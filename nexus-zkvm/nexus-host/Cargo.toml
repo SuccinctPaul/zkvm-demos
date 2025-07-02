@@ -1,0 +1,12 @@
+[package]
+name = "nexus-host"
+edition.workspace = true
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+
+[dependencies]
+nexus-sdk = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
+
+common.workspace = true
