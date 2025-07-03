@@ -9,7 +9,10 @@ members = [
     "common",
     # guest compute logic
     "fib",
-    #nexus-zkvm zkVM
+    # risc0 zkvm
+    "risc0-zkvm/risc0-host",
+    "risc0-zkvm/risc0-guest",
+    # nexus zkvm
     "nexus-zkvm/nexus-host",
     "nexus-zkvm/nexus-guest",
 ]
@@ -25,3 +28,14 @@ common = { path = "common" }
 #misc
 dotenv = "0.15.0"
 anyhow = "1.0.98"
+
+
+
+
+# Always optimize; building and running the guest takes much longer without optimization.
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+debug = 1
+lto = true
