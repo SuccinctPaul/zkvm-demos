@@ -9,12 +9,15 @@ members = [
     "common",
     # guest compute logic
     "fib",
-    # risc0 zkvm
-    "risc0-zkvm/risc0-host",
-    "risc0-zkvm/risc0-guest",
     # nexus zkvm
     "nexus-zkvm/nexus-host",
     "nexus-zkvm/nexus-guest",
+    # risc0 zkvm
+    "risc0-zkvm/risc0-host",
+    "risc0-zkvm/risc0-guest",
+    # sp1 zkvm
+    "sp1-zkvm/sp1-host",
+    "sp1-zkvm/sp1-guest",
 ]
 resolver = "2"
 
