@@ -20,9 +20,6 @@ fn main() {
     zkm_sdk::utils::setup_logger();
     dotenv::dotenv().ok();
 
-    // Parse the command line arguments.
-    // let args = Args::parse();
-
     // Setup the prover client.
     let client = ProverClient::new();
 
@@ -32,21 +29,6 @@ fn main() {
     let mut stdin = ZKMStdin::new();
     stdin.write(&fib_n);
 
-    // if args.execute {
-    //     // Execute the program
-    //     let (_output, report) = client.execute(FIBONACCI_ELF, stdin).run().unwrap();
-    //     println!("Program executed successfully.");
-    //
-    //     // Read the output.
-    //
-    //     // let expect = fib::fibonacci(fib_n);
-    //     // assert_eq!(a, expected_a);
-    //     // assert_eq!(b, expected_b);
-    //     // println!("Values are correct!");
-    //
-    //     // Record the number of cycles executed.
-    //     println!("Number of cycles: {}", report.total_instruction_count());
-    // } else {
     // Setup the program for proving.
     let (pk, vk) = client.setup(FIBONACCI_ELF);
 
@@ -61,5 +43,4 @@ fn main() {
     // Verify the proof.
     client.verify(&proof, &vk).expect("failed to verify proof");
     println!("Successfully verified proof!");
-    // }
 }
