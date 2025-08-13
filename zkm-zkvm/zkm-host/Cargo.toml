@@ -1,0 +1,15 @@
+[package]
+name = "zkm-host"
+edition.workspace = true
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.1.2" }
+dotenv = "0.15.0"
+
+common.workspace = true
+
+[build-dependencies]
+zkm-build = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.1.2" }
