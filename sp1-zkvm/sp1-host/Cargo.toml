@@ -1,8 +1,9 @@
 [package]
 name = "sp1-host"
-version = "0.1.0"
-edition = "2021"
-
+edition.workspace = true
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
 
 [dependencies]
 sp1-sdk = "5.0.0"
