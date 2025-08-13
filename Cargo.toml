@@ -18,6 +18,9 @@ members = [
     # sp1 zkvm
     "sp1-zkvm/sp1-host",
     "sp1-zkvm/sp1-guest",
+    # zkm zkvm
+    "zkm-zkvm/zkm-host",
+    "zkm-zkvm/zkm-guest",
 ]
 resolver = "2"
 

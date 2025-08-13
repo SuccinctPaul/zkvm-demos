@@ -9,7 +9,7 @@
 
 ### how to run the Nexus demo
 
-* cd to the Nexus demo directory
+* cd to the target demo directory
 
 ```bash
 cd nexus-zkvm/nexus-host
@@ -30,7 +30,7 @@ cargo run -r -- --nocapture
 
 ### how to run the Risc0 demo
 
-* cd to the Risc0 demo directory
+* cd to the target demo directory
 
 ```bash
 cd risc0/risc0-host
@@ -57,10 +57,10 @@ RISC0_DEV_MODE=0 RUST_LOG=info RISC0_INFO=1 cargo run --release
 
 ### how to run the Sp1 demo
 
-* cd to the Risc0 demo directory
+* cd to the target demo directory
 
 ```bash
-cd sp1/sp1-host
+cd sp1-zkvm/sp1-host
 ```
 
 * run in dev mode
@@ -75,3 +75,49 @@ RUST_LOG=info cargo run --release -- --execute
 RUST_LOG=info cargo run --release -- --prove
 ```
 
+
+
+
+## ZKM zkvm
+
+### Resources
+
+* https://docs.zkm.io/introduction/quickstart.html
+* https://github.com/ProjectZKM/Ziren
+
+### how to run
+
+* cd to the target demo directory
+```bash
+cd zkm-zkvm/zkm-host
+```
+
+* run in dev mode
+
+```bash
+RUST_LOG=info cargo run --release -- --execute
+```
+
+* run in production mode
+
+```bash
+cargo run --release -- --<PROOF_TYPE> // for core and compressed proofs 
+cargo run --release --bin evm -- --system <PROOF_TYPE>  // for EVM-compatible proofs
+```
+
+* core proof
+```bash
+RUST_LOG=info cargo run --release -- --core
+```
+
+* compressed proof
+```bash
+RUST_LOG=info cargo run --release -- --compressed
+```
+
+* evm proof
+```bash
+cargo run --release --bin evm -- --system groth16
+
+cargo run --release --bin evm -- --system plonk
+```
