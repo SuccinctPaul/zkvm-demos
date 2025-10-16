@@ -6,10 +6,10 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.1.2" }
+zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.0" }
 dotenv = "0.15.0"
 
 common.workspace = true
 
 [build-dependencies]
-zkm-build = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.1.2" }
+zkm-build = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.0" }
