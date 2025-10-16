@@ -6,9 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
 ENV PATH=/usr/local/cargo/bin:$PATH
-ENV RISC0_VERSION="3.0.3"
-ENV RISC0_CPP_VERSION="2024.1.5"
-ENV RISC0_RUST_VERSION="1.88.0"
+ENV CI=true  # Skip CUDA build in Docker
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -24,15 +22,12 @@ RUN apt-get update && apt-get install -y \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 RUN rustup update && rustup default stable
 
-# Install rzup and Risc0 toolchain
-RUN curl -L https://risczero.com/install | bash
-ENV PATH="/root/.risc0/bin:$PATH"
+# Copy and run Risc0 SDK installer script
+COPY scripts/sdk_installers/install_risc0_sdk.sh /tmp/install_risc0_sdk.sh
+RUN chmod +x /tmp/install_risc0_sdk.sh && /tmp/install_risc0_sdk.sh
 
-# Install Risc0 components
-RUN rzup install cargo-risczero "$RISC0_VERSION"
-RUN rzup install cpp "$RISC0_CPP_VERSION"
-RUN rzup install r0vm "$RISC0_VERSION"
-RUN rzup install rust "$RISC0_RUST_VERSION"
+# Add rzup to PATH
+ENV PATH="/root/.risc0/bin:$PATH"
 
 # Set working directory
 WORKDIR /workspace

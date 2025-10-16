@@ -22,12 +22,12 @@ RUN apt-get update && apt-get install -y \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 RUN rustup update && rustup default stable
 
-# Install zkmup and ZKM toolchain
-RUN curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ProjectZKM/toolchain/refs/heads/main/setup.sh | sh
-ENV PATH="/root/.zkm-toolchain/bin:$PATH"
+# Copy and run ZKM SDK installer script
+COPY scripts/sdk_installers/install_zkm_sdk.sh /tmp/install_zkm_sdk.sh
+RUN chmod +x /tmp/install_zkm_sdk.sh && /tmp/install_zkm_sdk.sh
 
-# Install ZKM components
-RUN zkmup install
+# Add ZKM to PATH
+ENV PATH="/root/.zkm-toolchain/bin:$PATH"
 
 # Set working directory
 WORKDIR /workspace

@@ -7,7 +7,6 @@ ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
 ENV PATH=/usr/local/cargo/bin:$PATH
 ENV SP1_DIR="/root/.sp1"
-ENV SP1_VERSION="latest"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -23,12 +22,12 @@ RUN apt-get update && apt-get install -y \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 RUN rustup update && rustup default stable
 
-# Install SP1 toolchain
-RUN curl -L https://sp1up.succinct.xyz | bash
-ENV PATH="${SP1_DIR}/bin:$PATH"
+# Copy and run SP1 SDK installer script
+COPY scripts/sdk_installers/install_sp1_sdk.sh /tmp/install_sp1_sdk.sh
+RUN chmod +x /tmp/install_sp1_sdk.sh && /tmp/install_sp1_sdk.sh
 
-# Install SP1 components
-RUN sp1up -v ${SP1_VERSION}
+# Add SP1 to PATH
+ENV PATH="${SP1_DIR}/bin:$PATH"
 
 # Set working directory
 WORKDIR /workspace

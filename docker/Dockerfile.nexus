@@ -21,15 +21,9 @@ RUN apt-get update && apt-get install -y \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 RUN rustup update && rustup default stable
 
-# Install Nexus toolchain
-ENV NEXUS_TOOLCHAIN_VERSION="nightly-2025-04-06"
-ENV NEXUS_CLI_VERSION_TAG="v0.3.4"
-
-# Install Nexus CLI
-RUN cargo "+${NEXUS_TOOLCHAIN_VERSION}" install --git https://github.com/nexus-xyz/nexus-zkvm cargo-nexus --tag "$NEXUS_CLI_VERSION_TAG"
-
-# Install Nexus target
-RUN rustup "+${NEXUS_TOOLCHAIN_VERSION}" target add riscv32i-unknown-none-elf
+# Copy and run Nexus SDK installer script
+COPY scripts/sdk_installers/install_nexus_sdk.sh /tmp/install_nexus_sdk.sh
+RUN chmod +x /tmp/install_nexus_sdk.sh && /tmp/install_nexus_sdk.sh
 
 # Set working directory
 WORKDIR /workspace

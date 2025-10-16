@@ -2,6 +2,8 @@
 
 这个目录包含了为不同ZKVMs创建独立Docker环境的配置文件，解决了不同ZKVMs工具链之间的冲突问题。
 
+**重要**: 这些Dockerfile使用项目中的现有安装脚本(`scripts/sdk_installers/`)，确保与本地安装方式保持一致。
+
 ## 文件结构
 
 ```
@@ -171,6 +173,7 @@ docker system prune -f
 2. **增量构建**: Docker会缓存构建层，只有代码更改时才重新构建
 3. **资源监控**: 运行多个ZKVMs时注意系统资源使用情况
 4. **版本管理**: 定期更新ZKVM工具链版本以获得最新功能
+5. **脚本复用**: Dockerfile使用现有的`scripts/sdk_installers/`脚本，确保与本地安装方式一致
 
 ## 参考资源
 
