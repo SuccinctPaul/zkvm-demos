@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  nexus-zkvm:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.nexus
+    container_name: nexus-zkvm-demo
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+    command: ["bash", "-c", "cd nexus-zkvm/nexus-host && cargo run -r -- --nocapture"]
+    profiles:
+      - nexus
+      - all
+
+  risc0-zkvm:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.risc0
+    container_name: risc0-zkvm-demo
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    environment:
+      - RISC0_DEV_MODE=1
+      - RUST_LOG=info
+      - RISC0_INFO=1
+    command: ["bash", "-c", "cd risc0-zkvm/risc0-host && RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release"]
+    profiles:
+      - risc0
+      - all
+
+  sp1-zkvm:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.sp1
+    container_name: sp1-zkvm-demo
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+    command: ["bash", "-c", "cd sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- --execute"]
+    profiles:
+      - sp1
+      - all
+
+  zkm-zkvm:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.zkm
+    container_name: zkm-zkvm-demo
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+    command: ["bash", "-c", "cd zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release -- --execute"]
+    profiles:
+      - zkm
+      - all
+
+  # Interactive shell for development
+  nexus-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.nexus
+    container_name: nexus-dev
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+    command: ["bash"]
+    profiles:
+      - dev
+
+  risc0-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.risc0
+    container_name: risc0-dev
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    environment:
+      - RISC0_DEV_MODE=1
+      - RUST_LOG=info
+      - RISC0_INFO=1
+    command: ["bash"]
+    profiles:
+      - dev
+
+  sp1-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.sp1
+    container_name: sp1-dev
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+    command: ["bash"]
+    profiles:
+      - dev
+
+  zkm-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.zkm
+    container_name: zkm-dev
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+    command: ["bash"]
+    profiles:
+      - dev

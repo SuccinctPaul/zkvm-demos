@@ -1,0 +1,43 @@
+# SP1 ZKVM Dockerfile
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH=/usr/local/cargo/bin:$PATH
+ENV SP1_DIR="/root/.sp1"
+ENV SP1_VERSION="latest"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+RUN rustup update && rustup default stable
+
+# Install SP1 toolchain
+RUN curl -L https://sp1up.succinct.xyz | bash
+ENV PATH="${SP1_DIR}/bin:$PATH"
+
+# Install SP1 components
+RUN sp1up -v ${SP1_VERSION}
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy project files
+COPY . /workspace/
+
+# Build the project
+RUN cd sp1-zkvm/sp1-host && cargo build --release
+
+# Set default command (execute mode)
+CMD ["bash", "-c", "cd sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- --execute"]

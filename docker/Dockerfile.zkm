@@ -1,0 +1,42 @@
+# ZKM ZKVM Dockerfile
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH=/usr/local/cargo/bin:$PATH
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    wget \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+RUN rustup update && rustup default stable
+
+# Install zkmup and ZKM toolchain
+RUN curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ProjectZKM/toolchain/refs/heads/main/setup.sh | sh
+ENV PATH="/root/.zkm-toolchain/bin:$PATH"
+
+# Install ZKM components
+RUN zkmup install
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy project files
+COPY . /workspace/
+
+# Build the project
+RUN cd zkm-zkvm/zkm-host && cargo build --release
+
+# Set default command (execute mode)
+CMD ["bash", "-c", "cd zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release -- --execute"]

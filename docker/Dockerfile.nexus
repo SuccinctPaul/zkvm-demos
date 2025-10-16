@@ -1,0 +1,44 @@
+# Nexus ZKVM Dockerfile
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH=/usr/local/cargo/bin:$PATH
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+RUN rustup update && rustup default stable
+
+# Install Nexus toolchain
+ENV NEXUS_TOOLCHAIN_VERSION="nightly-2025-04-06"
+ENV NEXUS_CLI_VERSION_TAG="v0.3.4"
+
+# Install Nexus CLI
+RUN cargo "+${NEXUS_TOOLCHAIN_VERSION}" install --git https://github.com/nexus-xyz/nexus-zkvm cargo-nexus --tag "$NEXUS_CLI_VERSION_TAG"
+
+# Install Nexus target
+RUN rustup "+${NEXUS_TOOLCHAIN_VERSION}" target add riscv32i-unknown-none-elf
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy project files
+COPY . /workspace/
+
+# Build the project
+RUN cd nexus-zkvm/nexus-host && cargo build --release
+
+# Set default command
+CMD ["bash", "-c", "cd nexus-zkvm/nexus-host && cargo run -r -- --nocapture"]

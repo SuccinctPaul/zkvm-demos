@@ -1,0 +1,47 @@
+# Risc0 ZKVM Dockerfile
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH=/usr/local/cargo/bin:$PATH
+ENV RISC0_VERSION="3.0.3"
+ENV RISC0_CPP_VERSION="2024.1.5"
+ENV RISC0_RUST_VERSION="1.88.0"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+RUN rustup update && rustup default stable
+
+# Install rzup and Risc0 toolchain
+RUN curl -L https://risczero.com/install | bash
+ENV PATH="/root/.risc0/bin:$PATH"
+
+# Install Risc0 components
+RUN rzup install cargo-risczero "$RISC0_VERSION"
+RUN rzup install cpp "$RISC0_CPP_VERSION"
+RUN rzup install r0vm "$RISC0_VERSION"
+RUN rzup install rust "$RISC0_RUST_VERSION"
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy project files
+COPY . /workspace/
+
+# Build the project
+RUN cd risc0-zkvm/risc0-host && cargo build --release
+
+# Set default command (dev mode)
+CMD ["bash", "-c", "cd risc0-zkvm/risc0-host && RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release"]
