@@ -7,7 +7,7 @@ services:
     build:
       context: ../..
       dockerfile: docker/development/Dockerfile.nexus.toolchain
-    image: nexus-zkvm-toolchain:latest
+    image: nexus-dev:latest
     container_name: nexus-dev
     volumes:
       - ../../:/workspace
@@ -28,7 +28,7 @@ services:
     build:
       context: ../..
       dockerfile: docker/development/Dockerfile.risc0.toolchain
-    image: risc0-zkvm-toolchain:latest
+    image: risc0-dev:latest
     container_name: risc0-dev
     volumes:
       - ../../:/workspace
@@ -51,7 +51,7 @@ services:
     build:
       context: ../..
       dockerfile: docker/development/Dockerfile.sp1.toolchain
-    image: sp1-zkvm-toolchain:latest
+    image: sp1-dev:latest
     container_name: sp1-dev
     volumes:
       - ../../:/workspace
@@ -72,7 +72,7 @@ services:
     build:
       context: ../..
       dockerfile: docker/development/Dockerfile.zkm.toolchain
-    image: zkm-zkvm-toolchain:latest
+    image: zkm-dev:latest
     container_name: zkm-dev
     volumes:
       - ../../:/workspace
