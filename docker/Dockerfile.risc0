@@ -1,42 +1,59 @@
-# Risc0 ZKVM Dockerfile
-FROM ubuntu:22.04
+# Multi-stage Risc0 ZKVM Dockerfile - Using shared base image
+FROM zkvm-base:latest AS base
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-ENV RUSTUP_HOME=/usr/local/rustup
-ENV CARGO_HOME=/usr/local/cargo
-ENV PATH=/usr/local/cargo/bin:$PATH
-ENV CI=true  # Skip CUDA build in Docker
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    pkg-config \
-    libssl-dev \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-RUN rustup update && rustup default stable
+# Set CI environment to skip CUDA build
+ENV CI=true
 
 # Copy and run Risc0 SDK installer script
 COPY scripts/sdk_installers/install_risc0_sdk.sh /tmp/install_risc0_sdk.sh
-RUN chmod +x /tmp/install_risc0_sdk.sh && /tmp/install_risc0_sdk.sh
+RUN chmod +x /tmp/install_risc0_sdk.sh && /tmp/install_risc0_sdk.sh \
+    && rm -f /tmp/install_risc0_sdk.sh
 
 # Add rzup to PATH
 ENV PATH="/root/.risc0/bin:$PATH"
 
-# Set working directory
+# Build stage - separate from runtime
+FROM base AS builder
+
+WORKDIR /workspace
+
+# Copy only necessary files for build
+COPY Cargo.toml Cargo.lock ./
+COPY common/ ./common/
+COPY fib/ ./fib/
+COPY risc0-zkvm/risc0-host/Cargo.toml ./risc0-zkvm/risc0-host/
+COPY risc0-zkvm/risc0-guest/ ./risc0-zkvm/risc0-guest/
+
+# Build dependencies first (better caching)
+RUN cd risc0-zkvm/risc0-host && cargo build --release --locked
+
+# Copy source code and build
+COPY risc0-zkvm/risc0-host/src/ ./risc0-zkvm/risc0-host/src/
+RUN cd risc0-zkvm/risc0-host && cargo build --release --locked
+
+# Runtime stage - minimal image
+FROM ubuntu:22.04 AS runtime
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Copy Rust and Risc0 tools from builder
+COPY --from=builder /usr/local/rustup /usr/local/rustup
+COPY --from=builder /usr/local/cargo /usr/local/cargo
+COPY --from=builder /root/.risc0 /root/.risc0
+
+# Copy built binary
+COPY --from=builder /workspace/risc0-zkvm/risc0-host/target/release/risc0-host /usr/local/bin/
+
+# Set environment
+ENV PATH=/usr/local/cargo/bin:/root/.risc0/bin:/usr/local/bin:$PATH
 WORKDIR /workspace
 
 # Copy project files
 COPY . /workspace/
 
-# Build the project
-RUN cd risc0-zkvm/risc0-host && cargo build --release
-
 # Set default command (dev mode)
-CMD ["bash", "-c", "cd risc0-zkvm/risc0-host && RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release"]
+CMD ["risc0-host"]

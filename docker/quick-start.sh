@@ -27,16 +27,17 @@ echo "✅ Docker is running"
 echo ""
 
 # Show available options
-echo "Available ZKVMs:"
+echo "Available options:"
 echo "  1) Nexus ZKVM"
 echo "  2) Risc0 ZKVM" 
 echo "  3) SP1 ZKVM"
 echo "  4) ZKM ZKVM"
 echo "  5) All ZKVMs"
 echo "  6) Development Environment"
+echo "  7) Build Base Image"
 echo ""
 
-read -p "Select an option (1-6): " choice
+read -p "Select an option (1-7): " choice
 
 case $choice in
     1)
@@ -91,6 +92,10 @@ case $choice in
                 exit 1
                 ;;
         esac
+        ;;
+    7)
+        echo -e "${GREEN}Building shared base image...${NC}"
+        docker-compose -f docker/docker-compose.yml build zkvm-base
         ;;
     *)
         echo "❌ Invalid choice"

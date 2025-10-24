@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  # Shared base image for all ZKVMs
+  zkvm-base:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.base
+    image: zkvm-base:latest
+    profiles:
+      - base
+      - all
   nexus-zkvm:
     build:
       context: ..

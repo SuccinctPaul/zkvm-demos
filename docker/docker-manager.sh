@@ -33,6 +33,7 @@ show_usage() {
     echo ""
     echo "Commands:"
     echo "  build [zkvm]     Build Docker images for specific zkvm or all"
+    echo "  build-base        Build the shared base image"
     echo "  run [zkvm]       Run specific zkvm demo"
     echo "  dev [zkvm]       Start development shell for specific zkvm"
     echo "  stop [zkvm]      Stop running containers"
@@ -47,6 +48,13 @@ show_usage() {
     echo "  $0 dev sp1              # Start SP1 development shell"
     echo "  $0 build all            # Build all ZKVM images"
     echo "  $0 run all              # Run all ZKVM demos"
+}
+
+# Function to build base image
+build_base() {
+    print_info "Building shared base image..."
+    docker-compose -f docker/docker-compose.yml build zkvm-base
+    print_success "Shared base image built successfully"
 }
 
 # Function to build Docker images
@@ -236,6 +244,9 @@ case $1 in
             exit 1
         fi
         build_images $2
+        ;;
+    "build-base")
+        build_base
         ;;
     "run")
         if [ -z "$2" ]; then

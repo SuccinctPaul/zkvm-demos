@@ -1,42 +1,59 @@
-# SP1 ZKVM Dockerfile
-FROM ubuntu:22.04
+# Multi-stage SP1 ZKVM Dockerfile - Using shared base image
+FROM zkvm-base:latest AS base
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-ENV RUSTUP_HOME=/usr/local/rustup
-ENV CARGO_HOME=/usr/local/cargo
-ENV PATH=/usr/local/cargo/bin:$PATH
+# Set SP1 environment variable
 ENV SP1_DIR="/root/.sp1"
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    pkg-config \
-    libssl-dev \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-RUN rustup update && rustup default stable
 
 # Copy and run SP1 SDK installer script
 COPY scripts/sdk_installers/install_sp1_sdk.sh /tmp/install_sp1_sdk.sh
-RUN chmod +x /tmp/install_sp1_sdk.sh && /tmp/install_sp1_sdk.sh
+RUN chmod +x /tmp/install_sp1_sdk.sh && /tmp/install_sp1_sdk.sh \
+    && rm -f /tmp/install_sp1_sdk.sh
 
 # Add SP1 to PATH
 ENV PATH="${SP1_DIR}/bin:$PATH"
 
-# Set working directory
+# Build stage - separate from runtime
+FROM base AS builder
+
+WORKDIR /workspace
+
+# Copy only necessary files for build
+COPY Cargo.toml Cargo.lock ./
+COPY common/ ./common/
+COPY fib/ ./fib/
+COPY sp1-zkvm/sp1-host/Cargo.toml ./sp1-zkvm/sp1-host/
+COPY sp1-zkvm/sp1-guest/ ./sp1-zkvm/sp1-guest/
+
+# Build dependencies first (better caching)
+RUN cd sp1-zkvm/sp1-host && cargo build --release --locked
+
+# Copy source code and build
+COPY sp1-zkvm/sp1-host/src/ ./sp1-zkvm/sp1-host/src/
+RUN cd sp1-zkvm/sp1-host && cargo build --release --locked
+
+# Runtime stage - minimal image
+FROM ubuntu:22.04 AS runtime
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Copy Rust and SP1 tools from builder
+COPY --from=builder /usr/local/rustup /usr/local/rustup
+COPY --from=builder /usr/local/cargo /usr/local/cargo
+COPY --from=builder /root/.sp1 /root/.sp1
+
+# Copy built binary
+COPY --from=builder /workspace/sp1-zkvm/sp1-host/target/release/sp1-host /usr/local/bin/
+
+# Set environment
+ENV PATH=/usr/local/cargo/bin:/root/.sp1/bin:/usr/local/bin:$PATH
 WORKDIR /workspace
 
 # Copy project files
 COPY . /workspace/
 
-# Build the project
-RUN cd sp1-zkvm/sp1-host && cargo build --release
-
 # Set default command (execute mode)
-CMD ["bash", "-c", "cd sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- --execute"]
+CMD ["sp1-host", "--execute"]
