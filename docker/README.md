@@ -1,91 +1,239 @@
-# ZKVM Demos Docker Configuration Summary
+# ZKVM Docker Environment
 
-## ✅ Completed Work
+Isolated Docker environments for multiple ZKVMs (SP1, Nexus, Risc0, ZKM) to avoid toolchain conflicts.
 
-### 1. Created Independent Dockerfiles
-- `Dockerfile.nexus` - Nexus ZKVM environment
-- `Dockerfile.risc0` - Risc0 ZKVM environment
-- `Dockerfile.sp1` - SP1 ZKVM environment
-- `Dockerfile.zkm` - ZKM ZKVM environment
+## 🚀 Quick Start
 
-### 2. Using Existing Installation Scripts
-All Dockerfiles use the project's `scripts/sdk_installers/` scripts:
-- `install_nexus_sdk.sh`
-- `install_risc0_sdk.sh`
-- `install_sp1_sdk.sh`
-- `install_zkm_sdk.sh`
-
-This ensures Docker environments are completely consistent with local installation methods.
-
-### 3. Docker Compose Orchestration
-- `docker-compose.yml` - Manages multiple ZKVMs services
-- Uses profiles to separate different environments
-- Supports both development and production modes
-
-### 4. Management Scripts
-- `docker-manager.sh` - Full-featured management script
-- `quick-start.sh` - Interactive quick start
-- `test-docker-config.sh` - Configuration validation tests
-
-### 5. Documentation
-- `README.md` - Detailed usage instructions
-- Includes troubleshooting and development recommendations
-
-## 🚀 Usage Instructions
-
-### Quick Start
+### First Time Setup
 ```bash
-# Interactive startup
-./docker/quick-start.sh
+cd docker/scripts
 
-# Or use management script
-./docker/docker-manager.sh build all
-./docker/docker-manager.sh run nexus
+# Build base image (required once)
+./build-base.sh
+
+# Build your ZKVM toolchain
+./development-manager.sh build sp1
 ```
 
-### Development Environment
+### Development Mode (Recommended)
 ```bash
-# Start development shell
-./docker/docker-manager.sh dev nexus
-./docker/docker-manager.sh dev risc0
+cd docker/scripts
+
+# SP1 - Execute & Prove
+./development-manager.sh run sp1 --execute    # Fast testing
+./development-manager.sh run sp1 --prove      # Generate proof
+
+# Nexus - Auto prove
+./development-manager.sh run nexus --nocapture
+
+# Risc0 - Auto prove
+./development-manager.sh run risc0
+
+# ZKM - Auto prove
+./development-manager.sh run zkm
+
+# Interactive debugging
+./development-manager.sh shell sp1
 ```
 
-### Docker Compose
+### Production Mode
 ```bash
-# Run specific ZKVM
-docker-compose -f docker/docker-compose.yml --profile nexus up nexus-zkvm
+cd docker/scripts
 
-# Run all ZKVMs
-docker-compose -f docker/docker-compose.yml --profile all up
+./production-manager.sh build sp1
+./production-manager.sh run sp1
+./production-manager.sh logs sp1
 ```
 
-## 🔧 Core Problems Solved
+## 📊 Two Modes
 
-1. **Toolchain Conflicts** - Each ZKVM runs in an independent container
-2. **Dependency Isolation** - Different versions of dependency libraries don't interfere with each other
-3. **Environment Consistency** - Uses the same installation scripts
-4. **Development Convenience** - Supports interactive development environments
-5. **Management Simplification** - Provides convenient management tools
+| Mode | Best For | Speed | Code Changes |
+|------|----------|-------|--------------|
+| **Development** | Daily coding, testing | First: slow<br>Then: fast (cached) | ✅ Real-time |
+| **Production** | Deployment, CI/CD | ⚡ Always fast | ❌ Rebuild needed |
 
-## 📁 File Structure
+## 🔵 SP1 Commands
+
+```bash
+# Development (flexible)
+./development-manager.sh run sp1 --execute    # No proof
+./development-manager.sh run sp1 --prove      # With proof
+./development-manager.sh shell sp1            # Interactive
+
+# Production (fast)
+./production-manager.sh build sp1
+./production-manager.sh run sp1
+```
+
+## 🟢 Nexus Commands
+
+```bash
+# Development
+./development-manager.sh run nexus --nocapture
+./development-manager.sh shell nexus
+
+# Production  
+./production-manager.sh build nexus
+./production-manager.sh run nexus
+```
+
+## 🔴 Risc0 Commands
+
+```bash
+# Development
+./development-manager.sh run risc0
+./development-manager.sh shell risc0
+
+# Production
+./production-manager.sh build risc0
+./production-manager.sh run risc0
+```
+
+## 🟡 ZKM Commands
+
+```bash
+# Development
+./development-manager.sh run zkm
+./development-manager.sh shell zkm
+
+# Production
+./production-manager.sh build zkm
+./production-manager.sh run zkm
+```
+
+## 🎯 Common Workflows
+
+### Workflow 1: Rapid Development
+```bash
+# Edit code in your IDE
+# Then run immediately (no rebuild)
+./development-manager.sh run sp1 --execute
+```
+
+### Workflow 2: Full Testing
+```bash
+# Test all ZKVMs
+for zkvm in sp1 nexus risc0 zkm; do
+    ./development-manager.sh build $zkvm
+    ./development-manager.sh run $zkvm
+done
+```
+
+### Workflow 3: Debug Issues
+```bash
+# Enter container
+./development-manager.sh shell sp1
+
+# Inside container
+cd sp1-zkvm/sp1-host
+cargo build --release
+RUST_LOG=debug cargo run --release -- --execute
+```
+
+## 🛠️ Management Commands
+
+### Development Manager
+```bash
+./development-manager.sh build <zkvm>        # Build toolchain image
+./development-manager.sh run <zkvm> [args]   # Run with args
+./development-manager.sh shell <zkvm>        # Interactive shell
+./development-manager.sh logs <zkvm>         # View logs
+./development-manager.sh clean-cache         # Free space
+```
+
+### Production Manager
+```bash
+./production-manager.sh build <zkvm>         # Build precompiled image
+./production-manager.sh run <zkvm>           # Run
+./production-manager.sh logs <zkvm>          # View logs
+./production-manager.sh clean                # Remove all
+```
+
+## 🔍 Troubleshooting
+
+### Error: "zkvm-base:latest not found"
+**Auto-fix:** Scripts detect and build automatically
+```bash
+./development-manager.sh build sp1  # Will build base if needed
+```
+
+### Slow First Run?
+**Normal:** First compilation takes 5-10 mins. Cached runs: 30s-2mins.
+
+### Code Changes Not Applied?
+**Solution:** Use development mode (production needs rebuild)
+```bash
+# Development: automatic ✅
+./development-manager.sh run sp1 --execute
+
+# Production: rebuild needed ❌
+./production-manager.sh build sp1
+```
+
+### Out of Disk Space?
+```bash
+# Clean caches
+./development-manager.sh clean-cache
+
+# Clean everything
+docker system prune -a
+```
+
+## 📁 Directory Structure
+
 ```
 docker/
-├── Dockerfile.nexus          # Nexus ZKVM configuration
-├── Dockerfile.risc0          # Risc0 ZKVM configuration
-├── Dockerfile.sp1            # SP1 ZKVM configuration
-├── Dockerfile.zkm            # ZKM ZKVM configuration
-├── docker-compose.yml        # Service orchestration
-├── docker-manager.sh         # Management script
-├── quick-start.sh            # Quick start
-├── test-docker-config.sh     # Test script
-└── README.md                 # Usage instructions
+├── base/                    # Shared base image
+├── production/              # Precompiled images
+├── development/             # Toolchain images  
+├── scripts/                 # Management scripts
+└── docs/                    # Detailed guides
+    ├── DOCKER-USAGE-EXAMPLES.md  # Complete examples
+    └── USAGE-GUIDE.md            # Detailed guide
 ```
 
-## ✅ Test Verification
-All configurations have passed test verification:
-- Dockerfile structure validation ✅
-- Docker Compose configuration validation ✅
-- Management script validation ✅
-- Installation script existence validation ✅
+## 📚 Documentation
 
-You can now safely use the Docker environment to run different ZKVM demos without worrying about toolchain conflicts!
+- **[DOCKER-USAGE-EXAMPLES.md](docs/DOCKER-USAGE-EXAMPLES.md)** - Complete examples for all ZKVMs
+- **[USAGE-GUIDE.md](docs/USAGE-GUIDE.md)** - Detailed usage patterns and best practices
+
+## 💡 Tips
+
+1. **Use development mode** for daily coding (real-time code sync)
+2. **Use production mode** for deployment (fast, consistent)
+3. **Interactive shell** is great for debugging (`shell` command)
+4. **First build is slow**, subsequent builds are cached
+5. **Clean cache** when disk space is low
+
+## 🎯 ZKVM Feature Matrix
+
+| ZKVM | Execute Mode | Prove Mode | Interactive Shell |
+|------|--------------|------------|-------------------|
+| SP1 | `--execute` ✅ | `--prove` ✅ | ✅ |
+| Nexus | Auto ⚡ | Auto ⚡ | ✅ |
+| Risc0 | Auto ⚡ | Auto ⚡ | ✅ |
+| ZKM | Auto ⚡ | Auto ⚡ | ✅ |
+
+## ⚡ One-Line Commands
+
+```bash
+# Quick test SP1
+cd docker/scripts && ./development-manager.sh build sp1 && ./development-manager.sh run sp1 --execute
+
+# Build all ZKVMs
+cd docker/scripts && for z in sp1 nexus risc0 zkm; do ./development-manager.sh build $z; done
+
+# Interactive SP1 debug
+cd docker/scripts && ./development-manager.sh shell sp1
+```
+
+## 🆘 Need Help?
+
+1. Check [DOCKER-USAGE-EXAMPLES.md](docs/DOCKER-USAGE-EXAMPLES.md) for specific examples
+2. Try the interactive menu: `./quick-start.sh`
+3. View logs: `./development-manager.sh logs <zkvm>`
+4. Enter container: `./development-manager.sh shell <zkvm>`
+
+---
+
+**Choose your mode, run your ZKVM, done! 🚀**

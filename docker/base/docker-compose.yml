@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  # Shared base image for all ZKVMs
+  # Contains: Ubuntu 22.04 + Rust toolchain + common dependencies
+  zkvm-base:
+    build:
+      context: ../..
+      dockerfile: docker/base/Dockerfile.base
+    image: zkvm-base:latest
+    profiles:
+      - base
+

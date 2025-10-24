@@ -1,0 +1,24 @@
+# SP1 ZKVM Toolchain-Only Dockerfile
+# This image contains only the development environment and SP1 toolchain
+# Source code is mounted at runtime and compiled on-demand
+# Usage: docker run -v $(pwd):/workspace sp1-toolchain cargo run --release -- --execute
+
+FROM zkvm-base:latest
+
+# Set SP1 environment variable
+ENV SP1_DIR="/root/.sp1"
+
+# Copy and run SP1 SDK installer script
+COPY scripts/sdk_installers/install_sp1_sdk.sh /tmp/install_sp1_sdk.sh
+RUN chmod +x /tmp/install_sp1_sdk.sh && /tmp/install_sp1_sdk.sh \
+    && rm -f /tmp/install_sp1_sdk.sh
+
+# Add SP1 to PATH
+ENV PATH="${SP1_DIR}/bin:$PATH"
+
+# Set working directory
+WORKDIR /workspace
+
+# Set default command to bash (interactive shell)
+CMD ["bash"]
+

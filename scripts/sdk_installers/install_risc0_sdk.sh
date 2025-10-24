@@ -82,21 +82,33 @@ echo "The rzup installer might have updated your shell configuration files (e.g.
 echo "To ensure rzup and Risc0 tools are available in your current shell session if this was a new installation,"
 echo "you may need to source your shell profile (e.g., 'source ~/.bashrc') or open a new terminal." 
 
-# Build r0vm from source with CUDA features enabled (skip if in CI)
-if [ -z $CI ]; then
-    CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
-    RISC0_BIN_DIR="$HOME/.risc0/extensions/v$RISC0_VERSION-cargo-risczero-x86_64-unknown-linux-gnu"
-
-    TEMP_DIR=$(mktemp -d)
-    git clone https://github.com/risc0/risc0.git --depth 1 --branch "v$RISC0_VERSION" "$TEMP_DIR/risc0"
-    cd "$TEMP_DIR/risc0"
-
-    # Build with feature `cuda`
-    RUSTFLAGS="-C target-cpu=native" cargo build --release --features cuda --bin r0vm
-    # Copy the binary to the same directory with `cargo-risczero` and `r0vm`
-    cp ./target/release/r0vm "$RISC0_BIN_DIR/r0vm-cuda"
-    # Create symbolic link as `cargo-risczero` and `r0vm`
-    ln -s "$RISC0_BIN_DIR/r0vm-cuda" "$CARGO_HOME/bin/r0vm-cuda"
-
-    rm -rf "$TEMP_DIR"
-fi
+# Optional: Build r0vm from source with CUDA features (requires CUDA toolkit and git)
+# This section is commented out by default as it requires CUDA drivers and adds significant build time
+# To enable CUDA support, set BUILD_R0VM_WITH_CUDA=true environment variable
+#
+# if [ "${BUILD_R0VM_WITH_CUDA}" = "true" ] && [ -z "$CI" ]; then
+#     echo "Building r0vm with CUDA support..."
+#     
+#     # Check if CUDA is available
+#     if ! command -v nvcc &> /dev/null; then
+#         echo "Warning: CUDA toolkit not found. Skipping CUDA build."
+#         echo "Install CUDA toolkit to enable GPU acceleration."
+#     else
+#         CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
+#         RISC0_BIN_DIR="$HOME/.risc0/extensions/v$RISC0_VERSION-cargo-risczero-x86_64-unknown-linux-gnu"
+#
+#         TEMP_DIR=$(mktemp -d)
+#         git clone https://github.com/risc0/risc0.git --depth 1 --branch "v$RISC0_VERSION" "$TEMP_DIR/risc0"
+#         cd "$TEMP_DIR/risc0"
+#
+#         # Build with feature `cuda`
+#         RUSTFLAGS="-C target-cpu=native" cargo build --release --features cuda --bin r0vm
+#         # Copy the binary to the same directory with `cargo-risczero` and `r0vm`
+#         cp ./target/release/r0vm "$RISC0_BIN_DIR/r0vm-cuda"
+#         # Create symbolic link
+#         ln -s "$RISC0_BIN_DIR/r0vm-cuda" "$CARGO_HOME/bin/r0vm-cuda"
+#
+#         rm -rf "$TEMP_DIR"
+#         echo "r0vm with CUDA support built successfully."
+#     fi
+# fi

@@ -52,5 +52,5 @@ WORKDIR /workspace
 # Copy project files
 COPY . /workspace/
 
-# Set default command (execute mode)
-CMD ["zkm-host", "--execute"]
+# Set default command (prove and verify mode)
+CMD ["zkm-host"]

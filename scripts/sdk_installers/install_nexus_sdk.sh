@@ -30,11 +30,14 @@ echo "Installing Nexus Toolchain and SDK using Nexus (prebuilt binaries)..."
 ensure_tool_installed "rustup" "for managing Rust toolchains"
 ensure_tool_installed "cargo" "as cargo-nexus is a cargo subcommand"
 
-NEXUS_TOOLCHAIN_VERSION="nightly-2025-04-06"
-NEXUS_CLI_VERSION_TAG="v0.3.4"
+# Default versions (can be overridden via environment variables)
+NEXUS_TOOLCHAIN_VERSION="${NEXUS_TOOLCHAIN_VERSION:-nightly-2025-04-06}"
+NEXUS_CLI_VERSION_TAG="${NEXUS_CLI_VERSION_TAG:-v0.3.4}"
 
 # Install the Nexus CLI
 echo "Installing Nexus CLI from GitHub repository..."
+echo "Using Nexus toolchain: ${NEXUS_TOOLCHAIN_VERSION}"
+echo "Using Nexus CLI version tag: ${NEXUS_CLI_VERSION_TAG}"
 cargo "+${NEXUS_TOOLCHAIN_VERSION}" install --git https://github.com/nexus-xyz/nexus-zkvm cargo-nexus --tag "$NEXUS_CLI_VERSION_TAG"
 
 # Install Nexus's target

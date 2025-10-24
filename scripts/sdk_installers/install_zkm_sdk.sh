@@ -31,7 +31,6 @@ ensure_tool_installed() {
 echo "Installing zkm Toolchain using zkmup (latest release versions)..."
 
 ensure_tool_installed "curl" "to download the zkmup installer"
-ensure_tool_installed "wget" "to download the zkmup installer"
 ensure_tool_installed "bash" "as the zkmup installer script uses bash"
 
 # Install zkmup itself if not already present
@@ -44,16 +43,16 @@ if ! is_tool_installed "zkmup"; then
 
     # For the current script's execution, we need to add the zkmup path explicitly
     # as the .bashrc changes won't affect this running script instance.
-    zkmup_BIN_DIR="${HOME}/.zkm-toolchain/bin"
-    if [ -d "${zkmup_BIN_DIR}" ] && [[ ":$PATH:" != *":${zkmup_BIN_DIR}:"* ]]; then
-        echo "Adding ${zkmup_BIN_DIR} to PATH for current script session."
-        export PATH="${zkmup_BIN_DIR}:$PATH"
+    ZKMUP_BIN_DIR="${HOME}/.zkm-toolchain/bin"
+    if [ -d "${ZKMUP_BIN_DIR}" ] && [[ ":$PATH:" != *":${ZKMUP_BIN_DIR}:"* ]]; then
+        echo "Adding ${ZKMUP_BIN_DIR} to PATH for current script session."
+        export PATH="${ZKMUP_BIN_DIR}:$PATH"
     fi
 
     # Re-check if zkmup is now in PATH
     if ! is_tool_installed "zkmup"; then
         echo "Error: zkmup command not found after installation attempt." >&2
-        echo "       Please check if ${zkmup_BIN_DIR} was created and if it's in your PATH for new shells." >&2
+        echo "       Please check if ${ZKMUP_BIN_DIR} was created and if it's in your PATH for new shells." >&2
         echo "       You might need to source your ~/.bashrc or similar shell profile." >&2
         exit 1
     fi
@@ -71,8 +70,15 @@ echo "Verifying zkm installation..."
 ensure_tool_installed "cargo"
 zkmup list-available || (echo "Error: zkmup list-available command failed!" >&2 && exit 1)
 
-# Export the zkm toolchain environment variables
-source ~/.zkm-toolchain/env
+# Export the zkm toolchain environment variables if the file exists
+ZKM_ENV_FILE="${HOME}/.zkm-toolchain/env"
+if [ -f "${ZKM_ENV_FILE}" ]; then
+    echo "Sourcing zkm environment from ${ZKM_ENV_FILE}..."
+    source "${ZKM_ENV_FILE}"
+else
+    echo "Warning: zkm environment file not found at ${ZKM_ENV_FILE}"
+    echo "         zkm tools may still work if properly installed to PATH."
+fi
 
 echo "zkm Toolchain installation (latest release) successful."
 echo "The zkmup installer might have updated your shell configuration files (e.g., ~/.bashrc, ~/.zshrc)."
