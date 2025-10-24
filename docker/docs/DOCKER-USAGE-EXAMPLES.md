@@ -74,8 +74,8 @@ cd docker/scripts
 cd docker
 
 # Development mode with custom arguments
-ZKVM_ARGS="--execute" docker-compose -f development/docker-compose.yml --profile sp1 up sp1-zkvm-toolchain
-ZKVM_ARGS="--prove" docker-compose -f development/docker-compose.yml --profile sp1 up sp1-zkvm-toolchain
+docker-compose -f development/docker-compose.yml run --rm sp1-dev bash -c "cd sp1-zkvm/sp1-host && cargo run --release -- --execute"
+docker-compose -f development/docker-compose.yml run --rm sp1-dev bash -c "cd sp1-zkvm/sp1-host && cargo run --release -- --prove"
 
 # Production mode
 docker-compose -f production/docker-compose.yml --profile sp1 up sp1-zkvm
@@ -137,7 +137,7 @@ cd docker/scripts
 cd docker
 
 # Development mode
-ZKVM_ARGS="--nocapture" docker-compose -f development/docker-compose.yml --profile nexus up nexus-zkvm-toolchain
+docker-compose -f development/docker-compose.yml run --rm nexus-dev bash -c "cd nexus-zkvm/nexus-host && cargo run -r -- --nocapture"
 
 # Production mode
 docker-compose -f production/docker-compose.yml --profile nexus up nexus-zkvm
@@ -202,7 +202,7 @@ cd docker/scripts
 cd docker
 
 # Development mode
-docker-compose -f development/docker-compose.yml --profile risc0 up risc0-zkvm-toolchain
+docker-compose -f development/docker-compose.yml run --rm risc0-dev bash -c "cd risc0-zkvm/risc0-host && cargo run --release"
 
 # Production mode
 docker-compose -f production/docker-compose.yml --profile risc0 up risc0-zkvm
@@ -261,7 +261,7 @@ cd docker/scripts
 cd docker
 
 # Development mode
-docker-compose -f development/docker-compose.yml --profile zkm up zkm-zkvm-toolchain
+docker-compose -f development/docker-compose.yml run --rm zkm-dev bash -c "cd zkm-zkvm/zkm-host && cargo run --release"
 
 # Production mode
 docker-compose -f production/docker-compose.yml --profile zkm up zkm-zkvm

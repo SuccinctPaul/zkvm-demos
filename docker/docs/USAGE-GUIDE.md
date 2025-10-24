@@ -120,13 +120,13 @@ docker-compose -f docker/production/docker-compose.yml --profile sp1 up sp1-zkvm
 
 ```bash
 # Build
-docker-compose -f docker/development/docker-compose.yml build sp1-zkvm-toolchain
+docker-compose -f docker/development/docker-compose.yml build sp1-dev
 
 # Run - execute mode
-ZKVM_ARGS="--execute" docker-compose -f docker/development/docker-compose.yml --profile sp1 up sp1-zkvm-toolchain
+docker-compose -f docker/development/docker-compose.yml run --rm sp1-dev bash -c "cd sp1-zkvm/sp1-host && cargo run --release -- --execute"
 
 # Run - prove mode
-ZKVM_ARGS="--prove" docker-compose -f docker/development/docker-compose.yml --profile sp1 up sp1-zkvm-toolchain
+docker-compose -f docker/development/docker-compose.yml run --rm sp1-dev bash -c "cd sp1-zkvm/sp1-host && cargo run --release -- --prove"
 ```
 
 ## 📊 Supported Parameters for Each ZKVM
@@ -194,7 +194,7 @@ volumes:
 Pass parameters via environment variables:
 
 ```bash
-ZKVM_ARGS="--prove" docker-compose up sp1-zkvm-toolchain
+docker-compose run --rm sp1-dev bash -c "cd sp1-zkvm/sp1-host && cargo run --release -- --prove"
 ```
 
 **Benefits:**

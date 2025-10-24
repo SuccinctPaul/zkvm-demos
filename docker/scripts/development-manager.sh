@@ -1,6 +1,6 @@
 #!/bin/bash
 # Development Environment Manager
-# Manages toolchain Docker images for flexible development
+# Simplified manager for ZKVM development containers
 
 set -e
 
@@ -10,6 +10,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOCKER_DIR="$(dirname "$SCRIPT_DIR")"
+COMPOSE_FILE="$DOCKER_DIR/development/docker-compose.yml"
 
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -28,52 +33,81 @@ print_error() {
 }
 
 show_usage() {
-    echo "Development Environment Manager"
-    echo "Purpose: Manage toolchain images for daily development and debugging"
+    echo "╔══════════════════════════════════════════════════════════╗"
+    echo "║         ZKVM Development Environment Manager             ║"
+    echo "╚══════════════════════════════════════════════════════════╝"
     echo ""
     echo "Usage: $0 [COMMAND] [ZKVM] [ARGS...]"
     echo ""
     echo "Commands:"
     echo "  build [zkvm]           Build toolchain image"
-    echo "  run [zkvm] [args]      Run toolchain mode with arguments"
+    echo "  run [zkvm] [args]      Run ZKVM with custom arguments"
     echo "  shell [zkvm]           Enter interactive shell"
-    echo "  exec [zkvm] [cmd]      Execute command in container"
     echo "  stop [zkvm]            Stop running container"
     echo "  logs [zkvm]            View container logs"
-    echo "  ps                     View running containers"
-    echo "  clean-cache            Clean build cache"
+    echo "  ps                     List running containers"
+    echo "  clean-cache            Clean build cache volumes"
     echo ""
-    echo "ZKVMs: nexus, risc0, sp1, zkm, all"
+    echo "Available ZKVMs: nexus, risc0, sp1, zkm, all"
     echo ""
     echo "Examples:"
-    echo "  # Build toolchain image"
+    echo "  # Build and run"
     echo "  $0 build sp1"
+    echo "  $0 run sp1 --execute          # Execute mode"
+    echo "  $0 run sp1 --prove            # Prove mode"
+    echo "  $0 run nexus --nocapture      # Nexus with output"
     echo ""
-    echo "  # Run different modes"
-    echo "  $0 run sp1 --execute          # SP1 execute mode"
-    echo "  $0 run sp1 --prove            # SP1 prove mode"
-    echo "  $0 run nexus --nocapture      # Nexus with stdout"
+    echo "  # Interactive mode"
+    echo "  $0 shell sp1                  # Enter bash shell"
     echo ""
-    echo "  # Interactive development"
-    echo "  $0 shell sp1                  # Enter SP1 container"
-    echo "  $0 exec sp1 cargo build       # Execute command in container"
+    echo "  # Container management"
+    echo "  $0 stop sp1                   # Stop container"
+    echo "  $0 logs sp1                   # View logs"
+    echo "  $0 ps                         # List containers"
     echo ""
     echo "Features:"
-    echo "  ✅ Real-time source code sync (volume mount)"
-    echo "  ✅ Flexible parameter passing"
+    echo "  ✅ Single unified service per ZKVM"
+    echo "  ✅ Real-time source code mounting"
     echo "  ✅ Persistent build cache"
-    echo "  ✅ Suitable for rapid iterative development"
+    echo "  ✅ Flexible command execution"
 }
 
 # Check and build base image if needed
 check_base_image() {
     if ! docker image inspect zkvm-base:latest > /dev/null 2>&1; then
         print_warning "Base image zkvm-base:latest not found, building..."
-        docker-compose -f ../base/docker-compose.yml build zkvm-base
+        docker-compose -f "$DOCKER_DIR/base/docker-compose.yml" build zkvm-base
         print_success "Base image built successfully"
-    else
-        print_info "Base image zkvm-base:latest exists"
     fi
+}
+
+# Get service name for ZKVM
+get_service_name() {
+    local zkvm=$1
+    case $zkvm in
+        "nexus"|"risc0"|"sp1"|"zkm")
+            echo "${zkvm}-dev"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+# Get profile name for ZKVM
+get_profile() {
+    local zkvm=$1
+    case $zkvm in
+        "nexus"|"risc0"|"sp1"|"zkm")
+            echo "${zkvm}"
+            ;;
+        "all")
+            echo "all"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
 }
 
 build_toolchain() {
@@ -82,38 +116,22 @@ build_toolchain() {
     # Ensure base image exists
     check_base_image
     
-    case $zkvm in
-        "nexus")
-            print_info "Building Nexus ZKVM toolchain image..."
-            docker-compose -f ../development/docker-compose.yml build nexus-zkvm-toolchain
-            print_success "Nexus toolchain image built successfully"
-            ;;
-        "risc0")
-            print_info "Building Risc0 ZKVM toolchain image..."
-            docker-compose -f ../development/docker-compose.yml build risc0-zkvm-toolchain
-            print_success "Risc0 toolchain image built successfully"
-            ;;
-        "sp1")
-            print_info "Building SP1 ZKVM toolchain image..."
-            docker-compose -f ../development/docker-compose.yml build sp1-zkvm-toolchain
-            print_success "SP1 toolchain image built successfully"
-            ;;
-        "zkm")
-            print_info "Building ZKM ZKVM toolchain image..."
-            docker-compose -f ../development/docker-compose.yml build zkm-zkvm-toolchain
-            print_success "ZKM toolchain image built successfully"
-            ;;
-        "all")
-            print_info "Building all ZKVM toolchain images..."
-            docker-compose -f ../development/docker-compose.yml build nexus-zkvm-toolchain risc0-zkvm-toolchain sp1-zkvm-toolchain zkm-zkvm-toolchain
-            print_success "All toolchain images built successfully"
-            ;;
-        *)
+    if [ "$zkvm" = "all" ]; then
+        print_info "Building all ZKVM toolchain images..."
+        docker-compose -f "$COMPOSE_FILE" build nexus-dev risc0-dev sp1-dev zkm-dev
+        print_success "All toolchain images built successfully"
+    else
+        local service=$(get_service_name "$zkvm")
+        if [ -z "$service" ]; then
             print_error "Unknown ZKVM: $zkvm"
             show_usage
             exit 1
-            ;;
-    esac
+        fi
+        
+        print_info "Building ${zkvm^^} ZKVM toolchain image..."
+        docker-compose -f "$COMPOSE_FILE" build "$service"
+        print_success "${zkvm^^} toolchain image built successfully"
+    fi
 }
 
 run_toolchain() {
@@ -121,154 +139,99 @@ run_toolchain() {
     shift
     local args="$@"
     
-    if [ -z "$args" ]; then
-        print_warning "No arguments provided, will use default parameters"
+    local service=$(get_service_name "$zkvm")
+    local profile=$(get_profile "$zkvm")
+    
+    if [ -z "$service" ] || [ -z "$profile" ]; then
+        print_error "Unknown ZKVM: $zkvm"
+        show_usage
+        exit 1
     fi
     
+    # Build run command based on ZKVM type
+    local run_cmd=""
     case $zkvm in
         "nexus")
-            print_info "Running Nexus ZKVM (toolchain mode, args: ${args:-default})..."
-            ZKVM_ARGS="$args" docker-compose -f ../development/docker-compose.yml --profile nexus-toolchain up nexus-zkvm-toolchain
+            run_cmd="cd nexus-zkvm/nexus-host && cargo run -r -- ${args:---nocapture}"
             ;;
         "risc0")
-            print_info "Running Risc0 ZKVM (toolchain mode, args: ${args:-default})..."
-            ZKVM_ARGS="$args" docker-compose -f ../development/docker-compose.yml --profile risc0-toolchain up risc0-zkvm-toolchain
+            run_cmd="cd risc0-zkvm/risc0-host && RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release ${args}"
             ;;
         "sp1")
-            print_info "Running SP1 ZKVM (toolchain mode, args: ${args:-default})..."
-            ZKVM_ARGS="$args" docker-compose -f ../development/docker-compose.yml --profile sp1-toolchain up sp1-zkvm-toolchain
+            run_cmd="cd sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- ${args:---execute}"
             ;;
         "zkm")
-            print_info "Running ZKM ZKVM (toolchain mode, args: ${args:-default})..."
-            ZKVM_ARGS="$args" docker-compose -f ../development/docker-compose.yml --profile zkm-toolchain up zkm-zkvm-toolchain
-            ;;
-        *)
-            print_error "Unknown ZKVM: $zkvm"
-            show_usage
-            exit 1
+            run_cmd="cd zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release ${args}"
             ;;
     esac
+    
+    print_info "Running ${zkvm^^} ZKVM (args: ${args:-default})..."
+    docker-compose -f "$COMPOSE_FILE" run --rm "$service" bash -c "$run_cmd"
 }
 
 start_shell() {
     local zkvm=$1
     
-    case $zkvm in
-        "nexus")
-            print_info "Starting Nexus interactive shell..."
-            docker-compose -f ../development/docker-compose.yml --profile dev up -d nexus-dev
-            docker exec -it nexus-dev bash
-            ;;
-        "risc0")
-            print_info "Starting Risc0 interactive shell..."
-            docker-compose -f ../development/docker-compose.yml --profile dev up -d risc0-dev
-            docker exec -it risc0-dev bash
-            ;;
-        "sp1")
-            print_info "Starting SP1 interactive shell..."
-            docker-compose -f ../development/docker-compose.yml --profile dev up -d sp1-dev
-            docker exec -it sp1-dev bash
-            ;;
-        "zkm")
-            print_info "Starting ZKM interactive shell..."
-            docker-compose -f ../development/docker-compose.yml --profile dev up -d zkm-dev
-            docker exec -it zkm-dev bash
-            ;;
-        *)
-            print_error "Unknown ZKVM: $zkvm"
-            show_usage
-            exit 1
-            ;;
-    esac
-}
-
-exec_command() {
-    local zkvm=$1
-    shift
-    local cmd="$@"
-    
-    if [ -z "$cmd" ]; then
-        print_error "Please specify the command to execute"
+    local service=$(get_service_name "$zkvm")
+    if [ -z "$service" ]; then
+        print_error "Unknown ZKVM: $zkvm"
+        show_usage
         exit 1
     fi
     
-    local container_name="${zkvm}-zkvm-toolchain"
-    
-    print_info "Executing in $container_name: $cmd"
-    docker exec -it $container_name bash -c "$cmd"
+    print_info "Starting ${zkvm^^} interactive shell..."
+    docker-compose -f "$COMPOSE_FILE" run --rm "$service" bash
 }
 
 stop_container() {
     local zkvm=$1
     
-    case $zkvm in
-        "nexus")
-            print_info "Stopping Nexus container..."
-            docker-compose -f ../development/docker-compose.yml stop nexus-zkvm-toolchain nexus-dev
-            ;;
-        "risc0")
-            print_info "Stopping Risc0 container..."
-            docker-compose -f ../development/docker-compose.yml stop risc0-zkvm-toolchain risc0-dev
-            ;;
-        "sp1")
-            print_info "Stopping SP1 container..."
-            docker-compose -f ../development/docker-compose.yml stop sp1-zkvm-toolchain sp1-dev
-            ;;
-        "zkm")
-            print_info "Stopping ZKM container..."
-            docker-compose -f ../development/docker-compose.yml stop zkm-zkvm-toolchain zkm-dev
-            ;;
-        "all")
-            print_info "Stopping all development containers..."
-            docker-compose -f ../development/docker-compose.yml down
-            ;;
-        *)
+    if [ "$zkvm" = "all" ]; then
+        print_info "Stopping all development containers..."
+        docker-compose -f "$COMPOSE_FILE" down
+        print_success "All containers stopped"
+    else
+        local service=$(get_service_name "$zkvm")
+        if [ -z "$service" ]; then
             print_error "Unknown ZKVM: $zkvm"
             show_usage
             exit 1
-            ;;
-    esac
+        fi
+        
+        print_info "Stopping ${zkvm^^} container..."
+        docker stop "$service" 2>/dev/null || print_warning "Container not running"
+        print_success "${zkvm^^} container stopped"
+    fi
 }
 
 show_logs() {
     local zkvm=$1
     
-    case $zkvm in
-        "nexus")
-            docker-compose -f ../development/docker-compose.yml logs -f nexus-zkvm-toolchain
-            ;;
-        "risc0")
-            docker-compose -f ../development/docker-compose.yml logs -f risc0-zkvm-toolchain
-            ;;
-        "sp1")
-            docker-compose -f ../development/docker-compose.yml logs -f sp1-zkvm-toolchain
-            ;;
-        "zkm")
-            docker-compose -f ../development/docker-compose.yml logs -f zkm-zkvm-toolchain
-            ;;
-        *)
-            print_error "Unknown ZKVM: $zkvm"
-            show_usage
-            exit 1
-            ;;
-    esac
+    local service=$(get_service_name "$zkvm")
+    if [ -z "$service" ]; then
+        print_error "Unknown ZKVM: $zkvm"
+        show_usage
+        exit 1
+    fi
+    
+    docker-compose -f "$COMPOSE_FILE" logs -f "$service"
 }
 
 show_ps() {
     print_info "Running development containers:"
-    docker ps --filter "name=toolchain\|dev" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+    docker ps --filter "name=-dev" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
 }
 
 clean_cache() {
     print_warning "This will clean all build cache volumes"
-    print_info "Cache volume list:"
-    docker volume ls | grep "cache"
+    print_info "Cache volumes:"
+    docker volume ls --filter "name=cache" --format "table {{.Name}}\t{{.Driver}}"
     echo ""
-    read -p "Confirm to continue? (y/N): " confirm
+    read -p "Confirm deletion? (y/N): " confirm
     
     if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
-        print_info "Cleaning cache..."
-        docker volume rm $(docker volume ls -q | grep "cache") 2>/dev/null || true
+        print_info "Cleaning cache volumes..."
+        docker volume ls -q --filter "name=cache" | xargs -r docker volume rm
         print_success "Cache cleanup completed"
     else
         print_info "Cancelled"
