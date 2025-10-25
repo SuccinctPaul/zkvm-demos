@@ -11,6 +11,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOCKER_DIR="$(dirname "$SCRIPT_DIR")"
+COMPOSE_FILE="$DOCKER_DIR/production/docker-compose.yml"
+BASE_COMPOSE_FILE="$DOCKER_DIR/base/docker-compose.yml"
+
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -59,7 +65,7 @@ show_usage() {
 check_base_image() {
     if ! docker image inspect zkvm-base:latest > /dev/null 2>&1; then
         print_warning "Base image zkvm-base:latest not found, building..."
-        docker-compose -f ../base/docker-compose.yml build zkvm-base
+        docker-compose -f "$BASE_COMPOSE_FILE" build zkvm-base
         print_success "Base image built successfully"
     else
         print_info "Base image zkvm-base:latest exists"
@@ -75,27 +81,27 @@ build_image() {
     case $zkvm in
         "nexus")
             print_info "Building Nexus ZKVM precompiled image..."
-            docker-compose -f ../production/docker-compose.yml build nexus-zkvm
+            docker-compose -f "$COMPOSE_FILE" build nexus-zkvm
             print_success "Nexus ZKVM image built successfully"
             ;;
         "risc0")
             print_info "Building Risc0 ZKVM precompiled image..."
-            docker-compose -f ../production/docker-compose.yml build risc0-zkvm
+            docker-compose -f "$COMPOSE_FILE" build risc0-zkvm
             print_success "Risc0 ZKVM image built successfully"
             ;;
         "sp1")
             print_info "Building SP1 ZKVM precompiled image..."
-            docker-compose -f ../production/docker-compose.yml build sp1-zkvm
+            docker-compose -f "$COMPOSE_FILE" build sp1-zkvm
             print_success "SP1 ZKVM image built successfully"
             ;;
         "zkm")
             print_info "Building ZKM ZKVM precompiled image..."
-            docker-compose -f ../production/docker-compose.yml build zkm-zkvm
+            docker-compose -f "$COMPOSE_FILE" build zkm-zkvm
             print_success "ZKM ZKVM image built successfully"
             ;;
         "all")
             print_info "Building all ZKVM precompiled images..."
-            docker-compose -f ../production/docker-compose.yml build nexus-zkvm risc0-zkvm sp1-zkvm zkm-zkvm
+            docker-compose -f "$COMPOSE_FILE" build nexus-zkvm risc0-zkvm sp1-zkvm zkm-zkvm
             print_success "All ZKVM images built successfully"
             ;;
         *)
@@ -112,23 +118,23 @@ run_image() {
     case $zkvm in
         "nexus")
             print_info "Running Nexus ZKVM (production mode)..."
-            docker-compose -f ../production/docker-compose.yml --profile nexus up nexus-zkvm
+            docker-compose -f "$COMPOSE_FILE" --profile nexus up nexus-zkvm
             ;;
         "risc0")
             print_info "Running Risc0 ZKVM (production mode)..."
-            docker-compose -f ../production/docker-compose.yml --profile risc0 up risc0-zkvm
+            docker-compose -f "$COMPOSE_FILE" --profile risc0 up risc0-zkvm
             ;;
         "sp1")
             print_info "Running SP1 ZKVM (production mode)..."
-            docker-compose -f ../production/docker-compose.yml --profile sp1 up sp1-zkvm
+            docker-compose -f "$COMPOSE_FILE" --profile sp1 up sp1-zkvm
             ;;
         "zkm")
             print_info "Running ZKM ZKVM (production mode)..."
-            docker-compose -f ../production/docker-compose.yml --profile zkm up zkm-zkvm
+            docker-compose -f "$COMPOSE_FILE" --profile zkm up zkm-zkvm
             ;;
         "all")
             print_info "Running all ZKVMs (production mode)..."
-            docker-compose -f ../production/docker-compose.yml --profile all up
+            docker-compose -f "$COMPOSE_FILE" --profile all up
             ;;
         *)
             print_error "Unknown ZKVM: $zkvm"
@@ -144,23 +150,23 @@ stop_container() {
     case $zkvm in
         "nexus")
             print_info "Stopping Nexus container..."
-            docker-compose -f ../production/docker-compose.yml stop nexus-zkvm
+            docker-compose -f "$COMPOSE_FILE" stop nexus-zkvm
             ;;
         "risc0")
             print_info "Stopping Risc0 container..."
-            docker-compose -f ../production/docker-compose.yml stop risc0-zkvm
+            docker-compose -f "$COMPOSE_FILE" stop risc0-zkvm
             ;;
         "sp1")
             print_info "Stopping SP1 container..."
-            docker-compose -f ../production/docker-compose.yml stop sp1-zkvm
+            docker-compose -f "$COMPOSE_FILE" stop sp1-zkvm
             ;;
         "zkm")
             print_info "Stopping ZKM container..."
-            docker-compose -f ../production/docker-compose.yml stop zkm-zkvm
+            docker-compose -f "$COMPOSE_FILE" stop zkm-zkvm
             ;;
         "all")
             print_info "Stopping all containers..."
-            docker-compose -f ../production/docker-compose.yml down
+            docker-compose -f "$COMPOSE_FILE" down
             ;;
         *)
             print_error "Unknown ZKVM: $zkvm"
@@ -175,16 +181,16 @@ show_logs() {
     
     case $zkvm in
         "nexus")
-            docker-compose -f ../production/docker-compose.yml logs -f nexus-zkvm
+            docker-compose -f "$COMPOSE_FILE" logs -f nexus-zkvm
             ;;
         "risc0")
-            docker-compose -f ../production/docker-compose.yml logs -f risc0-zkvm
+            docker-compose -f "$COMPOSE_FILE" logs -f risc0-zkvm
             ;;
         "sp1")
-            docker-compose -f ../production/docker-compose.yml logs -f sp1-zkvm
+            docker-compose -f "$COMPOSE_FILE" logs -f sp1-zkvm
             ;;
         "zkm")
-            docker-compose -f ../production/docker-compose.yml logs -f zkm-zkvm
+            docker-compose -f "$COMPOSE_FILE" logs -f zkm-zkvm
             ;;
         *)
             print_error "Unknown ZKVM: $zkvm"
@@ -205,7 +211,7 @@ clean_up() {
     
     if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
         print_info "Cleaning up..."
-        docker-compose -f ../production/docker-compose.yml down --remove-orphans
+        docker-compose -f "$COMPOSE_FILE" down --remove-orphans
         docker rmi $(docker images "*zkvm*" -q) 2>/dev/null || true
         docker system prune -f
         print_success "Cleanup completed"

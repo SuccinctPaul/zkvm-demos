@@ -128,9 +128,9 @@ build_toolchain() {
             exit 1
         fi
         
-        print_info "Building ${zkvm^^} ZKVM toolchain image..."
+        print_info "Building $(echo $zkvm | tr '[:lower:]' '[:upper:]') ZKVM toolchain image..."
         docker-compose -f "$COMPOSE_FILE" build "$service"
-        print_success "${zkvm^^} toolchain image built successfully"
+        print_success "$(echo $zkvm | tr '[:lower:]' '[:upper:]') toolchain image built successfully"
     fi
 }
 
@@ -165,7 +165,7 @@ run_toolchain() {
             ;;
     esac
     
-    print_info "Running ${zkvm^^} ZKVM (args: ${args:-default})..."
+    print_info "Running $(echo $zkvm | tr '[:lower:]' '[:upper:]') ZKVM (args: ${args:-default})..."
     docker-compose -f "$COMPOSE_FILE" run --rm "$service" bash -c "$run_cmd"
 }
 
@@ -179,7 +179,7 @@ start_shell() {
         exit 1
     fi
     
-    print_info "Starting ${zkvm^^} interactive shell..."
+    print_info "Starting $(echo $zkvm | tr '[:lower:]' '[:upper:]') interactive shell..."
     docker-compose -f "$COMPOSE_FILE" run --rm "$service" bash
 }
 
@@ -198,9 +198,9 @@ stop_container() {
             exit 1
         fi
         
-        print_info "Stopping ${zkvm^^} container..."
+        print_info "Stopping $(echo $zkvm | tr '[:lower:]' '[:upper:]') container..."
         docker stop "$service" 2>/dev/null || print_warning "Container not running"
-        print_success "${zkvm^^} container stopped"
+        print_success "$(echo $zkvm | tr '[:lower:]' '[:upper:]') container stopped"
     fi
 }
 
@@ -265,16 +265,6 @@ case $1 in
             exit 1
         fi
         start_shell $2
-        ;;
-    "exec")
-        if [ -z "$2" ]; then
-            print_error "Please specify the ZKVM"
-            show_usage
-            exit 1
-        fi
-        zkvm_name=$2
-        shift 2
-        exec_command $zkvm_name "$@"
         ;;
     "stop")
         if [ -z "$2" ]; then

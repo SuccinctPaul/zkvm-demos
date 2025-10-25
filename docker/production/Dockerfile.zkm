@@ -19,6 +19,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY common/ ./common/
 COPY fib/ ./fib/
 COPY zkm-zkvm/zkm-host/Cargo.toml ./zkm-zkvm/zkm-host/
+COPY zkm-zkvm/zkm-host/build.rs ./zkm-zkvm/zkm-host/
 COPY zkm-zkvm/zkm-guest/ ./zkm-zkvm/zkm-guest/
 
 # Build dependencies first (better caching)

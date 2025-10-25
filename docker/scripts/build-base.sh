@@ -3,6 +3,11 @@
 
 set -e
 
+# Get script directory and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOCKER_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$DOCKER_DIR")"
+
 # Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -34,7 +39,7 @@ fi
 print_info "Building shared base image with Rust and common dependencies..."
 
 # Build the base image
-if docker build -f docker/base/Dockerfile.base -t zkvm-base:latest ../..; then
+if docker build -f "$DOCKER_DIR/base/Dockerfile.base" -t zkvm-base:latest "$PROJECT_ROOT"; then
     print_success "Shared base image built successfully!"
     echo ""
     
