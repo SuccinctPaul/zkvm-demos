@@ -10,22 +10,13 @@
 //! RUST_LOG=info cargo run --release -- --prove
 //! ```
 
-use clap::Parser;
-use sp1_sdk::{ProverClient, SP1Stdin, include_elf};
+mod cli;
 
+use clap::Parser;
+use cli::Args;
+use sp1_sdk::{include_elf, ProverClient, SP1ProofMode, SP1Stdin};
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const FIBONACCI_ELF: &[u8] = include_elf!("sp1-guest");
-
-/// The arguments for the command.
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    #[arg(long)]
-    execute: bool,
-
-    #[arg(long)]
-    prove: bool,
-}
 
 fn main() {
     // Setup the logger.
@@ -62,7 +53,12 @@ fn main() {
         // println!("Values are correct!");
 
         // Record the number of cycles executed.
-        println!("Number of cycles: {}", report.total_instruction_count());
+        println!(
+            "Number of instructions: {}",
+            report.total_instruction_count()
+        );
+        println!("Number of cycles: {}", report.total_syscall_count());
+        println!("report: {}", report);
     } else {
         // Setup the program for proving.
         let (pk, vk) = client.setup(FIBONACCI_ELF);
@@ -70,6 +66,7 @@ fn main() {
         // Generate the proof
         let proof = client
             .prove(&pk, &stdin)
+            .mode(SP1ProofMode::Compressed)
             .run()
             .expect("failed to generate proof");
 

@@ -6,16 +6,12 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-sp1-sdk = "5.0.0"
-serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
-serde = { version = "1.0.200", default-features = false, features = ["derive"] }
-clap = { version = "4.0", features = ["derive", "env"] }
-tracing = "0.1.40"
-hex = "0.4.3"
-dotenv = "0.15.0"
+sp1-sdk = { version = "5.0.0", features = ["profiling"] }
 
-fib.workspace = true
+
 common.workspace = true
+clap.workspace = true
+dotenv.workspace = true
 
 [build-dependencies]
 sp1-build = "5.0.0"

@@ -1,5 +1,7 @@
 use dotenv::dotenv;
 
+mod hash;
+
 /// Load fib param from environment variable.
 pub fn load_fib_n() -> u32 {
     dotenv().ok();

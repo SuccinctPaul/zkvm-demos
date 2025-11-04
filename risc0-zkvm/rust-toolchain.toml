@@ -1,4 +1,2 @@
 [toolchain]
-channel = "stable"
-components = ["rustfmt", "rust-src"]
-profile = "minimal"
+channel = "nightly-2025-06-05"
