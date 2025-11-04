@@ -68,6 +68,9 @@ fn main() {
         let proof = client
             .prove(&pk, stdin)
             .core()
+            // .compressed()
+            // .groth16()
+            // .plonk()
             .run()
             .expect("failed to generate proof");
 
