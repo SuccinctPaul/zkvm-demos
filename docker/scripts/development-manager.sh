@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_DIR="$(dirname "$SCRIPT_DIR")"
-COMPOSE_FILE="$DOCKER_DIR/development/docker-compose.yml"
+COMPOSE_FILE="$DOCKER_DIR/docker-compose.yml"
 
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -83,7 +83,7 @@ show_usage() {
 check_base_image() {
     if ! docker image inspect zkvm-base:latest > /dev/null 2>&1; then
         print_warning "Base image zkvm-base:latest not found, building..."
-        docker-compose -f "$DOCKER_DIR/base/docker-compose.yml" build zkvm-base
+        cd "$DOCKER_DIR" && docker build -f dockerfiles/Dockerfile.base -t zkvm-base:latest ..
         print_success "Base image built successfully"
     fi
 }

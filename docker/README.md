@@ -19,7 +19,7 @@ cd docker/scripts
 
 #### Option 1: Using Docker Compose Directly (Recommended)
 ```bash
-cd docker/development
+cd docker
 
 # Build once (only needed first time or when dependencies change)
 docker compose build sp1-dev
@@ -68,7 +68,7 @@ Development mode provides a flexible environment with real-time code changes and
 ### 🔵 SP1 ZKVM
 ```bash
 # Using Docker Compose
-cd docker/development
+cd docker
 docker compose build sp1-dev                                    # Build once
 ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev  # Execute mode
 ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-dev    # Prove mode
@@ -85,7 +85,7 @@ cd docker/scripts
 ### 🟢 Nexus ZKVM
 ```bash
 # Using Docker Compose
-cd docker/development
+cd docker
 docker compose build nexus-dev
 ZKVM_ARGS="--nocapture" docker compose --profile nexus up nexus-dev
 docker compose run --rm nexus-dev bash
@@ -100,7 +100,7 @@ cd docker/scripts
 ### 🔴 Risc0 ZKVM
 ```bash
 # Using Docker Compose
-cd docker/development
+cd docker
 docker compose build risc0-dev
 docker compose --profile risc0 up risc0-dev
 docker compose run --rm risc0-dev bash
@@ -115,7 +115,7 @@ cd docker/scripts
 ### 🟡 ZKM ZKVM
 ```bash
 # Using Docker Compose
-cd docker/development
+cd docker
 docker compose build zkm-dev
 ZKVM_ARGS="--execute" docker compose --profile zkm up zkm-dev
 ZKVM_ARGS="--prove" docker compose --profile zkm up zkm-dev
@@ -147,7 +147,7 @@ cd docker/scripts
 ### Workflow 1: Rapid Development (No Rebuild Needed)
 ```bash
 # Using Docker Compose
-cd docker/development
+cd docker
 docker compose build sp1-dev                                   # Build once
 ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev # Fast run
 ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev # Fast run again
@@ -162,7 +162,7 @@ cd docker/scripts
 ### Workflow 2: When Dependencies Change
 ```bash
 # Using Docker Compose
-cd docker/development
+cd docker
 docker compose --profile sp1 up --build sp1-dev  # Rebuild and run
 
 # Using script
@@ -173,7 +173,7 @@ cd docker/scripts
 ### Workflow 3: Background Mode
 ```bash
 # Using Docker Compose
-cd docker/development
+cd docker
 docker compose --profile sp1 up -d sp1-dev        # Start in background
 docker compose logs -f sp1-dev                    # View logs
 docker compose --profile sp1 down                 # Stop
@@ -188,7 +188,7 @@ cd docker/scripts
 ### Workflow 4: Debug Issues
 ```bash
 # Using Docker Compose
-cd docker/development
+cd docker
 docker compose run --rm sp1-dev bash              # Interactive shell
 
 # Using script
@@ -243,18 +243,23 @@ docker system prune -a
 
 ```
 docker/
-├── base/                    # Shared base image
-├── development/             # Toolchain images  
+├── docker-compose.yml       # Main compose file
+├── dockerfiles/             # All Dockerfiles
+│   ├── Dockerfile.base      # Shared base image
+│   ├── Dockerfile.nexus     # Nexus ZKVM toolchain
+│   ├── Dockerfile.risc0     # Risc0 ZKVM toolchain
+│   ├── Dockerfile.sp1       # SP1 ZKVM toolchain
+│   └── Dockerfile.zkm       # ZKM ZKVM toolchain
 ├── scripts/                 # Management scripts
-└── docs/                    # Detailed guides
-    ├── DOCKER-USAGE-EXAMPLES.md  # Complete examples
-    └── USAGE-GUIDE.md            # Detailed guide
+│   ├── build-base.sh        # Build base image
+│   └── development-manager.sh # Manage containers
+├── README.md                # This file
+└── USAGE.md                 # Detailed usage guide (Chinese)
 ```
 
 ## 📚 Documentation
 
-- **[DOCKER-USAGE-EXAMPLES.md](docs/DOCKER-USAGE-EXAMPLES.md)** - Complete examples for all ZKVMs
-- **[USAGE-GUIDE.md](docs/USAGE-GUIDE.md)** - Detailed usage patterns and best practices
+- **[USAGE.md](USAGE.md)** - Detailed usage guide with examples (Chinese)
 
 ## 💡 Tips
 

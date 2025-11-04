@@ -39,7 +39,7 @@ fi
 print_info "Building shared base image with Rust and common dependencies..."
 
 # Build the base image
-if docker build -f "$DOCKER_DIR/base/Dockerfile.base" -t zkvm-base:latest "$PROJECT_ROOT"; then
+if docker build -f "$DOCKER_DIR/dockerfiles/Dockerfile.base" -t zkvm-base:latest "$PROJECT_ROOT"; then
     print_success "Shared base image built successfully!"
     echo ""
     
