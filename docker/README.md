@@ -252,9 +252,8 @@ docker/
 │   └── Dockerfile.zkm       # ZKM ZKVM toolchain
 ├── scripts/                 # Management scripts
 │   ├── build-base.sh        # Build base image
-│   └── docker-manager.sh # Manage containers
-├── README.md                # This file
-└── USAGE.md                 # Detailed usage guide (Chinese)
+│   └── docker-manager.sh    # Container management
+└── README.md                # This file
 ```
 
 ## 📚 Documentation
