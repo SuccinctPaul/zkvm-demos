@@ -167,7 +167,7 @@ run_toolchain() {
     
     print_info "Running $(echo $zkvm | tr '[:lower:]' '[:upper:]') ZKVM (args: ${args:-default})..."
 #    docker-compose -f "$COMPOSE_FILE" run --rm "$service" bash -c "$run_cmd"
-    docker-compose -f "$COMPOSE_FILE" run --it "$service" bash -c "$run_cmd"
+    docker-compose -f "$COMPOSE_FILE" run -it "$service" bash -c "$run_cmd"
 }
 
 start_shell() {
@@ -182,7 +182,7 @@ start_shell() {
     
     print_info "Starting $(echo $zkvm | tr '[:lower:]' '[:upper:]') interactive shell..."
 #    docker-compose -f "$COMPOSE_FILE" run --rm "$service" bash
-    docker-compose -f "$COMPOSE_FILE" run --it "$service" bash
+    docker-compose -f "$COMPOSE_FILE" run -it "$service" bash
 }
 
 stop_container() {
