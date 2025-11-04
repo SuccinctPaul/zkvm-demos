@@ -4,5 +4,5 @@ name = "zkm-guest"
 edition = "2021"
 
 [dependencies]
-zkm-zkvm = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.1.2" }
+zkm-zkvm = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1" }
 fib.workspace = true
