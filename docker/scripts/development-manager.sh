@@ -161,7 +161,7 @@ run_toolchain() {
             run_cmd="cd sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- ${args:---execute}"
             ;;
         "zkm")
-            run_cmd="cd zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release ${args}"
+            run_cmd="cd zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release -- ${args:---execute}"
             ;;
     esac
     
