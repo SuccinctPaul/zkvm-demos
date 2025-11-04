@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-sp1-sdk = { version = "5.0.0", features = ["profiling"] }
+sp1-sdk = { version = "5.2.2", features = ["profiling"] }
 
 
 common.workspace = true
