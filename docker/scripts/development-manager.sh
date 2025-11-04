@@ -37,39 +37,46 @@ show_usage() {
     echo "║         ZKVM Development Environment Manager             ║"
     echo "╚══════════════════════════════════════════════════════════╝"
     echo ""
-    echo "Usage: $0 [COMMAND] [ZKVM] [ARGS...]"
+    echo "Usage: $0 [COMMAND] [ZKVM] [OPTIONS] [ARGS...]"
     echo ""
     echo "Commands:"
-    echo "  build [zkvm]           Build toolchain image"
-    echo "  run [zkvm] [args]      Run ZKVM with custom arguments"
-    echo "  shell [zkvm]           Enter interactive shell"
-    echo "  stop [zkvm]            Stop running container"
-    echo "  logs [zkvm]            View container logs"
-    echo "  ps                     List running containers"
-    echo "  clean-cache            Clean build cache volumes"
+    echo "  build [zkvm]                Build/rebuild toolchain image"
+    echo "  run [zkvm] [options] [args] Run ZKVM with custom arguments"
+    echo "  up [zkvm] [options]         Start container in background"
+    echo "  shell [zkvm]                Enter interactive shell"
+    echo "  stop [zkvm]                 Stop running container"
+    echo "  logs [zkvm]                 View container logs"
+    echo "  ps                          List running containers"
+    echo "  clean-cache                 Clean build cache volumes"
+    echo ""
+    echo "Run Options:"
+    echo "  --build                     Rebuild image before running"
+    echo "  --no-cache                  Build without cache"
     echo ""
     echo "Available ZKVMs: nexus, risc0, sp1, zkm, all"
     echo ""
     echo "Examples:"
-    echo "  # Build and run"
-    echo "  $0 build sp1"
-    echo "  $0 run sp1 --execute          # Execute mode"
-    echo "  $0 run sp1 --prove            # Prove mode"
-    echo "  $0 run nexus --nocapture      # Nexus with output"
+    echo "  # Build once, then run multiple times (fast)"
+    echo "  $0 build sp1                      # Build image first"
+    echo "  $0 run sp1 --execute              # Fast: use cached build"
+    echo "  $0 run sp1 --execute              # Fast: reuse same build"
+    echo ""
+    echo "  # Force rebuild when needed"
+    echo "  $0 run sp1 --build --execute      # Rebuild and run"
+    echo "  $0 build sp1 --no-cache           # Clean rebuild"
+    echo ""
+    echo "  # Background mode"
+    echo "  $0 up sp1                         # Start in background"
+    echo "  $0 up sp1 --build                 # Rebuild and start"
     echo ""
     echo "  # Interactive mode"
-    echo "  $0 shell sp1                  # Enter bash shell"
-    echo ""
-    echo "  # Container management"
-    echo "  $0 stop sp1                   # Stop container"
-    echo "  $0 logs sp1                   # View logs"
-    echo "  $0 ps                         # List containers"
+    echo "  $0 shell sp1                      # Enter bash shell"
     echo ""
     echo "Features:"
-    echo "  ✅ Single unified service per ZKVM"
+    echo "  ✅ Manual build control - rebuild only when needed"
     echo "  ✅ Real-time source code mounting"
     echo "  ✅ Persistent build cache"
-    echo "  ✅ Flexible command execution"
+    echo "  ✅ Background mode support"
 }
 
 # Check and build base image if needed
@@ -112,13 +119,20 @@ get_profile() {
 
 build_toolchain() {
     local zkvm=$1
+    local no_cache=$2
     
     # Ensure base image exists
     check_base_image
     
+    local build_opts=""
+    if [ "$no_cache" = "--no-cache" ]; then
+        build_opts="--no-cache"
+        print_warning "Building without cache (this will take longer)"
+    fi
+    
     if [ "$zkvm" = "all" ]; then
         print_info "Building all ZKVM toolchain images..."
-        docker-compose -f "$COMPOSE_FILE" build nexus-dev risc0-dev sp1-dev zkm-dev
+        docker-compose -f "$COMPOSE_FILE" build $build_opts nexus-dev risc0-dev sp1-dev zkm-dev
         print_success "All toolchain images built successfully"
     else
         local service=$(get_service_name "$zkvm")
@@ -129,7 +143,7 @@ build_toolchain() {
         fi
         
         print_info "Building $(echo $zkvm | tr '[:lower:]' '[:upper:]') ZKVM toolchain image..."
-        docker-compose -f "$COMPOSE_FILE" build "$service"
+        docker-compose -f "$COMPOSE_FILE" build $build_opts "$service"
         print_success "$(echo $zkvm | tr '[:lower:]' '[:upper:]') toolchain image built successfully"
     fi
 }
@@ -137,6 +151,14 @@ build_toolchain() {
 run_toolchain() {
     local zkvm=$1
     shift
+    
+    # Check for --build flag
+    local should_build=false
+    if [ "$1" = "--build" ]; then
+        should_build=true
+        shift
+    fi
+    
     local args="$@"
     
     local service=$(get_service_name "$zkvm")
@@ -146,6 +168,12 @@ run_toolchain() {
         print_error "Unknown ZKVM: $zkvm"
         show_usage
         exit 1
+    fi
+    
+    # Rebuild if requested
+    if [ "$should_build" = true ]; then
+        print_info "Rebuilding image first..."
+        build_toolchain "$zkvm"
     fi
     
     # Build run command based on ZKVM type
@@ -166,8 +194,33 @@ run_toolchain() {
     esac
     
     print_info "Running $(echo $zkvm | tr '[:lower:]' '[:upper:]') ZKVM (args: ${args:-default})..."
-#    docker-compose -f "$COMPOSE_FILE" run --rm "$service" bash -c "$run_cmd"
     docker-compose -f "$COMPOSE_FILE" run -it "$service" bash -c "$run_cmd"
+}
+
+up_container() {
+    local zkvm=$1
+    shift
+    
+    # Check for --build flag
+    local build_flag=""
+    if [ "$1" = "--build" ]; then
+        build_flag="--build"
+        print_info "Rebuilding image first..."
+        shift
+    fi
+    
+    local service=$(get_service_name "$zkvm")
+    local profile=$(get_profile "$zkvm")
+    
+    if [ -z "$service" ] || [ -z "$profile" ]; then
+        print_error "Unknown ZKVM: $zkvm"
+        show_usage
+        exit 1
+    fi
+    
+    print_info "Starting $(echo $zkvm | tr '[:lower:]' '[:upper:]') container in background..."
+    docker-compose -f "$COMPOSE_FILE" --profile "$profile" up -d $build_flag "$service"
+    print_success "Container started. Use '$0 logs $zkvm' to view logs"
 }
 
 start_shell() {
@@ -248,7 +301,12 @@ case $1 in
             show_usage
             exit 1
         fi
-        build_toolchain $2
+        zkvm_name=$2
+        no_cache_flag=""
+        if [ "$3" = "--no-cache" ]; then
+            no_cache_flag="--no-cache"
+        fi
+        build_toolchain $zkvm_name $no_cache_flag
         ;;
     "run")
         if [ -z "$2" ]; then
@@ -259,6 +317,16 @@ case $1 in
         zkvm_name=$2
         shift 2
         run_toolchain $zkvm_name "$@"
+        ;;
+    "up")
+        if [ -z "$2" ]; then
+            print_error "Please specify the ZKVM to start"
+            show_usage
+            exit 1
+        fi
+        zkvm_name=$2
+        shift 2
+        up_container $zkvm_name "$@"
         ;;
     "shell")
         if [ -z "$2" ]; then

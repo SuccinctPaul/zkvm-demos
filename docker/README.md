@@ -15,25 +15,47 @@ cd docker/scripts
 ./development-manager.sh build sp1
 ```
 
-### Development Mode (Recommended)
+### Development Mode - Two Ways to Use
+
+#### Option 1: Using Docker Compose Directly (Recommended)
+```bash
+cd docker/development
+
+# Build once (only needed first time or when dependencies change)
+docker compose build sp1-dev
+
+# Run multiple times (fast, no rebuild)
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev
+ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-dev
+
+# Run in background
+docker compose --profile sp1 up -d sp1-dev
+
+# Rebuild and run when needed
+docker compose --profile sp1 up --build sp1-dev
+
+# Interactive shell
+docker compose run --rm sp1-dev bash
+
+# Stop container
+docker compose --profile sp1 down
+```
+
+#### Option 2: Using Convenience Script
 ```bash
 cd docker/scripts
 
-# SP1 - Execute & Prove
-./development-manager.sh run sp1 --execute    # Execution without Proof
-./development-manager.sh run sp1 --prove      # Generate proof
+# Build once
+./development-manager.sh build sp1
 
-# Nexus - Auto prove
-./development-manager.sh run nexus --nocapture
+# Run multiple times (fast)
+./development-manager.sh run sp1 --execute
+./development-manager.sh run sp1 --prove
 
-# Risc0 - Auto prove
-./development-manager.sh run risc0
+# Rebuild and run
+./development-manager.sh run sp1 --build --execute
 
-# ZKM - Auto prove
-./development-manager.sh run zkm --execute    # Execution without Proof
-./development-manager.sh run zkm --prove      # Generate proof
-
-# Interactive debugging
+# Interactive shell
 ./development-manager.sh shell sp1
 ```
 
@@ -41,36 +63,69 @@ cd docker/scripts
 
 Development mode provides a flexible environment with real-time code changes and interactive debugging capabilities.
 
-## 🔵 SP1 Commands
+## 📋 All ZKVM Examples
 
+### 🔵 SP1 ZKVM
 ```bash
-# Development mode
-./development-manager.sh run sp1 --execute    # No proof
-./development-manager.sh run sp1 --prove      # With proof
-./development-manager.sh shell sp1            # Interactive
+# Using Docker Compose
+cd docker/development
+docker compose build sp1-dev                                    # Build once
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev  # Execute mode
+ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-dev    # Prove mode
+docker compose run --rm sp1-dev bash                            # Interactive shell
+
+# Using script
+cd docker/scripts
+./development-manager.sh build sp1
+./development-manager.sh run sp1 --execute
+./development-manager.sh run sp1 --prove
+./development-manager.sh shell sp1
 ```
 
-## 🟢 Nexus Commands
-
+### 🟢 Nexus ZKVM
 ```bash
-# Development mode
+# Using Docker Compose
+cd docker/development
+docker compose build nexus-dev
+ZKVM_ARGS="--nocapture" docker compose --profile nexus up nexus-dev
+docker compose run --rm nexus-dev bash
+
+# Using script
+cd docker/scripts
+./development-manager.sh build nexus
 ./development-manager.sh run nexus --nocapture
 ./development-manager.sh shell nexus
 ```
 
-## 🔴 Risc0 Commands
-
+### 🔴 Risc0 ZKVM
 ```bash
-# Development mode
+# Using Docker Compose
+cd docker/development
+docker compose build risc0-dev
+docker compose --profile risc0 up risc0-dev
+docker compose run --rm risc0-dev bash
+
+# Using script
+cd docker/scripts
+./development-manager.sh build risc0
 ./development-manager.sh run risc0
 ./development-manager.sh shell risc0
 ```
 
-## 🟡 ZKM Commands
-
+### 🟡 ZKM ZKVM
 ```bash
-# Development mode
-./development-manager.sh run zkm
+# Using Docker Compose
+cd docker/development
+docker compose build zkm-dev
+ZKVM_ARGS="--execute" docker compose --profile zkm up zkm-dev
+ZKVM_ARGS="--prove" docker compose --profile zkm up zkm-dev
+docker compose run --rm zkm-dev bash
+
+# Using script
+cd docker/scripts
+./development-manager.sh build zkm
+./development-manager.sh run zkm --execute
+./development-manager.sh run zkm --prove
 ./development-manager.sh shell zkm
 ```
 

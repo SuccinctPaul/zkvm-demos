@@ -1,5 +1,6 @@
 # Development Mode Docker Compose
-# Simplified: Single service per ZKVM, supports both run and shell modes
+# Direct usage: docker compose --profile <zkvm> up [-d] [--build]
+# Or use convenience script: ./docker/scripts/development-manager.sh
 
 services:
   # Nexus ZKVM - Development
@@ -17,6 +18,8 @@ services:
     environment:
       - RUST_LOG=info
       - ZKVM_ARGS=${ZKVM_ARGS:---nocapture}
+    command: >
+      bash -c "cd nexus-zkvm/nexus-host && cargo run -r -- $${ZKVM_ARGS:---nocapture}"
     stdin_open: true
     tty: true
     profiles:
@@ -40,6 +43,8 @@ services:
       - RUST_LOG=info
       - RISC0_INFO=1
       - ZKVM_ARGS=${ZKVM_ARGS}
+    command: >
+      bash -c "cd risc0-zkvm/risc0-host && RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release $${ZKVM_ARGS}"
     stdin_open: true
     tty: true
     profiles:
@@ -61,6 +66,8 @@ services:
     environment:
       - RUST_LOG=info
       - ZKVM_ARGS=${ZKVM_ARGS:---execute}
+    command: >
+      bash -c "cd sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- $${ZKVM_ARGS:---execute}"
     stdin_open: true
     tty: true
     profiles:
@@ -81,7 +88,9 @@ services:
     working_dir: /workspace
     environment:
       - RUST_LOG=info
-      - ZKVM_ARGS=${ZKVM_ARGS}
+      - ZKVM_ARGS=${ZKVM_ARGS:---execute}
+    command: >
+      bash -c "cd zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release -- $${ZKVM_ARGS:---execute}"
     stdin_open: true
     tty: true
     profiles:
