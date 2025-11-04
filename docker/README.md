@@ -4,44 +4,42 @@ Isolated Docker environments for multiple ZKVMs (SP1, Nexus, Risc0, ZKM) to avoi
 
 ## 🚀 Quick Start
 
-### First Time Setup
 ```bash
+# 1. Build base image (first time only)
 cd docker/scripts
-
-# Build base image (required once)
 ./build-base.sh
 
-# Build your ZKVM toolchain
+# 2. Build ZKVM
 ./docker-manager.sh build sp1
+
+# 3. Run
+cd ..
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm
 ```
 
-### Development Mode - Two Ways to Use
+## 📋 Two Ways to Use
 
-#### Option 1: Using Docker Compose Directly (Recommended)
+### Option 1: Docker Compose (Recommended)
+
 ```bash
 cd docker
 
-# Build once (only needed first time or when dependencies change)
+# Build once
 docker compose build sp1-zkvm
 
-# Run multiple times (fast, no rebuild)
+# Run with different arguments
 ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm
 ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-zkvm
-
-# Run in background
-docker compose --profile sp1 up -d sp1-zkvm
-
-# Rebuild and run when needed
-docker compose --profile sp1 up --build sp1-zkvm
 
 # Interactive shell
 docker compose run --rm sp1-zkvm bash
 
-# Stop container
-docker compose --profile sp1 down
+# Rebuild when needed
+docker compose --profile sp1 up --build sp1-zkvm
 ```
 
-#### Option 2: Using Convenience Script
+### Option 2: Convenience Script
+
 ```bash
 cd docker/scripts
 
@@ -52,24 +50,21 @@ cd docker/scripts
 ./docker-manager.sh run sp1 --execute
 ./docker-manager.sh run sp1 --prove
 
-# Rebuild and run
+# Rebuild when needed
 ./docker-manager.sh run sp1 --build --execute
 
 # Interactive shell
 ./docker-manager.sh shell sp1
 ```
 
-## 📊 Development Mode
-
-Development mode provides a flexible environment with real-time code changes and interactive debugging capabilities.
-
-## 📋 All ZKVM Examples
+## 🎯 All ZKVM Examples
 
 ### 🔵 SP1 ZKVM
+
 ```bash
 # Using Docker Compose
 cd docker
-docker compose build sp1-zkvm                                    # Build once
+docker compose build sp1-zkvm
 ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm  # Execute mode
 ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-zkvm    # Prove mode
 docker compose run --rm sp1-zkvm bash                            # Interactive shell
@@ -83,6 +78,7 @@ cd docker/scripts
 ```
 
 ### 🟢 Nexus ZKVM
+
 ```bash
 # Using Docker Compose
 cd docker
@@ -98,6 +94,7 @@ cd docker/scripts
 ```
 
 ### 🔴 Risc0 ZKVM
+
 ```bash
 # Using Docker Compose
 cd docker
@@ -113,12 +110,13 @@ cd docker/scripts
 ```
 
 ### 🟡 ZKM ZKVM
+
 ```bash
 # Using Docker Compose
 cd docker
 docker compose build zkm-zkvm
-ZKVM_ARGS="--execute" docker compose --profile zkm up zkm-zkvm
-ZKVM_ARGS="--prove" docker compose --profile zkm up zkm-zkvm
+ZKVM_ARGS="--execute" docker compose --profile zkm up zkm-zkvm  # Execute mode
+ZKVM_ARGS="--prove" docker compose --profile zkm up zkm-zkvm    # Prove mode
 docker compose run --rm zkm-zkvm bash
 
 # Using script
@@ -129,173 +127,58 @@ cd docker/scripts
 ./docker-manager.sh shell zkm
 ```
 
-## 📊 Usage Comparison
+## 💡 Key Points
 
-| Method | Command | When to Use |
-|--------|---------|-------------|
-| **Docker Compose** | `docker compose --profile sp1 up [--build]` | Direct control, standard Docker workflow |
-| **Script** | `./docker-manager.sh run sp1 [--build]` | Convenient wrapper, simpler syntax |
+- **Build once, run many times** - No rebuild needed unless dependencies change
+- **Pass arguments via `ZKVM_ARGS`** - Environment variable controls behavior
+- **Code changes auto-sync** - Modify source code without rebuilding images
+- **Use `--build` to rebuild** - Only when Cargo.toml or Dockerfile changes
 
-**Key Points:**
-- ✅ Build once with `docker compose build` or script `build` command
-- ✅ Run multiple times without rebuilding (very fast)
-- ✅ Use `--build` flag only when dependencies change
-- ✅ Both methods support the same features
+## 🛠️ Common Commands
 
-## 🎯 Common Workflows
-
-### Workflow 1: Rapid Development (No Rebuild Needed)
 ```bash
-# Using Docker Compose
-cd docker
-docker compose build sp1-zkvm                                   # Build once
-ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm # Fast run
-ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm # Fast run again
+# Background mode
+docker compose --profile sp1 up -d sp1-zkvm
+docker compose logs -f sp1-zkvm
+docker compose --profile sp1 down
 
 # Using script
-cd docker/scripts
-./docker-manager.sh build sp1          # Build once
-./docker-manager.sh run sp1 --execute  # Fast run
-./docker-manager.sh run sp1 --execute  # Fast run again
-```
+./docker-manager.sh logs sp1
+./docker-manager.sh stop sp1
 
-### Workflow 2: When Dependencies Change
-```bash
-# Using Docker Compose
-cd docker
-docker compose --profile sp1 up --build sp1-zkvm  # Rebuild and run
+# Clean cache
+./docker-manager.sh clean
 
-# Using script
-cd docker/scripts
-./docker-manager.sh run sp1 --build --execute  # Rebuild and run
-```
-
-### Workflow 3: Background Mode
-```bash
-# Using Docker Compose
-cd docker
-docker compose --profile sp1 up -d sp1-zkvm        # Start in background
-docker compose logs -f sp1-zkvm                    # View logs
-docker compose --profile sp1 down                 # Stop
-
-# Using script
-cd docker/scripts
-./docker-manager.sh up sp1                   # Start in background
-./docker-manager.sh logs sp1                 # View logs
-./docker-manager.sh stop sp1                 # Stop
-```
-
-### Workflow 4: Debug Issues
-```bash
-# Using Docker Compose
-cd docker
-docker compose run --rm sp1-zkvm bash              # Interactive shell
-
-# Using script
-cd docker/scripts
-./docker-manager.sh shell sp1                # Interactive shell
-
-# Inside container (both methods)
-cd sp1-zkvm/sp1-host
-cargo build --release
-RUST_LOG=debug cargo run --release -- --execute
-```
-
-## 🛠️ Management Commands
-
-### Development Manager
-```bash
-./docker-manager.sh build <zkvm>        # Build toolchain image
-./docker-manager.sh run <zkvm> [args]   # Run with args
-./docker-manager.sh shell <zkvm>        # Interactive shell
-./docker-manager.sh logs <zkvm>         # View logs
-./docker-manager.sh clean-cache         # Free space
-```
-
-## 🔍 Troubleshooting
-
-### Error: "zkvm-base:latest not found"
-**Auto-fix:** Scripts detect and build automatically
-```bash
-./docker-manager.sh build sp1  # Will build base if needed
-```
-
-### Slow First Run?
-**Normal:** First compilation takes 5-10 mins. Cached runs: 30s-2mins.
-
-### Code Changes Not Applied?
-**Solution:** Development mode automatically picks up code changes
-```bash
-# Development: automatic ✅
-./docker-manager.sh run sp1 --execute
-```
-
-### Out of Disk Space?
-```bash
-# Clean caches
-./docker-manager.sh clean-cache
-
-# Clean everything
-docker system prune -a
+# List containers
+docker ps --filter "name=zkvm"
 ```
 
 ## 📁 Directory Structure
 
 ```
 docker/
-├── docker-compose.yml       # Main compose file
+├── docker-compose.yml       # Main configuration
 ├── dockerfiles/             # All Dockerfiles
 │   ├── Dockerfile.base      # Shared base image
-│   ├── Dockerfile.nexus     # Nexus ZKVM toolchain
-│   ├── Dockerfile.risc0     # Risc0 ZKVM toolchain
-│   ├── Dockerfile.sp1       # SP1 ZKVM toolchain
-│   └── Dockerfile.zkm       # ZKM ZKVM toolchain
-├── scripts/                 # Management scripts
-│   ├── build-base.sh        # Build base image
-│   └── docker-manager.sh    # Container management
-└── README.md                # This file
+│   ├── Dockerfile.nexus
+│   ├── Dockerfile.risc0
+│   ├── Dockerfile.sp1
+│   └── Dockerfile.zkm
+└── scripts/
+    ├── build-base.sh        # Build base image
+    └── docker-manager.sh    # Management tool
 ```
 
-## 📚 Documentation
+## 🔍 Troubleshooting
 
-- **[USAGE.md](USAGE.md)** - Detailed usage guide with examples (Chinese)
+**"zkvm-base:latest not found"** - Run `./build-base.sh` first
 
-## 💡 Tips
+**Risc0 on Apple Silicon (M1/M2/M3)** - Risc0 toolchain doesn't support ARM64. Build uses `linux/amd64` with emulation (
+works but slower)
 
-1. **Development mode** provides real-time code sync - no rebuilds needed
-2. **Interactive shell** is great for debugging (`shell` command)
-3. **First build is slow**, subsequent builds are cached
-4. **Clean cache** when disk space is low
+**Slow first run** - Normal (5-10 mins). Cached runs: 30s-2mins
 
-## 🎯 ZKVM Feature Matrix
+**Code changes not applied** - Don't rebuild, code is mounted and auto-syncs
 
-| ZKVM | Execute Mode | Prove Mode | Interactive Shell |
-|------|--------------|------------|-------------------|
-| SP1 | `--execute` ✅ | `--prove` ✅ | ✅ |
-| Nexus | Auto ⚡ | Auto ⚡ | ✅ |
-| Risc0 | Auto ⚡ | Auto ⚡ | ✅ |
-| ZKM | Auto ⚡ | Auto ⚡ | ✅ |
+**Out of disk space** - Run `./docker-manager.sh clean` or `docker system prune -a`
 
-## ⚡ One-Line Commands
-
-```bash
-# Quick test SP1
-cd docker/scripts && ./docker-manager.sh build sp1 && ./docker-manager.sh run sp1 --execute
-
-# Build all ZKVMs
-cd docker/scripts && for z in sp1 nexus risc0 zkm; do ./docker-manager.sh build $z; done
-
-# Interactive SP1 debug
-cd docker/scripts && ./docker-manager.sh shell sp1
-```
-
-## 🆘 Need Help?
-
-1. Check [DOCKER-USAGE-EXAMPLES.md](docs/DOCKER-USAGE-EXAMPLES.md) for specific examples
-2. Try the interactive menu: `./quick-start.sh`
-3. View logs: `./docker-manager.sh logs <zkvm>`
-4. Enter container: `./docker-manager.sh shell <zkvm>`
-
----
-
-**Choose your mode, run your ZKVM, done! 🚀**
