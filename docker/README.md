@@ -129,30 +129,73 @@ cd docker/scripts
 ./development-manager.sh shell zkm
 ```
 
+## 📊 Usage Comparison
+
+| Method | Command | When to Use |
+|--------|---------|-------------|
+| **Docker Compose** | `docker compose --profile sp1 up [--build]` | Direct control, standard Docker workflow |
+| **Script** | `./development-manager.sh run sp1 [--build]` | Convenient wrapper, simpler syntax |
+
+**Key Points:**
+- ✅ Build once with `docker compose build` or script `build` command
+- ✅ Run multiple times without rebuilding (very fast)
+- ✅ Use `--build` flag only when dependencies change
+- ✅ Both methods support the same features
+
 ## 🎯 Common Workflows
 
-### Workflow 1: Rapid Development
+### Workflow 1: Rapid Development (No Rebuild Needed)
 ```bash
-# Edit code in your IDE
-# Then run immediately (no rebuild)
-./development-manager.sh run sp1 --execute
+# Using Docker Compose
+cd docker/development
+docker compose build sp1-dev                                   # Build once
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev # Fast run
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev # Fast run again
+
+# Using script
+cd docker/scripts
+./development-manager.sh build sp1          # Build once
+./development-manager.sh run sp1 --execute  # Fast run
+./development-manager.sh run sp1 --execute  # Fast run again
 ```
 
-### Workflow 2: Full Testing
+### Workflow 2: When Dependencies Change
 ```bash
-# Test all ZKVMs
-for zkvm in sp1 nexus risc0 zkm; do
-    ./development-manager.sh build $zkvm
-    ./development-manager.sh run $zkvm
-done
+# Using Docker Compose
+cd docker/development
+docker compose --profile sp1 up --build sp1-dev  # Rebuild and run
+
+# Using script
+cd docker/scripts
+./development-manager.sh run sp1 --build --execute  # Rebuild and run
 ```
 
-### Workflow 3: Debug Issues
+### Workflow 3: Background Mode
 ```bash
-# Enter container
-./development-manager.sh shell sp1
+# Using Docker Compose
+cd docker/development
+docker compose --profile sp1 up -d sp1-dev        # Start in background
+docker compose logs -f sp1-dev                    # View logs
+docker compose --profile sp1 down                 # Stop
 
-# Inside container
+# Using script
+cd docker/scripts
+./development-manager.sh up sp1                   # Start in background
+./development-manager.sh logs sp1                 # View logs
+./development-manager.sh stop sp1                 # Stop
+```
+
+### Workflow 4: Debug Issues
+```bash
+# Using Docker Compose
+cd docker/development
+docker compose run --rm sp1-dev bash              # Interactive shell
+
+# Using script
+cd docker/scripts
+./development-manager.sh shell sp1                # Interactive shell
+
+# Inside container (both methods)
 cd sp1-zkvm/sp1-host
 cargo build --release
 RUST_LOG=debug cargo run --release -- --execute
