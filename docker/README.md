@@ -37,69 +37,41 @@ cd docker/scripts
 ./development-manager.sh shell sp1
 ```
 
-### Production Mode
-```bash
-cd docker/scripts
+## 📊 Development Mode
 
-./production-manager.sh build sp1
-./production-manager.sh run sp1
-./production-manager.sh logs sp1
-```
-
-## 📊 Two Modes
-
-| Mode | Best For | Speed | Code Changes |
-|------|----------|-------|--------------|
-| **Development** | Daily coding, testing | First: slow<br>Then: fast (cached) | ✅ Real-time |
-| **Production** | Deployment, CI/CD | ⚡ Always fast | ❌ Rebuild needed |
+Development mode provides a flexible environment with real-time code changes and interactive debugging capabilities.
 
 ## 🔵 SP1 Commands
 
 ```bash
-# Development (flexible)
+# Development mode
 ./development-manager.sh run sp1 --execute    # No proof
 ./development-manager.sh run sp1 --prove      # With proof
 ./development-manager.sh shell sp1            # Interactive
-
-# Production (fast)
-./production-manager.sh build sp1
-./production-manager.sh run sp1
 ```
 
 ## 🟢 Nexus Commands
 
 ```bash
-# Development
+# Development mode
 ./development-manager.sh run nexus --nocapture
 ./development-manager.sh shell nexus
-
-# Production  
-./production-manager.sh build nexus
-./production-manager.sh run nexus
 ```
 
 ## 🔴 Risc0 Commands
 
 ```bash
-# Development
+# Development mode
 ./development-manager.sh run risc0
 ./development-manager.sh shell risc0
-
-# Production
-./production-manager.sh build risc0
-./production-manager.sh run risc0
 ```
 
 ## 🟡 ZKM Commands
 
 ```bash
-# Development
+# Development mode
 ./development-manager.sh run zkm
 ./development-manager.sh shell zkm
-
-# Production
-./production-manager.sh build zkm
-./production-manager.sh run zkm
 ```
 
 ## 🎯 Common Workflows
@@ -142,14 +114,6 @@ RUST_LOG=debug cargo run --release -- --execute
 ./development-manager.sh clean-cache         # Free space
 ```
 
-### Production Manager
-```bash
-./production-manager.sh build <zkvm>         # Build precompiled image
-./production-manager.sh run <zkvm>           # Run
-./production-manager.sh logs <zkvm>          # View logs
-./production-manager.sh clean                # Remove all
-```
-
 ## 🔍 Troubleshooting
 
 ### Error: "zkvm-base:latest not found"
@@ -162,13 +126,10 @@ RUST_LOG=debug cargo run --release -- --execute
 **Normal:** First compilation takes 5-10 mins. Cached runs: 30s-2mins.
 
 ### Code Changes Not Applied?
-**Solution:** Use development mode (production needs rebuild)
+**Solution:** Development mode automatically picks up code changes
 ```bash
 # Development: automatic ✅
 ./development-manager.sh run sp1 --execute
-
-# Production: rebuild needed ❌
-./production-manager.sh build sp1
 ```
 
 ### Out of Disk Space?
@@ -185,7 +146,6 @@ docker system prune -a
 ```
 docker/
 ├── base/                    # Shared base image
-├── production/              # Precompiled images
 ├── development/             # Toolchain images  
 ├── scripts/                 # Management scripts
 └── docs/                    # Detailed guides
@@ -200,11 +160,10 @@ docker/
 
 ## 💡 Tips
 
-1. **Use development mode** for daily coding (real-time code sync)
-2. **Use production mode** for deployment (fast, consistent)
-3. **Interactive shell** is great for debugging (`shell` command)
-4. **First build is slow**, subsequent builds are cached
-5. **Clean cache** when disk space is low
+1. **Development mode** provides real-time code sync - no rebuilds needed
+2. **Interactive shell** is great for debugging (`shell` command)
+3. **First build is slow**, subsequent builds are cached
+4. **Clean cache** when disk space is low
 
 ## 🎯 ZKVM Feature Matrix
 
