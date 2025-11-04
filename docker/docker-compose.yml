@@ -1,15 +1,20 @@
-# Development Mode Docker Compose
-# Direct usage: docker compose --profile <zkvm> up [-d] [--build]
-# Or use convenience script: ./scripts/development-manager.sh
+# ZKVM Docker Compose Configuration
+#
+# Usage:
+#   First time: cd scripts && ./build-base.sh   # Build base image
+#   Then: docker compose --profile <zkvm> up [-d] [--build]
+#   ZKVM_ARGS="args" docker compose --profile <zkvm> up <zkvm>-zkvm
+#
+# Available profiles: nexus, risc0, sp1, zkm, all
 
 services:
-  # Nexus ZKVM - Development
-  nexus-dev:
+  # Nexus ZKVM
+  nexus-zkvm:
     build:
       context: ..
       dockerfile: docker/dockerfiles/Dockerfile.nexus
-    image: nexus-dev:latest
-    container_name: nexus-dev
+    image: nexus-zkvm:latest
+    container_name: nexus-zkvm
     volumes:
       - ../:/workspace
       - nexus-cargo-cache:/usr/local/cargo/registry
@@ -26,13 +31,13 @@ services:
       - nexus
       - all
 
-  # Risc0 ZKVM - Development
-  risc0-dev:
+  # Risc0 ZKVM
+  risc0-zkvm:
     build:
       context: ..
       dockerfile: docker/dockerfiles/Dockerfile.risc0
-    image: risc0-dev:latest
-    container_name: risc0-dev
+    image: risc0-zkvm:latest
+    container_name: risc0-zkvm
     volumes:
       - ../:/workspace
       - risc0-cargo-cache:/usr/local/cargo/registry
@@ -51,13 +56,13 @@ services:
       - risc0
       - all
 
-  # SP1 ZKVM - Development
-  sp1-dev:
+  # SP1 ZKVM
+  sp1-zkvm:
     build:
       context: ..
       dockerfile: docker/dockerfiles/Dockerfile.sp1
-    image: sp1-dev:latest
-    container_name: sp1-dev
+    image: sp1-zkvm:latest
+    container_name: sp1-zkvm
     volumes:
       - ../:/workspace
       - sp1-cargo-cache:/usr/local/cargo/registry
@@ -74,13 +79,13 @@ services:
       - sp1
       - all
 
-  # ZKM ZKVM - Development
-  zkm-dev:
+  # ZKM ZKVM
+  zkm-zkvm:
     build:
       context: ..
       dockerfile: docker/dockerfiles/Dockerfile.zkm
-    image: zkm-dev:latest
-    container_name: zkm-dev
+    image: zkm-zkvm:latest
+    container_name: zkm-zkvm
     volumes:
       - ../:/workspace
       - zkm-cargo-cache:/usr/local/cargo/registry
@@ -97,7 +102,7 @@ services:
       - zkm
       - all
 
-# Persistent volumes for build caching
+# Persistent volumes for caching build artifacts and dependencies
 volumes:
   nexus-cargo-cache:
     driver: local

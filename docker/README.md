@@ -22,20 +22,20 @@ cd docker/scripts
 cd docker
 
 # Build once (only needed first time or when dependencies change)
-docker compose build sp1-dev
+docker compose build sp1-zkvm
 
 # Run multiple times (fast, no rebuild)
-ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev
-ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-dev
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm
+ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-zkvm
 
 # Run in background
-docker compose --profile sp1 up -d sp1-dev
+docker compose --profile sp1 up -d sp1-zkvm
 
 # Rebuild and run when needed
-docker compose --profile sp1 up --build sp1-dev
+docker compose --profile sp1 up --build sp1-zkvm
 
 # Interactive shell
-docker compose run --rm sp1-dev bash
+docker compose run --rm sp1-zkvm bash
 
 # Stop container
 docker compose --profile sp1 down
@@ -69,10 +69,10 @@ Development mode provides a flexible environment with real-time code changes and
 ```bash
 # Using Docker Compose
 cd docker
-docker compose build sp1-dev                                    # Build once
-ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev  # Execute mode
-ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-dev    # Prove mode
-docker compose run --rm sp1-dev bash                            # Interactive shell
+docker compose build sp1-zkvm                                    # Build once
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm  # Execute mode
+ZKVM_ARGS="--prove" docker compose --profile sp1 up sp1-zkvm    # Prove mode
+docker compose run --rm sp1-zkvm bash                            # Interactive shell
 
 # Using script
 cd docker/scripts
@@ -86,9 +86,9 @@ cd docker/scripts
 ```bash
 # Using Docker Compose
 cd docker
-docker compose build nexus-dev
-ZKVM_ARGS="--nocapture" docker compose --profile nexus up nexus-dev
-docker compose run --rm nexus-dev bash
+docker compose build nexus-zkvm
+ZKVM_ARGS="--nocapture" docker compose --profile nexus up nexus-zkvm
+docker compose run --rm nexus-zkvm bash
 
 # Using script
 cd docker/scripts
@@ -101,9 +101,9 @@ cd docker/scripts
 ```bash
 # Using Docker Compose
 cd docker
-docker compose build risc0-dev
-docker compose --profile risc0 up risc0-dev
-docker compose run --rm risc0-dev bash
+docker compose build risc0-zkvm
+docker compose --profile risc0 up risc0-zkvm
+docker compose run --rm risc0-zkvm bash
 
 # Using script
 cd docker/scripts
@@ -116,10 +116,10 @@ cd docker/scripts
 ```bash
 # Using Docker Compose
 cd docker
-docker compose build zkm-dev
-ZKVM_ARGS="--execute" docker compose --profile zkm up zkm-dev
-ZKVM_ARGS="--prove" docker compose --profile zkm up zkm-dev
-docker compose run --rm zkm-dev bash
+docker compose build zkm-zkvm
+ZKVM_ARGS="--execute" docker compose --profile zkm up zkm-zkvm
+ZKVM_ARGS="--prove" docker compose --profile zkm up zkm-zkvm
+docker compose run --rm zkm-zkvm bash
 
 # Using script
 cd docker/scripts
@@ -148,9 +148,9 @@ cd docker/scripts
 ```bash
 # Using Docker Compose
 cd docker
-docker compose build sp1-dev                                   # Build once
-ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev # Fast run
-ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-dev # Fast run again
+docker compose build sp1-zkvm                                   # Build once
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm # Fast run
+ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm # Fast run again
 
 # Using script
 cd docker/scripts
@@ -163,7 +163,7 @@ cd docker/scripts
 ```bash
 # Using Docker Compose
 cd docker
-docker compose --profile sp1 up --build sp1-dev  # Rebuild and run
+docker compose --profile sp1 up --build sp1-zkvm  # Rebuild and run
 
 # Using script
 cd docker/scripts
@@ -174,8 +174,8 @@ cd docker/scripts
 ```bash
 # Using Docker Compose
 cd docker
-docker compose --profile sp1 up -d sp1-dev        # Start in background
-docker compose logs -f sp1-dev                    # View logs
+docker compose --profile sp1 up -d sp1-zkvm        # Start in background
+docker compose logs -f sp1-zkvm                    # View logs
 docker compose --profile sp1 down                 # Stop
 
 # Using script
@@ -189,7 +189,7 @@ cd docker/scripts
 ```bash
 # Using Docker Compose
 cd docker
-docker compose run --rm sp1-dev bash              # Interactive shell
+docker compose run --rm sp1-zkvm bash              # Interactive shell
 
 # Using script
 cd docker/scripts
