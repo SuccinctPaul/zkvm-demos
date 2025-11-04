@@ -20,7 +20,7 @@ cd docker/scripts
 cd docker/scripts
 
 # SP1 - Execute & Prove
-./development-manager.sh run sp1 --execute    # Fast testing
+./development-manager.sh run sp1 --execute    # Execution without Proof
 ./development-manager.sh run sp1 --prove      # Generate proof
 
 # Nexus - Auto prove
@@ -30,7 +30,8 @@ cd docker/scripts
 ./development-manager.sh run risc0
 
 # ZKM - Auto prove
-./development-manager.sh run zkm
+./development-manager.sh run zkm --execute    # Execution without Proof
+./development-manager.sh run zkm --prove      # Generate proof
 
 # Interactive debugging
 ./development-manager.sh shell sp1
