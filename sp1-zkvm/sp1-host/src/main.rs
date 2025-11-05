@@ -14,7 +14,7 @@ mod cli;
 
 use clap::Parser;
 use cli::Args;
-use sp1_sdk::{include_elf, ProverClient, SP1ProofMode, SP1Stdin};
+use sp1_sdk::{include_elf, ProverClient, SP1Proof, SP1ProofMode, SP1Stdin};
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const FIBONACCI_ELF: &[u8] = include_elf!("sp1-guest");
 
@@ -68,15 +68,26 @@ fn main() {
         let proof = prover.run().expect("failed to generate proof");
 
         println!("Successfully generated proof!");
-        if proof_mode == SP1ProofMode::Plonk || proof_mode == SP1ProofMode::Groth16 {
-            println!(
-                "proof_mode: {:?}, proof size: {:?} Bytes",
-                proof_mode,
-                proof.bytes().len()
-            );
-        } else {
-            println!("proof_mode: {:?}", proof_mode,);
-        }
+
+        let proof_size = match proof.proof.clone() {
+            SP1Proof::Core(core_proof) => {
+                let mut total_proof_bytes = 0;
+                for cp in core_proof {
+                    let proof_bytes = serde_json::to_vec(&cp).unwrap();
+                    total_proof_bytes += proof_bytes.len();
+                }
+                total_proof_bytes
+            }
+            SP1Proof::Compressed(compress) => {
+                let proof_bytes = serde_json::to_vec(&compress.proof).unwrap();
+                proof_bytes.len()
+            }
+            _ => proof.bytes().len(),
+        };
+        println!(
+            "proof_mode: {:?}, proof size: {:?} Bytes",
+            proof_mode, proof_size
+        );
 
         // Verify the proof.
         client.verify(&proof, &vk).expect("failed to verify proof");
