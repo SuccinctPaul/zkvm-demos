@@ -43,7 +43,6 @@ fn main() {
     if args.execute {
         // Execute the program
         let (_output, report) = client.execute(FIBONACCI_ELF, &stdin).run().unwrap();
-        println!("Program executed successfully.");
 
         // Read the output.
 
@@ -58,7 +57,7 @@ fn main() {
             report.total_instruction_count()
         );
         println!("Number of cycles: {}", report.total_syscall_count());
-        println!("Successfully executed");
+        println!("Program executed successfully.");
     // println!("report: {}", report);sp1-zkvm  | opcode counts (7187 total instructions):
         // sp1-zkvm  |     1970 add
         // sp1-zkvm  |      713 xor

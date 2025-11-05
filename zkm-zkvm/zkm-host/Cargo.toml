@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1", default-features = false }
+zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1", default-features = false, features = ["native-gnark"] }
 
 common.workspace = true
 clap.workspace = true

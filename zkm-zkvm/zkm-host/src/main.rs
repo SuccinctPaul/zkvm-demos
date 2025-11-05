@@ -44,10 +44,8 @@ fn main() {
     if args.execute {
         // Execute the program
         let (_output, report) = client.execute(FIBONACCI_ELF, &stdin).run().unwrap();
-        println!("Program executed successfully.");
 
         // Read the output.
-
         // let expect = fib::fibonacci(fib_n);
         // assert_eq!(a, expected_a);
         // assert_eq!(b, expected_b);
@@ -60,7 +58,7 @@ fn main() {
         );
         println!("Number of cycles: {}", report.total_syscall_count());
         println!("report: {}", report);
-        println!("Successfully executed");
+        println!("Program executed successfully.");
     } else {
         // Setup the program for proving.
         let (pk, vk) = client.setup(FIBONACCI_ELF);
