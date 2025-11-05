@@ -60,6 +60,7 @@ fn main() {
         );
         println!("Number of cycles: {}", report.total_syscall_count());
         println!("report: {}", report);
+        println!("Successfully executed");
     } else {
         // Setup the program for proving.
         let (pk, vk) = client.setup(FIBONACCI_ELF);
