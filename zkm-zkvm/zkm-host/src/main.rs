@@ -64,7 +64,7 @@ fn main() {
 
     println!("Successfully generated proof!");
     println!(
-        "proof_mode: {:?}proof size: {:?} Bytes",
+        "proof_mode: {:?} , proof size: {:?} Bytes",
         proof_mode,
         proof.bytes().len()
     );
