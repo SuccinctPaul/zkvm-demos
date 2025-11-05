@@ -132,6 +132,3 @@ docker/
 
 **Out of disk space** - Run `docker volume prune` or `docker system prune -a`
 
----
-
-**Simple. Standard. Docker Compose.** 🚀

@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH
 
-# Install minimal system dependencies in one layer
+# Install system dependencies, Go, and protoc in one layer
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     libssl-dev \
     ca-certificates \
+    golang-go \
+    protobuf-compiler \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -25,16 +27,11 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
     && rustup update && rustup default stable \
     && rustup component add rust-src
 
-# Install Go
-ENV GO_VERSION=1.22.0 \
-    GOROOT=/usr/local/go \
-    GOPATH=/go \
-    PATH=/usr/local/go/bin:/go/bin:$PATH
+# Set Go environment variables (Go installed via apt)
+ENV GOPATH=/go \
+    PATH=/go/bin:$PATH
 
-RUN wget -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz \
-    && rm go${GO_VERSION}.linux-amd64.tar.gz \
-    && mkdir -p /go/bin
+RUN mkdir -p /go/bin
 
 # Create workspace directory
 WORKDIR /workspace
