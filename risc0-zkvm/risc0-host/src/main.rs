@@ -33,19 +33,19 @@ fn main() {
 
     // Proof information by proving the specified ELF binary.
     // This struct contains the receipt along with statistics about execution of the guest
-    let opts = ProverOpts::succinct();
+    let opts = ProverOpts::groth16();
     let prove_info = default_prover()
         .prove_with_opts(env, METHODS_ELF, &opts)
         .unwrap();
 
-    println!("Report.paging_cycles {:?}", prove_info.stats.paging_cycles);
-    println!(
-        "Report.reserved_cycles {:?}",
-        prove_info.stats.reserved_cycles
-    );
-    println!("Report.segments {:?}", prove_info.stats.segments);
-    println!("Report.segments {:?}", prove_info.stats.total_cycles);
-    println!("Report.segments {:?}", prove_info.stats.user_cycles);
+    // println!("Report.paging_cycles {:?}", prove_info.stats.paging_cycles);
+    // println!(
+    //     "Report.reserved_cycles {:?}",
+    //     prove_info.stats.reserved_cycles
+    // );
+    // println!("Report.segments {:?}", prove_info.stats.segments);
+    // println!("Report.segments {:?}", prove_info.stats.total_cycles);
+    // println!("Report.segments {:?}", prove_info.stats.user_cycles);
 
     println!(
         "proof mode: {:?}, proof size: {:?} Bytes",
