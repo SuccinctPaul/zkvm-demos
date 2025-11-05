@@ -1,10 +1,12 @@
 # zkvm-demos
 
-A collection of Zero-Knowledge Virtual Machine (zkVM) demonstrations for SP1, Risc0, Nexus, and ZKM. This repository shows how to build and run programs on different zkVM platforms.
+A collection of Zero-Knowledge Virtual Machine (zkVM) demonstrations for SP1, Risc0, Nexus, and ZKM. This repository
+shows how to build and run programs on different zkVM platforms.
 
 ## ⚠️ Toolchain Conflict Management
 
-**Important:** Installing multiple zkVMs on the same machine can cause conflicts between toolchains, Rust versions, and CLI tools. We provide two solutions:
+**Important:** Installing multiple zkVMs on the same machine can cause conflicts between toolchains, Rust versions, and
+CLI tools. We provide two solutions:
 
 ### 🐳 Docker Isolation (Recommended for Most Users)
 
@@ -19,8 +21,9 @@ cd docker/scripts
 ```
 
 **Advantages:**
+
 - ✅ No conflicts between zkVMs
-- ✅ Easy team collaboration  
+- ✅ Easy team collaboration
 - ✅ Consistent CI/CD integration
 - ✅ Simple cleanup
 
@@ -40,36 +43,41 @@ source ~/zkvm-workspaces/sp1-workspace/activate.sh
 ```
 
 **Advantages:**
+
 - ✅ Native performance (5-10% faster)
 - ✅ Seamless IDE integration
 - ✅ Automatic switching with direnv
 - ✅ Full control over environment
 
-📖 **Full Guide:** [docs/ISOLATION-LOCAL-ENV.md](docs/ISOLATION-LOCAL-ENV.md) | [中文版](docs/ISOLATION-LOCAL-ENV.zh-CN.md)
+📖 **Full Guide:
+** [docs/ISOLATION-LOCAL-ENV.md](docs/ISOLATION-LOCAL-ENV.md) | [中文版](docs/ISOLATION-LOCAL-ENV.zh-CN.md)
 
 ### 📊 Which Approach Should You Use?
 
-| Your Situation | Recommended Solution |
-|----------------|---------------------|
-| Working in a team | 🐳 Docker |
-| Need CI/CD | 🐳 Docker |
-| Just getting started | 🐳 Docker |
-| Solo dev, frequent builds | 🏠 Local + direnv |
-| Need hardware access (GPU) | 🏠 Local |
+| Your Situation             | Recommended Solution |
+|----------------------------|----------------------|
+| Working in a team          | 🐳 Docker            |
+| Need CI/CD                 | 🐳 Docker            |
+| Just getting started       | 🐳 Docker            |
+| Solo dev, frequent builds  | 🏠 Local + direnv    |
+| Need hardware access (GPU) | 🏠 Local             |
 
-📖 **Detailed Comparison:** [docs/ISOLATION-COMPARISON.md](docs/ISOLATION-COMPARISON.md) | [中文版](docs/ISOLATION-COMPARISON.zh-CN.md)
+📖 **Detailed Comparison:
+** [docs/ISOLATION-COMPARISON.md](docs/ISOLATION-COMPARISON.md) | [中文版](docs/ISOLATION-COMPARISON.zh-CN.md)
 
 ### 🔍 Understanding the Conflicts
 
 Learn about specific conflicts and why isolation is necessary:
 
-📖 **Conflict Analysis:** [docs/TOOLCHAIN-CONFLICTS.md](docker/docs/TOOLCHAIN-CONFLICTS.mdICTS.md) | [中文版](docs/TOOLCHAIN-CONFLICTS.zh-CN.md)
+📖 **Conflict Analysis:
+** [docs/TOOLCHAIN-CONFLICTS.md](docker/docs/TOOLCHAIN-CONFLICTS.mdICTS.md) | [中文版](docs/TOOLCHAIN-CONFLICTS.zh-CN.md)
 
 ---
 
 ## Running Individual ZKVMs
 
-The following sections show how to run each zkVM **without isolation** (not recommended if you plan to use multiple zkVMs). For production use, see the isolation guides above.
+The following sections show how to run each zkVM **without isolation** (not recommended if you plan to use multiple
+zkVMs). For production use, see the isolation guides above.
 
 ## Nexus zkvm
 
@@ -143,11 +151,8 @@ RUST_LOG=info cargo run --release -- --execute
 * run in production mode
 
 ```bash
-RUST_LOG=info cargo run --release -- --prove
+RUST_LOG=debug cargo run --release -- --prove
 ```
-
-
-
 
 ## ZKM zkvm
 
@@ -159,6 +164,7 @@ RUST_LOG=info cargo run --release -- --prove
 ### how to run
 
 * cd to the target demo directory
+
 ```bash
 cd zkm-zkvm/zkm-host
 ```
@@ -177,16 +183,19 @@ RUST_LOG=info cargo run --release --bin evm -- --system <PROOF_TYPE>  // for EVM
 ```
 
 * core proof
+
 ```bash
 RUST_LOG=info cargo run --release -- --core
 ```
 
 * compressed proof
+
 ```bash
 RUST_LOG=info cargo run --release -- --compressed
 ```
 
 * evm proof
+
 ```bash
 cargo run --release --bin evm -- --system groth16
 
