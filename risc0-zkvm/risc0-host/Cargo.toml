@@ -8,5 +8,5 @@ methods = { path = "../risc0-guest" }
 risc0-zkvm = { version = "=3.0.3", default-features = true, features = ["circuit_debug", "witgen_debug"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-common.workspace = true
-dotenv.workspace = true
+common = { path = "../../common" }
+dotenv = "0.15.0"

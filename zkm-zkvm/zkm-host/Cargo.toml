@@ -1,16 +1,18 @@
 [package]
 name = "zkm-host"
-edition.workspace = true
-version.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1", default-features = false, features = ["native-gnark"] }
 
-common.workspace = true
-clap.workspace = true
-dotenv.workspace = true
+common = { path = "../../common" }
+#misc
+dotenv = "0.15.0"
+clap = { version = "4.0", features = ["derive", "env"] }
+
 
 [build-dependencies]
 zkm-build = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1" }
