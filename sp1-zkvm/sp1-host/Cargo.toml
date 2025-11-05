@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 sp1-sdk = { version = "5.2.2", default-features = false, features = ["profiling", "reserved-capacity"] }
-
+once_cell = "*"
 
 common = { path = "../../common" }
 clap = { version = "4.0", features = ["derive", "env"] }

@@ -5559,6 +5559,7 @@ dependencies = [
  "clap",
  "common",
  "dotenv",
+ "once_cell",
  "sp1-build",
  "sp1-sdk",
 ]
