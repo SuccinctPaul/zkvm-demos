@@ -68,11 +68,15 @@ fn main() {
         let proof = prover.run().expect("failed to generate proof");
 
         println!("Successfully generated proof!");
-        println!(
-            "proof_mode: {:?}, proof size: {:?} Bytes",
-            proof_mode,
-            proof.bytes().len()
-        );
+        if proof_mode == SP1ProofMode::Plonk || proof_mode == SP1ProofMode::Groth16 {
+            println!(
+                "proof_mode: {:?}, proof size: {:?} Bytes",
+                proof_mode,
+                proof.bytes().len()
+            );
+        } else {
+            println!("proof_mode: {:?}", proof_mode,);
+        }
 
         // Verify the proof.
         client.verify(&proof, &vk).expect("failed to verify proof");
