@@ -63,7 +63,7 @@ fn main() {
         let (pk, vk) = client.setup(FIBONACCI_ELF);
 
         // Generate the proof
-        let proof_mode = SP1ProofMode::Compressed;
+        let proof_mode = SP1ProofMode::Groth16;
         let prover = client.prove(&pk, &stdin).mode(proof_mode);
         let proof = prover.run().expect("failed to generate proof");
 
