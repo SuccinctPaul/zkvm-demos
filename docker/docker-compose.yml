@@ -2,11 +2,13 @@
 #
 # Usage:
 #   First time: cd scripts && ./build-base.sh        # Build base image
-#   Then: docker compose --profile <zkvm> up [-d] [--build]
-#   Or use: cd scripts && ./docker-manager.sh build <zkvm>
+#   Build: docker compose build <zkvm>-zkvm
+#   Run: ZKVM_ARGS="args" docker compose --profile <zkvm> up <zkvm>-zkvm
 #
-# Pass arguments via ZKVM_ARGS:
+# Examples:
+#   docker compose build sp1-zkvm
 #   ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm
+#   docker compose run --rm sp1-zkvm bash
 #
 # Available profiles: nexus, risc0, sp1, zkm, all
 
