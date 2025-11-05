@@ -34,7 +34,6 @@ fn main() {
     // Proof information by proving the specified ELF binary.
     // This struct contains the receipt along with statistics about execution of the guest
     let opts = ProverOpts::succinct();
-    println!("proof mode: {:?}", opts.receipt_kind);
     let prove_info = default_prover()
         .prove_with_opts(env, METHODS_ELF, &opts)
         .unwrap();
@@ -47,6 +46,12 @@ fn main() {
     println!("Report.segments {:?}", prove_info.stats.segments);
     println!("Report.segments {:?}", prove_info.stats.total_cycles);
     println!("Report.segments {:?}", prove_info.stats.user_cycles);
+
+    println!(
+        "proof mode: {:?}, proof size: {:?}",
+        opts.receipt_kind,
+        prove_info.receipt.seal_size()
+    );
 
     // extract the receipt.
     let receipt = prove_info.receipt;
