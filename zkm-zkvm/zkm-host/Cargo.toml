@@ -6,7 +6,7 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1", default-features = false, features = ["native-gnark"] }
+zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1", default-features = false, features = ["network", "native-gnark"] }
 
 common = { path = "../../common" }
 #misc
