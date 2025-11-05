@@ -100,7 +100,11 @@ fn main() {
         let proof = prover.run().expect("failed to generate proof");
 
         println!("Successfully generated proof!");
-        println!("proof_mode: {:?}, proof size: {:?}", proof_mode);
+        println!(
+            "proof_mode: {:?}, proof size: {:?} Bytes",
+            proof_mode,
+            proof.bytes().len()
+        );
 
         // Verify the proof.
         client.verify(&proof, &vk).expect("failed to verify proof");
