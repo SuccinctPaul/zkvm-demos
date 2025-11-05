@@ -12,8 +12,15 @@ fn main() {
 
     println!("Compiling nexus-zkvm-guest program...");
     let mut prover_compiler = Compiler::<CargoPackager>::new(GUEST_PACKAGE);
-    let prover: Stwo<Local> =
-        Stwo::compile(&mut prover_compiler).expect("failed to compile nexus-zkvm-guest program");
+    let prover: Stwo<Local> = match Stwo::compile(&mut prover_compiler) {
+        Ok(prover) => prover,
+        Err(error) => {
+            panic!(
+                "failed to compile nexus-zkvm-guest program, error: {:?}",
+                error
+            );
+        }
+    };
 
     let elf = prover.elf.clone(); // save elf for use with verification
 
