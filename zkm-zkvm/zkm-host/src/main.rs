@@ -14,7 +14,7 @@ mod cli;
 
 use clap::Parser;
 use cli::Args;
-use zkm_sdk::{include_elf, ProverClient, ZKMStdin};
+use zkm_sdk::{include_elf, ProverClient, ZKMProofKind, ZKMStdin};
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const FIBONACCI_ELF: &[u8] = include_elf!("zkm-guest");
@@ -64,14 +64,17 @@ fn main() {
         let (pk, vk) = client.setup(FIBONACCI_ELF);
 
         // Generate the proof
-        let proof = client
-            .prove(&pk, stdin)
-            .core()
-            // .compressed()
-            // .groth16()
-            // .plonk()
-            .run()
-            .expect("failed to generate proof");
+        let proof_mode = ZKMProofKind::Core;
+        println!("proof_mode: {:?}", proof_mode);
+        let prover = match proof_mode {
+            ZKMProofKind::Core => client.prove(&pk, stdin).core(),
+            ZKMProofKind::Compressed => client.prove(&pk, stdin).compressed(),
+            ZKMProofKind::Plonk => client.prove(&pk, stdin).plonk(),
+            ZKMProofKind::Groth16 => client.prove(&pk, stdin).groth16(),
+            ZKMProofKind::CompressToGroth16 => client.prove(&pk, stdin).compress_to_groth16(),
+        };
+
+        let proof = prover.run().expect("failed to generate proof");
 
         println!("Successfully generated proof!");
 
