@@ -52,7 +52,7 @@ fn main() {
     let (pk, vk) = client.setup(FIBONACCI_ELF);
 
     // Generate the proof
-    let proof_mode = ZKMProofKind::Compressed;
+    let proof_mode = ZKMProofKind::Groth16;
     let prover = match proof_mode {
         ZKMProofKind::Core => client.prove(&pk, stdin).core(),
         ZKMProofKind::Compressed => client.prove(&pk, stdin).compressed(),

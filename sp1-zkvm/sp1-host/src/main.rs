@@ -95,12 +95,12 @@ fn main() {
         let (pk, vk) = client.setup(FIBONACCI_ELF);
 
         // Generate the proof
-        let proof_mode = SP1ProofMode::Compressed;
-        println!("proof_mode: {:?}", proof_mode);
+        let proof_mode = SP1ProofMode::Core;
         let prover = client.prove(&pk, &stdin).mode(proof_mode);
         let proof = prover.run().expect("failed to generate proof");
 
         println!("Successfully generated proof!");
+        println!("proof_mode: {:?}, proof size: {:?}", proof_mode);
 
         // Verify the proof.
         client.verify(&proof, &vk).expect("failed to verify proof");
