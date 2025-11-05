@@ -43,7 +43,7 @@ docker compose --profile sp1 up --build sp1-zkvm
 
 ## 🎯 All ZKVM Examples
 
-### 🔵 SP1 ZKVM
+### 🟢 SP1 ZKVM
 
 ```bash
 cd docker
@@ -71,7 +71,7 @@ docker compose --profile risc0 up risc0-zkvm
 docker compose run --rm risc0-zkvm bash
 ```
 
-### 🟡 ZKM ZKVM
+### 🔴 ZKM ZKVM
 
 ```bash
 cd docker
