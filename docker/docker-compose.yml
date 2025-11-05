@@ -1,0 +1,129 @@
+# ZKVM Docker Compose Configuration
+#
+# Usage:
+#   First time: cd scripts && ./build-base.sh        # Build base image
+#   Build: docker compose build <zkvm>-zkvm
+#   Run: ZKVM_ARGS="args" docker compose --profile <zkvm> up <zkvm>-zkvm
+#
+# Examples:
+#   docker compose build sp1-zkvm
+#   ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm
+#   docker compose run --rm sp1-zkvm bash
+#
+# Available profiles: nexus, risc0, sp1, zkm, all
+
+services:
+  # Nexus ZKVM
+  nexus-zkvm:
+    build:
+      context: ..
+      dockerfile: docker/dockerfiles/Dockerfile.nexus
+    image: nexus-zkvm:latest
+    container_name: nexus-zkvm
+    volumes:
+      - ../:/workspace
+      - nexus-cargo-cache:/usr/local/cargo/registry
+      - nexus-target-cache:/workspace/target
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+      - ZKVM_ARGS=${ZKVM_ARGS:---nocapture}
+    command: >
+      bash -c "cd nexus-zkvm/nexus-host && cargo run -r -- $${ZKVM_ARGS:---nocapture}"
+    stdin_open: true
+    tty: true
+    profiles:
+      - nexus
+      - all
+
+  # Risc0 ZKVM
+  risc0-zkvm:
+    platform: linux/amd64  # Risc0 toolchain doesn't support ARM64
+    build:
+      context: ..
+      dockerfile: docker/dockerfiles/Dockerfile.risc0
+    image: risc0-zkvm:latest
+    container_name: risc0-zkvm
+    volumes:
+      - ../:/workspace
+      - risc0-cargo-cache:/usr/local/cargo/registry
+      - risc0-target-cache:/workspace/target
+    working_dir: /workspace
+    environment:
+      - RISC0_DEV_MODE=1
+      - RUST_LOG=info
+      - RISC0_INFO=1
+      - ZKVM_ARGS=${ZKVM_ARGS}
+    command: >
+      bash -c "cd risc0-zkvm/risc0-host && RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release $${ZKVM_ARGS}"
+    stdin_open: true
+    tty: true
+    profiles:
+      - risc0
+      - all
+
+  # SP1 ZKVM
+  sp1-zkvm:
+    build:
+      context: ..
+      dockerfile: docker/dockerfiles/Dockerfile.sp1
+    image: sp1-zkvm:latest
+    container_name: sp1-zkvm
+    volumes:
+      - ../:/workspace
+      - sp1-cargo-cache:/usr/local/cargo/registry
+      - sp1-target-cache:/workspace/target
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+      - ZKVM_ARGS=${ZKVM_ARGS:---execute}
+    command: >
+      bash -c "cd sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- $${ZKVM_ARGS:---execute}"
+    stdin_open: true
+    tty: true
+    profiles:
+      - sp1
+      - all
+
+  # ZKM ZKVM
+  zkm-zkvm:
+    build:
+      context: ..
+      dockerfile: docker/dockerfiles/Dockerfile.zkm
+    image: zkm-zkvm:latest
+    container_name: zkm-zkvm
+    volumes:
+      - ../:/workspace
+      - zkm-cargo-cache:/usr/local/cargo/registry
+      - zkm-target-cache:/workspace/target
+    working_dir: /workspace
+    environment:
+      - RUST_LOG=info
+      - ZKVM_ARGS=${ZKVM_ARGS:---execute}
+    command: >
+      bash -c "cd zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release -- $${ZKVM_ARGS:---execute}"
+    stdin_open: true
+    tty: true
+    profiles:
+      - zkm
+      - all
+
+# Persistent volumes for caching build artifacts and dependencies
+volumes:
+  nexus-cargo-cache:
+    driver: local
+  nexus-target-cache:
+    driver: local
+  risc0-cargo-cache:
+    driver: local
+  risc0-target-cache:
+    driver: local
+  sp1-cargo-cache:
+    driver: local
+  sp1-target-cache:
+    driver: local
+  zkm-cargo-cache:
+    driver: local
+  zkm-target-cache:
+    driver: local
+

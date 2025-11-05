@@ -1,0 +1,40 @@
+# Shared Base Dockerfile for all ZKVMs
+# This base image contains common dependencies and Rust toolchain
+FROM ubuntu:22.04 AS base
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+
+# Install system dependencies, Go, and protoc in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    wget \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    golang-go \
+    protobuf-compiler \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install Rust with optimizations
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable \
+    && rustup update && rustup default stable \
+    && rustup component add rust-src
+
+# Set Go environment variables (Go installed via apt)
+ENV GOPATH=/go \
+    PATH=/go/bin:$PATH
+
+RUN mkdir -p /go/bin
+
+# Create workspace directory
+WORKDIR /workspace
+
+# Set default command
+CMD ["bash"]

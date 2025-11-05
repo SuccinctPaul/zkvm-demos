@@ -1,21 +1,18 @@
 [package]
 name = "sp1-host"
-edition.workspace = true
-version.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
-sp1-sdk = "5.0.0"
-serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
-serde = { version = "1.0.200", default-features = false, features = ["derive"] }
+sp1-sdk = { version = "5.2.2", default-features = false, features = ["profiling", "reserved-capacity"] }
+once_cell = "*"
+
+common = { path = "../../common" }
 clap = { version = "4.0", features = ["derive", "env"] }
-tracing = "0.1.40"
-hex = "0.4.3"
+
 dotenv = "0.15.0"
 
-fib.workspace = true
-common.workspace = true
-
 [build-dependencies]
-sp1-build = "5.0.0"
+sp1-build = "5.2.2"
