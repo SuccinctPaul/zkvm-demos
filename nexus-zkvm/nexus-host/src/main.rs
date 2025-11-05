@@ -22,7 +22,7 @@ fn main() {
     let compile_start = Instant::now();
     let mut prover_compiler = Compiler::<CargoPackager>::new(GUEST_PACKAGE);
     let prover: Stwo<Local> =
-        Stwo::compile(&mut prover_compiler).expect("failed to compile guest program");
+        Stwo::compile(&mut prover_compiler).unwrap();
     let compile_duration = compile_start.elapsed();
     println!("====== Compile Cost: {}s", compile_duration.as_secs_f64());
 

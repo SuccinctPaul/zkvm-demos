@@ -4,7 +4,6 @@ use nexus_rt::{println, profile};
 
 #[nexus_rt::main]
 #[nexus_rt::public_input(x)]
-#[profile]
 fn main(x: u32) {
     println!("Read public input:  {}", x);
     let res = fib::fibonacci(x);
