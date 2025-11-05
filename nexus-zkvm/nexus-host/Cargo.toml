@@ -8,5 +8,8 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 nexus-sdk = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
+#nexus-sdk-macros = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
+nexus-profiler = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
+
 
 common.workspace = true

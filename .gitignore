@@ -26,3 +26,5 @@ debug
 .DS_Store
 
 .data
+
+**/*.pb

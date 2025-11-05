@@ -89,7 +89,7 @@ cd nexus-zkvm/nexus-host
 * run the Nexus demo
 
 ```bash
-cargo run -r -- --nocapture
+RUST_LOG=info cargo run -r -- --nocapture
 ```
 
 ## Risc0 zkvm

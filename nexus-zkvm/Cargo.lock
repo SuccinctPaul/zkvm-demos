@@ -754,6 +754,7 @@ name = "nexus-host"
 version = "0.1.0"
 dependencies = [
  "common",
+ "nexus-profiler",
  "nexus-sdk",
 ]
 
