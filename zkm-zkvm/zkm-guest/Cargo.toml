@@ -4,5 +4,11 @@ name = "zkm-guest"
 edition = "2021"
 
 [dependencies]
-zkm-zkvm = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.1.2" }
-fib.workspace = true
+zkm-zkvm = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1" }
+#fib.workspace = true
+
+fib = { path = "../../fib" }
+#misc
+#dotenv = "0.15.0"
+#clap = { version = "4.0", features = ["derive", "env"] }
+

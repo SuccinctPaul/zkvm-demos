@@ -1,0 +1,18 @@
+# ZKM ZKVM Toolchain-Only Dockerfile
+# This image contains only the development environment and ZKM toolchain
+# Source code is mounted at runtime and compiled on-demand
+# Usage: docker run -v $(pwd):/workspace zkm-toolchain cargo run --release -- --execute
+
+FROM zkvm-base:latest
+
+# Copy and run ZKM SDK installer script
+COPY scripts/sdk_installers/install_zkm_sdk.sh /tmp/install_zkm_sdk.sh
+RUN chmod +x /tmp/install_zkm_sdk.sh && /tmp/install_zkm_sdk.sh \
+    && rm -f /tmp/install_zkm_sdk.sh
+
+# Set working directory
+WORKDIR /workspace
+
+# Set default command to bash (interactive shell)
+CMD ["bash"]
+

@@ -8,6 +8,7 @@ fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
         .init();
+    dotenv::dotenv().ok();
 
     // An executor environment describes the configurations for the zkVM
     // including program inputs.
@@ -33,14 +34,22 @@ fn main() {
     // Proof information by proving the specified ELF binary.
     // This struct contains the receipt along with statistics about execution of the guest
     let opts = ProverOpts::succinct();
+    println!("proof mode: {:?}", opts.receipt_kind);
     let prove_info = default_prover()
         .prove_with_opts(env, METHODS_ELF, &opts)
         .unwrap();
 
+    println!("Report.paging_cycles {:?}", prove_info.stats.paging_cycles);
+    println!(
+        "Report.reserved_cycles {:?}",
+        prove_info.stats.reserved_cycles
+    );
+    println!("Report.segments {:?}", prove_info.stats.segments);
+    println!("Report.segments {:?}", prove_info.stats.total_cycles);
+    println!("Report.segments {:?}", prove_info.stats.user_cycles);
+
     // extract the receipt.
     let receipt = prove_info.receipt;
-
-    // TODO: Implement code for retrieving receipt journal here.
 
     // For example:
     // let _output: u32 = receipt.journal.decode().unwrap();

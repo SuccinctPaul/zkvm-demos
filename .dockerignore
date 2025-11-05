@@ -1,0 +1,95 @@
+# Docker ignore file for zkvm-demos
+# This file helps reduce build context size and improve build performance
+
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+docs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build artifacts and caches
+target/
+**/target/
+Cargo.lock
+*.pdb
+
+# Docker files (avoid recursive copying)
+docker/
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Python cache (if any)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Test files
+test/
+tests/
+*_test.rs
+*_tests.rs
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Large files that shouldn't be in containers
+*.iso
+*.dmg
+*.zip
+*.tar.gz
+*.rar
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/

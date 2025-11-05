@@ -10,7 +10,7 @@
 //! RUST_LOG=info cargo run --release -- --prove
 //! ```
 
-use zkm_sdk::{ProverClient, ZKMStdin, include_elf};
+use zkm_sdk::{include_elf, ProverClient, ZKMStdin};
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const FIBONACCI_ELF: &[u8] = include_elf!("zkm-guest");
@@ -29,6 +29,25 @@ fn main() {
     let mut stdin = ZKMStdin::new();
     stdin.write(&fib_n);
 
+    // Execute the program
+    let (_output, report) = client.execute(FIBONACCI_ELF, stdin.clone()).run().unwrap();
+
+    // Read the output.
+    // let expect = fib::fibonacci(fib_n);
+    // assert_eq!(a, expected_a);
+    // assert_eq!(b, expected_b);
+    // println!("Values are correct!");
+
+    // Record the number of cycles executed.
+    println!(
+        "Number of instructions: {}",
+        report.total_instruction_count()
+    );
+    println!("Number of cycles: {}", report.total_syscall_count());
+    println!("report: {}", report);
+    println!("Program executed successfully.");
+
+    println!("\n");
     // Setup the program for proving.
     let (pk, vk) = client.setup(FIBONACCI_ELF);
 
