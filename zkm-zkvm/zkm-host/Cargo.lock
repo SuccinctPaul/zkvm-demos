@@ -7999,7 +7999,6 @@ dependencies = [
 name = "zkm-host"
 version = "0.1.0"
 dependencies = [
- "clap",
  "common",
  "dotenv",
  "zkm-build",

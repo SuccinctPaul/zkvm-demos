@@ -11,7 +11,7 @@ zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1", def
 common = { path = "../../common" }
 #misc
 dotenv = "0.15.0"
-clap = { version = "4.0", features = ["derive", "env"] }
+#clap = { version = "4.0", features = ["derive", "env"] }
 
 
 [build-dependencies]
