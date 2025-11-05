@@ -24,3 +24,5 @@ debug
 
 .env
 .DS_Store
+
+.data
