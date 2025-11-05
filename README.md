@@ -172,8 +172,8 @@ RUST_LOG=info cargo run --release -- --execute
 * run in production mode
 
 ```bash
-cargo run --release -- --<PROOF_TYPE> // for core and compressed proofs 
-cargo run --release --bin evm -- --system <PROOF_TYPE>  // for EVM-compatible proofs
+RUST_LOG=info cargo run --release -- --<PROOF_TYPE> // for core and compressed proofs 
+RUST_LOG=info cargo run --release --bin evm -- --system <PROOF_TYPE>  // for EVM-compatible proofs
 ```
 
 * core proof
