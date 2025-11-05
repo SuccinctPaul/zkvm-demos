@@ -48,7 +48,7 @@ fn main() {
     println!("Report.segments {:?}", prove_info.stats.user_cycles);
 
     println!(
-        "proof mode: {:?}, proof size: {:?}",
+        "proof mode: {:?}, proof size: {:?} Bytes",
         opts.receipt_kind,
         prove_info.receipt.seal_size()
     );
