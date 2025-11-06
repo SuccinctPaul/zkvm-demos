@@ -5560,6 +5560,7 @@ dependencies = [
  "common",
  "dotenv",
  "once_cell",
+ "serde_json",
  "sp1-build",
  "sp1-sdk",
 ]

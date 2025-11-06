@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 methods = { path = "../risc0-guest" }
-risc0-zkvm = { version = "=3.0.3", default-features = true, features = ["circuit_debug", "witgen_debug"] }
+risc0-zkvm = { version = "=3.0.3", default-features = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 common = { path = "../../common" }
