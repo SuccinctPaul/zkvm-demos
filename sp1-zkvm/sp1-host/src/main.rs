@@ -14,7 +14,7 @@ mod cli;
 
 use clap::Parser;
 use cli::Args;
-use sp1_sdk::{include_elf, ProverClient, SP1ProofMode, SP1Stdin};
+use sp1_sdk::{include_elf, ProverClient, SP1Proof, SP1ProofMode, SP1Stdin};
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const FIBONACCI_ELF: &[u8] = include_elf!("sp1-guest");
 
@@ -58,49 +58,36 @@ fn main() {
         );
         println!("Number of cycles: {}", report.total_syscall_count());
         println!("Program executed successfully.");
-    // println!("report: {}", report);sp1-zkvm  | opcode counts (7187 total instructions):
-    // sp1-zkvm  |     1970 add
-    // sp1-zkvm  |      713 xor
-    // sp1-zkvm  |      697 srl
-    // sp1-zkvm  |      696 lw
-    // sp1-zkvm  |      671 or
-    // sp1-zkvm  |      659 sll
-    // sp1-zkvm  |      631 sw
-    // sp1-zkvm  |      275 and
-    // sp1-zkvm  |      222 jalr
-    // sp1-zkvm  |      128 bltu
-    // sp1-zkvm  |      111 auipc
-    // sp1-zkvm  |      105 bgeu
-    // sp1-zkvm  |       89 lbu
-    // sp1-zkvm  |       52 beq
-    // sp1-zkvm  |       48 bne
-    // sp1-zkvm  |       36 sb
-    // sp1-zkvm  |       28 sub
-    // sp1-zkvm  |       24 sltu
-    // sp1-zkvm  |       20 ecall
-    // sp1-zkvm  |        4 mul
-    // sp1-zkvm  |        3 lb
-    // sp1-zkvm  |        3 jal
-    // sp1-zkvm  |        1 lhu
-    // sp1-zkvm  |        1 bge
-    // sp1-zkvm  | syscall counts (20 total syscall instructions):
-    // sp1-zkvm  |     8 commit
-    // sp1-zkvm  |     8 commit_deferred_proofs
-    // sp1-zkvm  |     1 halt
-    // sp1-zkvm  |     1 write
-    // sp1-zkvm  |     1 hint_len
-    // sp1-zkvm  |     1 hint_read
     } else {
         // Setup the program for proving.
         let (pk, vk) = client.setup(FIBONACCI_ELF);
 
         // Generate the proof
-        let proof_mode = SP1ProofMode::Compressed;
-        println!("proof_mode: {:?}", proof_mode);
+        let proof_mode = SP1ProofMode::Groth16;
         let prover = client.prove(&pk, &stdin).mode(proof_mode);
         let proof = prover.run().expect("failed to generate proof");
 
         println!("Successfully generated proof!");
+
+        let proof_size = match proof.proof.clone() {
+            SP1Proof::Core(core_proof) => {
+                let mut total_proof_bytes = 0;
+                for cp in core_proof {
+                    let proof_bytes = serde_json::to_vec(&cp).unwrap();
+                    total_proof_bytes += proof_bytes.len();
+                }
+                total_proof_bytes
+            }
+            SP1Proof::Compressed(compress) => {
+                let proof_bytes = serde_json::to_vec(&compress.proof).unwrap();
+                proof_bytes.len()
+            }
+            _ => proof.bytes().len(),
+        };
+        println!(
+            "proof_mode: {:?}, proof size: {:?} Bytes",
+            proof_mode, proof_size
+        );
 
         // Verify the proof.
         client.verify(&proof, &vk).expect("failed to verify proof");
