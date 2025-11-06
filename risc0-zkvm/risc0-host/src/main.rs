@@ -34,14 +34,14 @@ fn main() {
 
     // Proof information by proving the specified ELF binary.
     // This struct contains the receipt along with statistics about execution of the guest
-    let opts = ProverOpts::composite();
+    let opts = ProverOpts::groth16();
     let start = Instant::now();
     let prove_info = default_prover()
         .prove_with_opts(env, METHODS_ELF, &opts)
         .unwrap();
 
     println!(
-        "proof mode: {:?}, proof size: {:?} Bytes, proof time cost(s): {:?}",
+        "proof mode: {:?}, proof size: {:?} Bytes, proof time total cost(s): {:?}",
         opts.receipt_kind,
         prove_info.receipt.seal_size(),
         Instant::now().duration_since(start).as_secs_f64()

@@ -124,7 +124,7 @@ RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release
 * run in production mode
 
 ```bash
-RISC0_DEV_MODE=0 RUST_LOG=info RISC0_INFO=1 cargo run --release
+RISC0_DEV_MODE=0 RUST_LOG=debug RISC0_INFO=1 cargo run --release
 ```
 
 ## Sp1 zkvm
@@ -185,13 +185,13 @@ RUST_LOG=info cargo run --release --bin evm -- --system <PROOF_TYPE>  // for EVM
 * core proof
 
 ```bash
-RUST_LOG=info cargo run --release -- --core
+RUST_LOG=debug cargo run --release -- --core
 ```
 
 * compressed proof
 
 ```bash
-RUST_LOG=info cargo run --release -- --compressed
+RUST_LOG=debug cargo run --release -- --compressed
 ```
 
 * evm proof
