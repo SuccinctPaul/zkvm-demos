@@ -1,6 +1,7 @@
 # zkvm-demos
 
-A collection of Zero-Knowledge Virtual Machine (zkVM) demonstrations for SP1, Risc0, Nexus, ZKM, Valida, OpenVM, Pico, CENO, and Cairo. This repository shows how to build and run programs on different zkVM platforms.
+A collection of Zero-Knowledge Virtual Machine (zkVM) demonstrations for SP1, Risc0, Nexus, ZKM, ZisK, Valida, OpenVM,
+Pico, CENO, and Cairo. This repository shows how to build and run programs on different zkVM platforms.
 
 ## ⚠️ Toolchain Conflict Management
 
@@ -88,7 +89,8 @@ zkVMs). For production use, see the isolation guides above.
 
 ### how to run the CENO demo
 
-⚠️ **Note**: CENO zkVM is under active development by Scroll. This is a template implementation that will be updated once the CENO SDK is publicly available.
+⚠️ **Note**: CENO zkVM is under active development by Scroll. This is a template implementation that will be updated
+once the CENO SDK is publicly available.
 
 * cd to the target demo directory
 
@@ -347,7 +349,8 @@ cd valida-zkvm/valida-host
 RUST_LOG=info cargo run --release
 ```
 
-**Note:** The Rust host program is a demonstration structure. For actual Valida zkVM usage, use Docker or the local toolchain.
+**Note:** The Rust host program is a demonstration structure. For actual Valida zkVM usage, use Docker or the local
+toolchain.
 
 ## ZKM zkvm
 
@@ -395,4 +398,54 @@ RUST_LOG=debug cargo run --release -- --compressed
 cargo run --release --bin evm -- --system groth16
 
 cargo run --release --bin evm -- --system plonk
+```
+
+## ZisK zkvm
+
+### Resources
+
+* https://github.com/0xPolygonHermez/zisk
+* https://polygon.technology/blog/zisk-announcement
+* Performance: 1.5 GHz RISC-V trace generation (~10x faster than other zkVMs)
+
+### Installation
+
+```bash
+cd scripts/sdk_installers
+./install_zisk_sdk.sh
+```
+
+This will:
+
+- Install `ziskup` toolchain manager
+- Install `cargo-zisk` CLI tool (v0.10.0)
+
+### How to Run
+
+* Navigate to the ZisK demo directory:
+
+```bash
+cd zisk-zkvm/zisk-host
+```
+
+* Build the project:
+
+```bash
+cargo build --release
+```
+
+* Run the demo:
+
+```bash
+RUST_LOG=info cargo run --release
+```
+
+### GPU Acceleration (Optional)
+
+For NVIDIA GPUs with CUDA:
+
+```bash
+# Build with GPU support (done by install script)
+# Run with GPU acceleration
+cargo-zisk-gpu run --release
 ```
