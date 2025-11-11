@@ -1,0 +1,30 @@
+# Compiled Cairo programs
+*.json
+
+# Python virtual environment
+cairo-env/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Cairo compilation artifacts
+*.trace
+*.memory
+*.air_public_input
+*.air_private_input
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
