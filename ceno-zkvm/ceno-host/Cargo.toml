@@ -1,0 +1,23 @@
+[package]
+name = "ceno-host"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "ceno-host"
+path = "src/main.rs"
+
+[dependencies]
+# CENO zkVM host dependencies
+# Note: These will need to be updated once CENO SDK is published
+# ceno-sdk = "0.1"  # Placeholder for future CENO SDK
+
+# Common utilities
+common = { path = "../../common" }
+fib = { path = "../../fib" }
+
+# Environment and logging
+dotenv = "0.15"
+env_logger = "0.11"
+log = "0.4"
+

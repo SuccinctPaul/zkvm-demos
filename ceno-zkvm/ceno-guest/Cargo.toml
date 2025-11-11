@@ -1,0 +1,17 @@
+[package]
+name = "ceno-guest"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "ceno-guest"
+path = "src/main.rs"
+
+[dependencies]
+# CENO zkVM guest dependencies
+# Note: These will need to be updated once CENO SDK is published
+# ceno-zkvm = "0.1"  # Placeholder for future CENO SDK
+
+# Fibonacci computation library
+fib = { path = "../../fib" }
+
