@@ -17,3 +17,4 @@ pub fn main() {
     openvm::io::commit(&result);
 }
 
+
