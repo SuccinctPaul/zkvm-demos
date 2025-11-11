@@ -1,0 +1,87 @@
+use openvm_sdk::{config::ProverConfig, Prover, StdIn};
+use std::time::Instant;
+
+// Include the guest program ELF binary
+openvm_sdk::include_guest!();
+
+fn main() -> anyhow::Result<()> {
+    // Setup environment
+    dotenv::dotenv().ok();
+    env_logger::init();
+
+    // Load fibonacci input from environment
+    let fib_n = common::load_fib_n();
+    println!("fib_n = {}", fib_n);
+
+    println!("\n1. Initializing OpenVM prover...");
+    let init_start = Instant::now();
+    
+    // Create prover configuration
+    let config = ProverConfig::default();
+    
+    println!("   Initialization completed in {:.2}s", init_start.elapsed().as_secs_f64());
+
+    println!("\n2. Loading guest program...");
+    let load_start = Instant::now();
+    
+    // Load the guest program ELF
+    let elf = GUEST_ELF;
+    
+    println!("   Guest program loaded in {:.2}s", load_start.elapsed().as_secs_f64());
+    println!("   ELF size: {} bytes", elf.len());
+
+    println!("\n3. Executing program in zkVM...");
+    let exec_start = Instant::now();
+    
+    // Create input for the guest program
+    let mut stdin = StdIn::default();
+    stdin.write(&fib_n);
+    
+    // Execute the program
+    let prover = Prover::new(&config)?;
+    let (output, execution_report) = prover.execute(elf, stdin.clone())?;
+    
+    println!("   Execution completed in {:.2}s", exec_start.elapsed().as_secs_f64());
+    println!("   Cycle count: {}", execution_report.total_cycles());
+    
+    // Read the result from output
+    let result: u32 = output.read();
+    println!("   Fibonacci({}) = {}", fib_n, result);
+
+    println!("\n4. Generating zero-knowledge proof...");
+    let prove_start = Instant::now();
+    
+    // Create stdin again for proving
+    let mut stdin_prove = StdIn::default();
+    stdin_prove.write(&fib_n);
+    
+    // Generate proof
+    let proof = prover.prove(elf, stdin_prove)?;
+    
+    let prove_duration = prove_start.elapsed();
+    println!("   Proof generation completed in {:.2}s", prove_duration.as_secs_f64());
+    
+    // Get proof size
+    let proof_bytes = bincode::serialize(&proof)?;
+    println!("   Proof size: {} bytes", proof_bytes.len());
+
+    println!("\n5. Verifying proof...");
+    let verify_start = Instant::now();
+    
+    // Verify the proof
+    prover.verify(&proof)?;
+    
+    println!("   Verification completed in {:.2}s", verify_start.elapsed().as_secs_f64());
+    println!("   ✓ Proof verified successfully!");
+
+    println!("\n============ Summary ============");
+    println!("Input: n = {}", fib_n);
+    println!("Output: fibonacci({}) = {}", fib_n, result);
+    println!("Total cycles: {}", execution_report.total_cycles());
+    println!("Proof size: {} bytes", proof_bytes.len());
+    println!("Prove time: {:.2}s", prove_duration.as_secs_f64());
+    println!("=================================\n");
+
+    Ok(())
+}
+
