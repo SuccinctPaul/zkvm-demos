@@ -1,0 +1,19 @@
+[package]
+name = "valida-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+common.workspace = true
+fib.workspace = true
+dotenv.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+
+# Note: Valida zkVM dependencies would go here
+# As of late 2024/early 2025, Valida is primarily accessed via Docker
+# or compiled toolchains rather than Rust crates
+# This is a demonstration structure
+
