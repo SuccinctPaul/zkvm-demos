@@ -1,0 +1,6 @@
+[toolchain]
+# CENO zkVM will likely use a RISC-V target similar to other zkVMs
+# This will need to be updated based on CENO's specific requirements
+channel = "stable"
+targets = ["riscv32i-unknown-none-elf", "riscv32im-unknown-none-elf"]
+
