@@ -1,0 +1,21 @@
+[package]
+name = "cairo_fibonacci"
+version = "0.1.0"
+edition = "2024_07"
+
+# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
+
+[dependencies]
+starknet = ">=2.8.5"
+
+[dev-dependencies]
+cairo_test = "2.8.5"
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[scripts]
+test = "scarb cairo-test"
+run = "scarb cairo-run --no-build --available-gas 200000000"
+
