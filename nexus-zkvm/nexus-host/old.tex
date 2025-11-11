@@ -1,0 +1,71 @@
+\begin{table*}[!ht]
+    \centering
+    \caption{Performance comparison of ZKVMs on Fibonacci benchmarks.}
+    \label{zkvm_bench_table}
+    \sisetup{table-format=8.3, table-number-alignment=center}
+    \small
+    \setlength{\tabcolsep}{1.0pt} % 减少列间距
+    \begin{tabular}{@{}
+        c
+        l
+        l
+        S[table-format=8.0]
+        S[table-format=8.0]
+        S[table-format=2.0]
+        S[table-format=5.0]
+        S
+        S[table-format=8.0]
+        S
+        S[table-format=7.0]
+        S[table-format=8.0]
+        S
+        S[table-format=3.0]
+        @{}}
+        \toprule
+        \multirow{2}{*}{\textbf{Fib($n$)}} &
+        \multicolumn{2}{c}{\textbf{ZKVM}} &
+        \multicolumn{1}{c}{\textbf{Program}} &
+        \multicolumn{3}{c}{\textbf{Execution}} &
+        \multicolumn{2}{c}{\textbf{VM Circuit Prove}} &
+        \multicolumn{2}{c}{\textbf{Compress Prove}} &
+        \multicolumn{3}{c}{\textbf{Groth16 (BN254)}} \\
+        \cmidrule(lr){2-3}
+        \cmidrule(lr){3-3}
+        \cmidrule(lr){5-7}
+        \cmidrule(lr){8-9}
+        \cmidrule(lr){10-11}
+        \cmidrule(l){12-14}
+        &
+            {Name} & {Version} &
+            {Instr.} & {Cycles} &
+            {Syscall Cycles} & {Touched Addr.} &
+            {Time (s)} & {Size (B)} &
+            {Time (s)} & {Size (B)} &
+            {Constraints} & {Time (s)} & {Size (B)} \\
+        \midrule
+
+        10 & ZIREN & 1.2.1 & 5968   & 5968   & 20 & 16079 & 2.305 & 2590183 & 5.94 & 1109739 & 7106550 & 7.12  & 260 \\
+        & SP1   & 5.2.2 & 7409   & 7409   & 20 & 18349 & 3.718 & 4322729 & 4.13 & 3452412 & 8382715 & 7.53  & 260 \\
+        & RISC0 & 3.0.3 & 1688   & 65536  & 5  & 26018 & 3.507 & 220904  & 5.36 & 222668  & {--}    & 12.62 & 256 \\
+        & NEXUS & 0.3.4 & {--}   & {--}   & {--} & 2396 & 0.252 & 50080   & {--} & {--}    & {--}    & {--}  & {--} \\
+
+        \addlinespace
+
+        20 & ZIREN & 1.2.1 & 199257 & 199257 & 20 & 16089 & 3.154 & 2609845 & 5.94 & 1109739 & 7106550 & 7.00  & 260 \\
+        & SP1   & 5.2.2 & 203259 & 203259 & 20 & 18350 & 5.270 & 4332900 & 4.37 & 3451027 & 8382715 & 7.92  & 260 \\
+        & RISC0 & 3.0.3 & 197488 & 262144 & 5  & 26018 & 12.963& 255656  & 5.40 & 222668  & {--}    & 9.08  & 256 \\
+        & NEXUS & 0.3.4 & {--}   & {--}   & {--} & 2476 & 19.467& 62624   & {--} & {--}    & {--}    & {--}  & {--} \\
+
+        \addlinespace
+
+        30 & ZIREN & 1.2.1 & 23965890 & 23965890 & 20 & 16119 & 178.00 & 41812470 & 126 & 1109739 & 7106550 & 8.42 & 260 \\
+        & SP1   & 5.2.2 & 24285120 & 24285120 & 20 & 18350 & 237.55 & 97432108 & 165 & 3450508 & 8382715 & 7.48 & 260 \\
+        & RISC0 & 3.0.3 & 24279293 & 25165824 & 5  & 96888 & 1340.72& 6747072  & 6.87 & 222668  & {--}    & 13.82& 256 \\
+        & NEXUS & 0.3.4 & {--}     & {--}     & {--}& {--}  & {--}   & {--}     & {--} & {--}    & {--}    & {--} & {--} \\
+
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+
+

@@ -1,0 +1,25 @@
+\begin{table*}[!ht]
+    \centering
+    \small % 可选：缩小字体以适应宽表
+    \setlength{\tabcolsep}{4pt} % 可选：减小列间距
+    \begin{tabular}{l l l r r r r r r r r r}
+        \toprule
+        & \multicolumn{2}{c}{ZKVM} & \multicolumn{2}{c}{PROGRAM \& EXECUTION} & & \multicolumn{2}{c}{VM CIRCUIT PROVE} & \multicolumn{2}{c}{COMPRESS PROVE} & \multicolumn{2}{c}{GROTH16 (BN254)} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){7-8} \cmidrule(lr){9-10} \cmidrule(lr){11-12}
+        FIBONACCI N & NAME & VERSION & INSTRUCTIONS & TOTAL CYCLES & TOUCHED MEMORY ADDRESSES & PROVE TIME (s) & PROOF SIZE (BYTES) & PROVE TIME (s) & PROOF SIZE (BYTES) & PROVE TIME (s) & PROOF SIZE (BYTES) \\
+        \midrule
+        10 & ZIREN & 1.2.1 & 5968 & 5968 & 16079 & 2.305477209 & 2590183 & 5.94 & 1109739 & 7.123420833 & 260 \\
+        & SP1 & 5.2.2 & 7409 & 7409 & 18349 & 3.717811083 & 4322729 & 4.13 & 3452412 & 7.533600041 & 260 \\
+        & RISC0 & 3.0.3 & 1688 & 65536 & 26018 & 3.506601666 & 220904 & 5.36 & 222668 & 12.621594 & 256 \\
+        & NEXUS & 0.3.4 & 2295 & — & 2396 & 0.251758375 & 50080 & — & — & — & — \\
+        20 & ZIREN & 1.2.1 & 199257 & 199257 & 16089 & 3.153953333 & 2609845 & 5.94 & 1109739 & 6.997289292 & 260 \\
+        & SP1 & 5.2.2 & 203259 & 203259 & 18350 & 5.270194792 & 4332900 & 4.37 & 3451027 & 7.922454 & 260 \\
+        & RISC0 & 3.0.3 & 197488 & 262144 & 26018 & 12.96308358 & 255656 & 5.403695 & 222668 & 9.082926 & 256 \\
+        & NEXUS & 0.3.4 & — & — & 2476 & 19.46684979 & 62624 & — & — & — & — \\
+        30 & ZIREN & 1.2.1 & 23965890 & 23965890 & 16119 & 177.9993138 & 41812470 & 126 & 1109739 & 8.418824167 & 260 \\
+        & SP1 & 5.2.2 & 24285120 & 24285120 & 18350 & 237.5494215 & 97432108 & 165 & 3450508 & 7.479148542 & 260 \\
+        & RISC0 & 3.0.3 & 24279293 & 25165824 & 96888 & 1340.721889 & 6747072 & 6.865999 & 222668 & 13.819846 & 256 \\
+        & NEXUS & 0.3.4 & — & — & — & — & — & — & — & — & — \\
+        \bottomrule
+    \end{tabular}
+\end{table*}

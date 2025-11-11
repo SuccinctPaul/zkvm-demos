@@ -182,3 +182,4 @@ Choose based on your specific requirements:
 - [Cairo vs Solidity](https://www.cairo-lang.org/cairo-for-blockchain-developers/)
 - [STARK vs SNARK](https://consensys.net/blog/blockchain-explained/zero-knowledge-proofs-starks-vs-snarks/)
 
+
