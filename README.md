@@ -100,6 +100,27 @@ cd nexus-zkvm/nexus-host
 RUST_LOG=info cargo run -r -- --nocapture
 ```
 
+## Pico zkvm
+
+### Resources
+
+* https://docs.brevis.network/
+* https://github.com/brevis-network/pico
+
+### how to run the Pico demo
+
+* cd to the target demo directory
+
+```bash
+cd pico-zkvm/pico-host
+```
+
+* run the Pico demo
+
+```bash
+RUST_LOG=info cargo run --release
+```
+
 ## Risc0 zkvm
 
 ### Resources
