@@ -10,3 +10,4 @@ openvm = { git = "https://github.com/openvm-org/openvm", tag = "v1.4.0" }
 [profile.release]
 opt-level = 3
 
+

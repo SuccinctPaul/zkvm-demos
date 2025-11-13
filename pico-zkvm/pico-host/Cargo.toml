@@ -6,12 +6,13 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v1.1.7" }
+pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v1.1.6" }
 common = { workspace = true }
 dotenv = "0.15.0"
 anyhow = "1.0"
 
-[build-dependencies]
-pico-build = { git = "https://github.com/brevis-network/pico", tag = "v1.1.7" }
+#[build-dependencies]
+#pico-build = { git = "https://github.com/brevis-network/pico", tag = "v1.1.7" }
+#
 
 
