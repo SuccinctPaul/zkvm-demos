@@ -29,22 +29,32 @@ scarb build
 # Run tests
 scarb test
 
-# Run the program
+# Run the main program (returns Fibonacci computations for n=10)
 scarb cairo-run --available-gas=200000000
+# Expected output: [10, 55, 55, 55, 89]
+# - n = 10
+# - fib_recursive(10) = 55
+# - fib_iterative(10) = 55  
+# - fib_pair(10) = (55, 89)
 ```
 
-## Generate Proof (Optional)
+## Project Structure
+
+- `src/lib.cairo` - Main library with Fibonacci implementations and main() function
+- `src/contract.cairo` - StarkNet smart contract example
+- `src/main.cairo` - Alternative main program structure
+- `examples/` - Additional example programs
+
+## Generate Proof (Advanced)
+
+Cairo 2.x uses STARK proofs by default. To generate explicit proofs, you can use the Cairo proving tools:
 
 ```bash
-# Compile to Sierra
+# Build the project to generate Sierra JSON
 scarb build
 
-# Run with proof generation
-cairo-run \
-  --program=target/dev/cairo_fibonacci.sierra.json \
-  --layout=recursive \
-  --print_output \
-  --proof_mode
+# The Sierra JSON is at: target/dev/cairo_fibonacci.sierra.json
+# Use with Cairo proving tools for explicit proof generation
 ```
 
 ## Resources

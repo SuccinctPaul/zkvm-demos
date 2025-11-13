@@ -1,26 +1,15 @@
 [workspace]
-members = ["zisk-guest", "zisk-host"]
+members = ["zisk-guest"]
 resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-rust-version = "1.85"
 
 [workspace.dependencies]
 fib = { path = "../fib" }
-common = { path = "../common" }
 
 # ZisK dependencies
 ziskos = { git = "https://github.com/0xPolygonHermez/zisk.git", tag = "v0.10.0" }
-zisk-sdk = { git = "https://github.com/0xPolygonHermez/zisk.git", tag = "v0.10.0" }
-
-# Utilities
-dotenv = "0.15.0"
-env_logger = "0.11"
-log = "0.4"
-anyhow = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 

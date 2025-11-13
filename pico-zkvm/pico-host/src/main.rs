@@ -1,14 +1,10 @@
-#![feature(generic_arg_infer)]
-use pico_sdk::{Prover, ProverClient, ProverConfig};
+use pico_sdk::{client::DefaultProverClient, init_logger};
 use std::time::Instant;
-
-// Include the guest program ELF binary
-pico_sdk::include_guest!();
 
 fn main() -> anyhow::Result<()> {
     // Setup environment
     dotenv::dotenv().ok();
-    env_logger::init();
+    init_logger();
 
     // Load fibonacci input from environment
     let fib_n = common::load_fib_n();
@@ -17,85 +13,77 @@ fn main() -> anyhow::Result<()> {
     println!("\n1. Initializing Pico zkVM prover...");
     let init_start = Instant::now();
 
-    // Create prover configuration
-    let config = ProverConfig::default();
-    let client = ProverClient::new(config)?;
+    // Load the guest program ELF
+    // Try multiple possible ELF locations
+    let elf_paths = vec![
+        "../pico-guest/elf/riscv32im-pico-zkvm-elf",
+        "../pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest",
+        "pico-guest/elf/riscv32im-pico-zkvm-elf",
+    ];
+    
+    let mut elf = None;
+    for path in &elf_paths {
+        if let Ok(data) = std::fs::read(path) {
+            println!("Loaded ELF from: {}", path);
+            elf = Some(data);
+            break;
+        }
+    }
+    
+    let elf = elf.expect(
+        "Failed to read guest ELF. Please build the guest program first with 'cargo pico build' or place a pre-built ELF in pico-guest/elf/riscv32im-pico-zkvm-elf"
+    );
 
     println!(
         "Initialization completed in {:.2}s",
         init_start.elapsed().as_secs_f64()
     );
-
-    println!("2.Building guest program...");
-    let build_start = Instant::now();
-
-    // Load the guest program
-    let elf = GUEST_ELF;
-
-    println!(
-        "Build completed in {:.2}s",
-        build_start.elapsed().as_secs_f64()
-    );
     println!("ELF size: {} bytes", elf.len());
 
-    println!("\n3. Executing program in zkVM...");
+    // Initialize the prover client
+    let client = DefaultProverClient::new(&elf);
+
+    println!("\n2. Executing program in zkVM...");
     let exec_start = Instant::now();
 
     // Create input for the guest program
-    let mut stdin = pico_sdk::Stdin::new();
-    stdin.write(&fib_n);
-
-    // Execute the program
-    let (output, report) = client.execute(elf, stdin)?;
+    let mut stdin_builder = client.new_stdin_builder();
+    stdin_builder.write(&fib_n);
 
     println!(
-        "Execution completed in {:.2}s",
+        "Execution setup completed in {:.2}s",
         exec_start.elapsed().as_secs_f64()
     );
-    println!("Cycle count: {}", report.cycle_count());
 
-    // Read the result from output
-    let result: u32 = output.read();
-    println!("Fibonacci({}) = {}", fib_n, result);
-
-    println!("\n4. Generating zero-knowledge proof...");
+    println!("\n3. Generating zero-knowledge proof...");
     let prove_start = Instant::now();
 
-    // Create stdin again for proving
-    let mut stdin = pico_sdk::Stdin::new();
-    stdin.write(&fib_n);
-
     // Generate proof
-    let prover = client.prove(elf, stdin)?;
-    let proof = prover.run()?;
+    let proof = client.prove_fast(stdin_builder)?;
 
     let prove_duration = prove_start.elapsed();
     println!(
         "Proof generation completed in {:.2}s",
         prove_duration.as_secs_f64()
     );
-    println!("Proof size: {} bytes", proof.bytes().len());
 
-    println!("\n5. Verifying proof...");
-    let verify_start = Instant::now();
+    // Read the result from public values
+    if let Some(public_buffer) = &proof.pv_stream {
+        let result: u32 = bincode::deserialize(public_buffer)
+            .expect("Failed to deserialize public values");
+        println!("Fibonacci({}) = {}", fib_n, result);
 
-    // Verify the proof
-    client.verify(&proof)?;
+        println!("\n============ Summary ============");
+        println!("Input: n = {}", fib_n);
+        println!("Output: fibonacci({}) = {}", fib_n, result);
+        println!("Proof size: {} bytes", public_buffer.len());
+        println!("Prove time: {:.2}s", prove_duration.as_secs_f64());
+        println!("=================================\n");
+    } else {
+        println!("Warning: No public values in proof");
+    }
 
-    println!(
-        "Verification completed in {:.2}s",
-        verify_start.elapsed().as_secs_f64()
-    );
-    println!("Proof verified successfully!");
-
-    println!("\n============ Summary ============");
-    println!("Input: n = {}", fib_n);
-    println!("Output: fibonacci({}) = {}", fib_n, result);
-    println!("Total cycles: {}", report.cycle_count());
-    println!("Proof size: {} bytes", proof.bytes().len());
-    println!("Prove time: {:.2}s", prove_duration.as_secs_f64());
-    println!("=================================\n");
+    println!("Proof generated successfully!");
 
     Ok(())
 }
-

@@ -11,11 +11,19 @@ starknet = ">=2.8.5"
 [dev-dependencies]
 cairo_test = "2.8.5"
 
+# Enable both contract and executable targets
 [[target.starknet-contract]]
 sierra = true
 casm = true
 
+[lib]
+
+# Define executable example
+[[example]]
+name = "fib_demo"
+path = "examples/fib_demo.cairo"
+
 [scripts]
 test = "scarb cairo-test"
-run = "scarb cairo-run --no-build --available-gas 200000000"
+run = "scarb cairo-run --example fib_demo --available-gas 200000000"
 
