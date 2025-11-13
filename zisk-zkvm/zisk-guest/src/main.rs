@@ -3,30 +3,37 @@
 //! This program runs inside the ZisK zero-knowledge virtual machine.
 //! It computes Fibonacci numbers and commits the result to the public output.
 
-#![no_main]
-#![no_std]
+// Disable the standard Rust entry point when targeting zkVM
+#![cfg_attr(all(target_os = "zkvm", target_vendor = "zisk"), no_main)]
 
-// Import ZisK guest environment
 use ziskos::*;
 
-// Entry point for the ZisK guest program
-ziskos::entry!(main);
+// Entry point for the ZisK guest program (when targeting zkVM)
+#[cfg(all(target_os = "zkvm", target_vendor = "zisk"))]
+ziskos::entrypoint!(fibonacci_main);
 
-pub fn main() {
-    // Read input from the host
-    let n: u32 = ziskos::io::read();
+// Regular main function (when building natively for testing)
+#[cfg(not(all(target_os = "zkvm", target_vendor = "zisk")))]
+fn main() {
+    fibonacci_main();
+}
+
+pub fn fibonacci_main() {
+    // Read input from the host (input.bin file)
+    let input = read_input();
     
-    // Log the input (for debugging)
-    ziskos::io::log(&format!("Computing Fibonacci for n = {}", n));
+    // Parse the input as a u32 (little-endian)
+    let n = u32::from_le_bytes([input[0], input[1], input[2], input[3]]);
+    
+    println!("Computing Fibonacci for n = {}", n);
     
     // Compute Fibonacci using the shared library
     let result = fib::fibonacci(n);
     
-    // Log the result
-    ziskos::io::log(&format!("Fibonacci({}) = {}", n, result));
+    println!("Fibonacci({}) = {}", n, result);
     
-    // Commit the result as public output
+    // Set the result as public output
     // This makes the result part of the proof's public data
-    ziskos::io::commit(&result);
+    set_output(0, result);
 }
 

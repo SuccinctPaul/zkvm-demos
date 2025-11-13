@@ -1,7 +1,7 @@
 # zkvm-demos
 
 A collection of Zero-Knowledge Virtual Machine (zkVM) demonstrations for SP1, Risc0, Nexus, ZKM, ZisK, Valida, OpenVM,
-Pico, CENO, and Cairo. This repository shows how to build and run programs on different zkVM platforms.
+Pico, CENO, Cairo, and Jolt. This repository shows how to build and run programs on different zkVM platforms.
 
 ## ⚠️ Toolchain Conflict Management
 
@@ -144,6 +144,39 @@ cairo-compile src/fib_simple.cairo --output fib_simple.json
 
 # Then run
 cairo-run --program=fib_simple.json --print_output --layout=small
+```
+
+## Jolt zkvm
+
+### Resources
+
+* https://jolt.a16zcrypto.com/
+* https://github.com/a16z/jolt
+* https://eprint.iacr.org/2023/1217
+
+### how to run the Jolt demo
+
+* Install Jolt first (if not already installed):
+
+```bash
+# Option 1: Use the installation script
+./scripts/sdk_installers/install_jolt_sdk.sh
+
+# Option 2: Manual installation
+cargo +nightly install --git https://github.com/a16z/jolt --force --bins jolt
+jolt install-toolchain
+```
+
+* cd to the target demo directory
+
+```bash
+cd jolt-zkvm/jolt-host
+```
+
+* run the Jolt demo
+
+```bash
+FIBONACCI_N=10 RUST_LOG=info cargo run --release
 ```
 
 ## Nexus zkvm
