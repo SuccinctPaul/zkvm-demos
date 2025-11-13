@@ -1,0 +1,15 @@
+[package]
+name = "jolt-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+jolt-guest = { path = "../jolt-guest" }
+jolt-sdk = { git = "https://github.com/a16z/jolt", rev = "55b9830a3944dde55d33a55c42522b81dd49f87a" }
+common.workspace = true
+
+[build-dependencies]
+jolt-sdk = { git = "https://github.com/a16z/jolt", rev = "55b9830a3944dde55d33a55c42522b81dd49f87a" }
+
