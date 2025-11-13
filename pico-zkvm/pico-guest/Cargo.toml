@@ -5,10 +5,11 @@ edition = "2021"
 
 [dependencies]
 fib.workspace = true
-pico-zkvm = { git = "https://github.com/brevis-network/pico", tag = "v1.1.7" }
+pico-vm = { git = "https://github.com/brevis-network/pico", tag = "v1.1.6" }
 
 [profile.release]
 opt-level = 3
 lto = true
+
 
 
