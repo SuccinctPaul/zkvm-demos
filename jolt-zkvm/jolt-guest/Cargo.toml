@@ -1,0 +1,11 @@
+[package]
+name = "jolt-guest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fib.workspace = true
+
+[features]
+guest = []
+
