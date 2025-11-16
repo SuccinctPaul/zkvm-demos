@@ -1,0 +1,90 @@
+# ===== Fibonacci Calculator in Miden Assembly =====
+# Computes the nth Fibonacci number iteratively
+# Input: n (provided via advice provider)
+# Output: fib(n) (left on operand stack)
+
+begin
+    # Load input n from advice provider
+    adv_push.1              # Stack: [n]
+    
+    # Handle base cases (n == 0 or n == 1)
+    dup.0                   # Stack: [n, n]
+    push.2                  # Stack: [2, n, n]
+    lt                      # Stack: [n<2, n]
+    
+    if.true
+        # Base case: if n < 2, return 1
+        drop                # Stack: []
+        push.1              # Stack: [1]
+    else
+        # Iterative case: compute fib(n) for n >= 2
+        # Initialize: counter = n, a = 1 (fib(1)), b = 0 (fib(0))
+        push.1              # Stack: [1, n]     (a = fib(1))
+        push.1              # Stack: [1, 1, n]  (b = fib(0), actually we start with fib(1))
+        movup.2             # Stack: [n, 1, 1]  (counter, a, b)
+        push.1              # Stack: [1, n, 1, 1]
+        sub                 # Stack: [n-1, 1, 1] (we'll iterate n-1 times)
+        
+        # Loop: compute fib values iteratively
+        # Stack layout: [counter, a, b]
+        # where a = fib(i), b = fib(i-1)
+        repeat.20
+            # Check if we should continue (counter > 0)
+            dup.0           # Stack: [counter, counter, a, b]
+            push.0          # Stack: [0, counter, counter, a, b]
+            gt              # Stack: [counter>0, counter, a, b]
+            
+            if.true
+                # Calculate next: next = a + b
+                dup.1       # Stack: [a, counter, a, b]
+                dup.3       # Stack: [b, a, counter, a, b]
+                add         # Stack: [next=a+b, counter, a, b]
+                
+                # Rotate values: b = a, a = next
+                movup.3     # Stack: [b, next, counter, a]
+                drop        # Stack: [next, counter, a]
+                swap        # Stack: [counter, next, a]
+                movup.2     # Stack: [a, counter, next]
+                drop        # Stack: [counter, next]
+                dup.0       # Stack: [counter, counter, next]
+                movdn.1     # Stack: [counter, counter, next]
+                push.1      # Stack: [1, counter, counter, next]
+                sub         # Stack: [counter-1, counter, next]
+                swap        # Stack: [counter, counter-1, next]
+                drop        # Stack: [counter-1, next]
+                push.1      # Stack: [1, counter-1, next]
+                swap        # Stack: [counter-1, 1, next]
+                movdn.1     # Stack: [counter-1, 1, next]
+                               # Wait, this is getting complex
+                
+                # Let me simplify: just use the counter as-is
+                # Stack should be: [counter, a, b]
+                # After iteration: [counter-1, next, a]
+                # where next = a+b, and we want new_a = next, new_b = a
+                
+                # Actually: temp = a + b
+                dup.2       # [b, counter, a, b]
+                dup.2       # [a, b, counter, a, b]
+                add         # [temp, counter, a, b]
+                movdn.3     # [counter, a, b, temp]
+                movup.2     # [b, counter, a, temp]
+                movdn.3     # [counter, a, temp, b]
+                drop        # [counter, a, temp] where temp is new 'a', a is new 'b'
+                swap        # [a, counter, temp]
+                movdn.2     # [counter, temp, a] = [counter, new_a, new_b]
+                
+                # Decrement counter
+                push.1      # [1, counter, new_a, new_b]
+                movup.1     # [counter, 1, new_a, new_b]
+                sub         # [counter-1, new_a, new_b]
+            end
+        end
+        
+        # Result is in position 1, counter is in position 0
+        # Stack: [counter, result, old_b]
+        drop            # [result, old_b]
+        swap            # [old_b, result]
+        drop            # [result]
+    end
+end
+

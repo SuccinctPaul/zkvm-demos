@@ -3,27 +3,15 @@ name = "cairo_fibonacci"
 version = "0.1.0"
 edition = "2024_07"
 
-# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
-
 [dependencies]
 starknet = ">=2.8.5"
 
 [dev-dependencies]
 cairo_test = "2.8.5"
 
-# Enable both contract and executable targets
-[[target.starknet-contract]]
-sierra = true
-casm = true
-
 [lib]
-
-# Define executable example
-[[example]]
-name = "fib_demo"
-path = "examples/fib_demo.cairo"
 
 [scripts]
 test = "scarb cairo-test"
-run = "scarb cairo-run --example fib_demo --available-gas 200000000"
+run = "scarb cairo-run --available-gas=200000000"
 

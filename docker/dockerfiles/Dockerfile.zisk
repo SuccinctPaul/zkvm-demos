@@ -1,0 +1,63 @@
+# ZisK ZKVM Toolchain-Only Dockerfile
+# This image contains the development environment and ZisK toolchain for proof generation
+# Source code is mounted at runtime and compiled on-demand
+# Usage: docker run -v $(pwd):/workspace zisk-toolchain bash
+
+FROM zkvm-base:latest
+
+# Install ZisK-specific dependencies required for proof generation
+# These are needed by cargo-zisk prove and the proving system
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Core utilities
+    xz-utils \
+    jq \
+    # QEMU for emulation
+    qemu-system \
+    # Math and crypto libraries
+    libomp-dev \
+    libgmp-dev \
+    libsecp256k1-dev \
+    libsodium-dev \
+    # Development libraries
+    nlohmann-json3-dev \
+    uuid-dev \
+    libgrpc++-dev \
+    libpqxx-dev \
+    # Assembler
+    nasm \
+    # MPI for parallel processing
+    libopenmpi-dev \
+    openmpi-bin \
+    openmpi-common \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Set ZisK environment variables
+ENV ZISK_VERSION="0.10.0" \
+    ZISK_HOME="/root/.zisk" \
+    SETUP_KEY="proving"
+
+# Copy and run ZisK SDK installer script with modifications for Docker
+COPY scripts/sdk_installers/install_zisk_sdk.sh /tmp/install_zisk_sdk.sh
+RUN chmod +x /tmp/install_zisk_sdk.sh && \
+    # Set CI flag to skip GPU build (can be slow and not needed for basic proof generation)
+    # Remove this line if you want GPU support
+    CI=true /tmp/install_zisk_sdk.sh && \
+    rm -f /tmp/install_zisk_sdk.sh
+
+# Add ZisK binaries to PATH
+ENV PATH="${ZISK_HOME}/bin:$PATH"
+
+# Verify installation
+RUN echo "Verifying ZisK installation..." && \
+    cargo-zisk --version && \
+    ziskemu --version && \
+    rustup toolchain list | grep zisk && \
+    echo "ZisK toolchain verified successfully!"
+
+# Set working directory
+WORKDIR /workspace
+
+# Set default command to bash (interactive shell)
+CMD ["bash"]
+

@@ -1,0 +1,25 @@
+[package]
+name = "lean-host"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "lean-host"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+env_logger = "0.11"
+log = "0.4"
+
+# Note: lean_prover and related dependencies would go here
+# Example (when available):
+# lean_prover = { git = "https://github.com/leanEthereum/leanMultisig" }
+# plonky3-field = "0.1"
+# koala-bear = "0.1"
+
+[build-dependencies]
+# Build script dependencies would go here for compiling guest programs
+

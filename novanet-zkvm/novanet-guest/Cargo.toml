@@ -1,0 +1,11 @@
+[package]
+name = "novanet-guest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fib.workspace = true
+# Nova-based zkVM guest dependencies would go here
+# For now, we'll use a generic implementation structure
+serde = { version = "1.0", features = ["derive"] }
+

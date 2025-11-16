@@ -2,6 +2,31 @@
 
 Fibonacci number computation using Cairo 2.x with STARK proofs.
 
+
+
+### Proof Generation Process
+
+```mermaid
+Cairo Source Code (*.cairo)
+         ↓
+    [Scarb Build]
+         ↓
+Sierra Intermediate Representation (*.sierra.json)
+         ↓
+    [Cairo VM Execution]
+         ↓
+Execution Trace (memory states, gas usage)
+         ↓
+    [STARK Prover]
+         ↓
+STARK Proof (succinctly proves execution)
+         ↓
+    [STARK Verifier]
+         ↓
+Verification Result (✓ or ✗)
+```
+
+
 ## Quick Start - Generate Proof
 
 ```bash
@@ -78,10 +103,7 @@ scarb cairo-run --available-gas=200000000
 
 ## Project Structure
 
-- `src/lib.cairo` - Main library with Fibonacci implementations and main() function
-- `src/contract.cairo` - StarkNet smart contract example
-- `src/main.cairo` - Alternative main program structure
-- `examples/` - Additional example programs
+- `src/lib.cairo` - Complete Fibonacci implementation with main() function and tests
 
 ## Proof Generation
 
@@ -115,16 +137,6 @@ starkli deploy --network testnet
 | **Tests** | 4/4 passing ✓ |
 | **Proof Ready** | ✅ Yes |
 
-## Test Results
-
-All tests passing ✓:
-```bash
-scarb test
-# test_fib_recursive ... ok (gas: 870,510)
-# test_fib_iterative ... ok (gas: 73,900)
-# test_fib_pair ... ok (gas: 55,220)
-# test_recursive_vs_iterative ... ok (gas: 947,760)
-```
 
 ## Resources
 
