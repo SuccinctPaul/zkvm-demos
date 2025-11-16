@@ -50,7 +50,9 @@ FIBONACCI_N=10
 
 ### Note on Current Build Status
 
-⚠️ **Important**: The Pico zkVM SDK (versions v1.1.6 and v1.1.7) currently has compatibility issues with certain Rust nightly toolchains. The `cargo pico build` command may fail due to:
+⚠️ **Important**: The Pico zkVM SDK (versions v1.1.6 and v1.1.7) currently has compatibility issues with certain Rust
+nightly toolchains. The `cargo pico build` command may fail due to:
+
 - Unstable feature incompatibilities
 - Deprecated API usage in dependencies
 
@@ -75,7 +77,8 @@ cargo build --release
 
 ## Running
 
-✅ **Verified Working**: Proof generation has been tested and verified. See [PROOF_VERIFICATION.md](PROOF_VERIFICATION.md) for detailed test results.
+✅ **Verified Working**: Proof generation has been tested and verified.
+See [PROOF_VERIFICATION.md](PROOF_VERIFICATION.md) for detailed test results.
 
 ### Prerequisites for Running
 
@@ -85,8 +88,8 @@ cargo build --release
    ```
 
 2. Ensure a guest ELF binary exists in one of these locations:
-   - `pico-guest/elf/riscv32im-pico-zkvm-elf` (pre-built ✅ included)
-   - `pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest` (from cargo pico build)
+    - `pico-guest/elf/riscv32im-pico-zkvm-elf` (pre-built ✅ included)
+    - `pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest` (from cargo pico build)
 
 ### Execute the program and generate proof:
 
@@ -95,41 +98,8 @@ cd pico-zkvm/pico-host
 cargo run --release
 ```
 
-Expected output:
-```
-fib_n = 10
-
-1. Initializing Pico zkVM prover...
-Loaded ELF from: ../pico-guest/elf/riscv32im-pico-zkvm-elf
-Initialization completed in 0.00s
-ELF size: 140440 bytes
-
-2. Executing program in zkVM...
-Execution setup completed in 0.00s
-
-3. Generating zero-knowledge proof...
-Proof generation completed in 2.34s
-Fibonacci(10) = 55
-
-============ Summary ============
-Input: n = 10
-Output: fibonacci(10) = 55
-Proof size: 12 bytes
-Prove time: 2.34s
-=================================
-
-Proof generated successfully!
-```
-
 ### Known Issues
 
 1. **Build Tool Compatibility**: The `cargo pico` build tool has compatibility issues with current Rust nightly versions
 2. **Guest Program API**: Uses `pico-sdk` v1.1.6 which may not match all examples in official documentation
 3. **Toolchain Requirements**: Requires specific nightly version `nightly-2025-08-04`
-
-### Future Improvements
-
-Once the Pico zkVM toolchain stabilizes:
-- Automated guest program building
-- Integration tests
-- CI/CD pipeline integration
