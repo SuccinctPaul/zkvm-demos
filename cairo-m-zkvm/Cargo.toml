@@ -1,0 +1,38 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[workspace]
+members = [
+    "cairo-m-host",
+]
+resolver = "2"
+
+[workspace.dependencies]
+fib = { path = "../fib" }
+common = { path = "../common" }
+
+# Cairo-M dependencies (these would be from the cairo-m repository)
+# Note: These are placeholder paths - actual integration depends on cairo-m's published crates
+# cairo-m-compiler = { git = "https://github.com/kkrt-labs/cairo-m.git" }
+# cairo-m-runner = { git = "https://github.com/kkrt-labs/cairo-m.git" }
+# cairo-m-prover = { git = "https://github.com/kkrt-labs/cairo-m.git" }
+
+# misc
+dotenv = "0.15.0"
+anyhow = "1.0.98"
+env_logger = "0.11"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Always optimize; building and running takes much longer without optimization.
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+debug = 1
+lto = true
+

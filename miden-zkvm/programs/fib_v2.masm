@@ -1,0 +1,100 @@
+# Fibonacci in Miden Assembly (Simple Version)
+# Computes fib(n) where fib(0)=1, fib(1)=1
+
+begin
+    # Load n from advice provider
+    adv_push.1
+    
+    # Base case: if n <= 1, return 1
+    dup.0
+    push.1
+    lte
+    if.true
+        drop
+        push.1
+    else
+        # Stack: [n]
+        # Setup: counter=n-1, a=1 (fib(1)), b=1 (fib(0))
+        push.1 sub      # [counter=n-1]
+        push.1          # [b=1, counter]
+        push.1          # [a=1, b=1, counter]
+        
+        # Unrolled loop: max 10 iterations
+        # Stack layout: [a, b, counter]
+        # On each iteration: temp=a+b, a=b, b=temp, counter--
+        
+        # Iter 1
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add     # [a+b, a, b, counter]
+            movup.2             # [b, a+b, a, counter]
+            drop                # [a+b, a, counter] (now a+b is new 'a', a is new 'b')
+            swap                # [a, a+b, counter]
+            movdn.1             # [a+b, a, counter] = [new_a, new_b, counter]
+            movup.2             # [counter, new_a, new_b]
+            push.1 sub          # [counter-1, new_a, new_b]
+            movdn.2             # [new_a, new_b, counter-1]
+        end
+        
+        # Iter 2
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Iter 3
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Iter 4
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Iter 5
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Iter 6
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Iter 7
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Iter 8
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Iter 9
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Iter 10
+        dup.2 push.0 neq
+        if.true
+            dup.1 dup.1 add movup.2 drop swap movdn.1 movup.2 push.1 sub movdn.2
+        end
+        
+        # Final stack should be: [result, old_b, counter]
+        # Keep only result
+        movup.2     # [counter, result, old_b]
+        drop        # [result, old_b]
+        swap        # [old_b, result]
+        drop        # [result]
+    end
+end

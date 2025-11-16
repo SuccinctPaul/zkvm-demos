@@ -20,7 +20,7 @@ fn main() -> anyhow::Result<()> {
         "../pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest",
         "pico-guest/elf/riscv32im-pico-zkvm-elf",
     ];
-    
+
     let mut elf = None;
     for path in &elf_paths {
         if let Ok(data) = std::fs::read(path) {
@@ -29,7 +29,7 @@ fn main() -> anyhow::Result<()> {
             break;
         }
     }
-    
+
     let elf = elf.expect(
         "Failed to read guest ELF. Please build the guest program first with 'cargo pico build' or place a pre-built ELF in pico-guest/elf/riscv32im-pico-zkvm-elf"
     );
@@ -69,8 +69,8 @@ fn main() -> anyhow::Result<()> {
 
     // Read the result from public values
     if let Some(public_buffer) = &proof.pv_stream {
-        let result: u32 = bincode::deserialize(public_buffer)
-            .expect("Failed to deserialize public values");
+        let result: u32 =
+            bincode::deserialize(public_buffer).expect("Failed to deserialize public values");
         println!("Fibonacci({}) = {}", fib_n, result);
 
         println!("\n============ Summary ============");

@@ -1,0 +1,30 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[workspace]
+members = [
+    "powdr-guest",
+    "powdr-host",
+]
+resolver = "2"
+
+[workspace.dependencies]
+fib = { path = "../fib" }
+common = { path = "../common" }
+
+# misc
+dotenv = "0.15.0"
+anyhow = "1.0.98"
+env_logger = "0.11"
+
+# Always optimize; building and running the guest takes much longer without optimization.
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+debug = 1
+lto = true
+

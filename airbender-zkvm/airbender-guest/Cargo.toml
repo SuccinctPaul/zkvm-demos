@@ -1,0 +1,22 @@
+[package]
+name = "airbender-guest"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+fib.workspace = true
+
+# Airbender guest runtime dependencies
+# Note: This is a placeholder structure based on the ere project
+# Actual dependencies will need to be adjusted once Airbender SDK is available
+serde = { workspace = true }
+
+[[bin]]
+name = "airbender-guest"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+

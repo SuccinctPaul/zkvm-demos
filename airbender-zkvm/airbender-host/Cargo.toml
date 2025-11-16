@@ -1,0 +1,34 @@
+[package]
+name = "airbender-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "airbender-host"
+path = "src/main.rs"
+
+[dependencies]
+common.workspace = true
+fib.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+bincode.workspace = true
+tempfile.workspace = true
+
+# Airbender host dependencies
+# Note: These are placeholders based on the ere project structure
+# Actual dependencies will need to be updated with official Airbender SDK
+# airbender_execution_utils = { version = "0.1", optional = true }
+
+[build-dependencies]
+# Build script dependencies for compiling the guest program
+
+[features]
+default = []
+
+[lints]
+workspace = true
+

@@ -1,0 +1,6 @@
+[toolchain]
+# Cairo-M requires Rust nightly for some advanced features
+channel = "nightly-2025-01-10"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
+

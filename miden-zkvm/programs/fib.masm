@@ -1,0 +1,74 @@
+# Miden Assembly Program: Fibonacci Calculator
+# This program computes the nth Fibonacci number
+#
+# Input: n (from stack)
+# Output: fib(n) (on stack)
+#
+# Algorithm:
+# - If n <= 1, return 1
+# - Otherwise compute iteratively: fib(n) = fib(n-1) + fib(n-2)
+
+proc.fibonacci
+    # Stack: [n, ...]
+    # Check if n <= 1
+    dup.0           # [n, n, ...]
+    push.1          # [1, n, n, ...]
+    lte             # [n<=1, n, ...]
+    if.true
+        # Base case: n <= 1, return 1
+        drop        # [...]
+        push.1      # [1, ...]
+    else
+        # Iterative case: compute fib(n)
+        # Initialize: a=1 (fib(0)), b=1 (fib(1)), counter=n-1
+        push.1      # [1, n, ...]         # a = fib(0)
+        push.1      # [1, 1, n, ...]      # b = fib(1)
+        dup.2       # [n, 1, 1, n, ...]
+        push.1      # [1, n, 1, 1, n, ...]
+        sub         # [n-1, 1, 1, n, ...] # counter = n-1
+        
+        # Loop n-1 times
+        repeat.20   # Maximum iterations (adjust based on n)
+            # Check if counter > 0
+            dup.0   # [counter, counter, b, a, n, ...]
+            push.0  # [0, counter, counter, b, a, n, ...]
+            gt      # [counter>0, counter, b, a, n, ...]
+            if.true
+                # temp = a + b
+                dup.1   # [b, counter, b, a, n, ...]
+                dup.3   # [a, b, counter, b, a, n, ...]
+                add     # [a+b, counter, b, a, n, ...]
+                # a = b
+                movup.3 # [a, counter, b, a+b, n, ...]
+                drop    # [counter, b, a+b, n, ...]
+                # b = temp (a+b)
+                movup.1 # [b, counter, a+b, n, ...]
+                drop    # [counter, a+b, n, ...]
+                movdn.1 # [a+b, counter, n, ...]
+                movup.1 # [counter, a+b, n, ...]
+                # counter--
+                push.1  # [1, counter, a+b, n, ...]
+                sub     # [counter-1, a+b, n, ...]
+                movdn.1 # [a+b, counter-1, n, ...]
+                movup.1 # [counter-1, a+b, n, ...]
+            end
+        end
+        
+        # Clean up and return b
+        drop        # [b, n, ...]
+        swap        # [n, b, ...]
+        drop        # [b, ...]
+    end
+end
+
+begin
+    # Read input n from advice stack
+    adv_push.1      # Push 1 value from advice provider
+    
+    # Call fibonacci procedure
+    exec.fibonacci
+    
+    # The result is now on top of stack
+    # No need to do anything else, the result will be verified
+end
+
