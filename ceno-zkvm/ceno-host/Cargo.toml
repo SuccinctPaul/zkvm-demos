@@ -8,9 +8,10 @@ name = "ceno-host"
 path = "src/main.rs"
 
 [dependencies]
-# CENO zkVM host dependencies
-# Note: These will need to be updated once CENO SDK is published
-# ceno-sdk = "0.1"  # Placeholder for future CENO SDK
+# Using Nexus zkVM as a proof-of-concept implementation
+# until CENO SDK is officially released
+nexus-sdk = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
+nexus-profiler = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
 
 # Common utilities
 common = { path = "../../common" }

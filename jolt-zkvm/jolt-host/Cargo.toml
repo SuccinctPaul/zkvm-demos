@@ -6,10 +6,7 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-jolt-guest = { path = "../jolt-guest" }
-jolt-sdk = { git = "https://github.com/a16z/jolt", rev = "55b9830a3944dde55d33a55c42522b81dd49f87a" }
+jolt-sdk = { git = "https://github.com/a16z/jolt", rev = "55b9830a3944dde55d33a55c42522b81dd49f87a", features = ["host"] }
+guest = { package = "jolt-guest", path = "../jolt-guest" }
 common.workspace = true
-
-[build-dependencies]
-jolt-sdk = { git = "https://github.com/a16z/jolt", rev = "55b9830a3944dde55d33a55c42522b81dd49f87a" }
 

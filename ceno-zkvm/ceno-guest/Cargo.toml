@@ -8,10 +8,13 @@ name = "ceno-guest"
 path = "src/main.rs"
 
 [dependencies]
-# CENO zkVM guest dependencies
-# Note: These will need to be updated once CENO SDK is published
-# ceno-zkvm = "0.1"  # Placeholder for future CENO SDK
+# Using Nexus zkVM as a proof-of-concept implementation
+# until CENO SDK is officially released
+nexus-rt = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
 
 # Fibonacci computation library
 fib = { path = "../../fib" }
+
+[features]
+cycles = [] # Enable cycle counting for run command
 

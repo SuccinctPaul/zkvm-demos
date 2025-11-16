@@ -1,8 +1,8 @@
 [toolchain]
-# CENO zkVM will likely use a RISC-V target similar to other zkVMs
-# This will need to be updated based on CENO's specific requirements
-channel = "stable"
-targets = ["riscv32i-unknown-none-elf", "riscv32im-unknown-none-elf"]
+# Using nightly toolchain for Nexus zkVM compatibility
+# (CENO proof-of-concept implementation)
+channel = "nightly-2025-04-06"
+targets = ["riscv32i-unknown-none-elf"]
 
 
 
