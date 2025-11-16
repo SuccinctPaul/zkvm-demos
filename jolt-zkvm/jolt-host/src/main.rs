@@ -14,7 +14,7 @@ pub fn main() {
     let compile_start = Instant::now();
     
     let target_dir = "/tmp/jolt-guest-targets";
-    let program = guest::compile_fibonacci(target_dir);
+    let mut program = guest::compile_fibonacci(target_dir);
     
     let compile_duration = compile_start.elapsed();
     println!("   ✓ Compilation completed in {:.2}s\n", compile_duration.as_secs_f64());
@@ -23,8 +23,8 @@ pub fn main() {
     println!("2️⃣  Preprocessing...");
     let preprocess_start = Instant::now();
     
-    let prover_preprocessing = guest::preprocess_prover_fibonacci(&program);
-    let verifier_preprocessing = guest::preprocess_verifier_fibonacci(&program);
+    let prover_preprocessing = guest::preprocess_prover_fibonacci(&mut program);
+    let verifier_preprocessing = guest::preprocess_verifier_fibonacci(&mut program);
     
     let preprocess_duration = preprocess_start.elapsed();
     println!("   ✓ Preprocessing completed in {:.2}s\n", preprocess_duration.as_secs_f64());
@@ -43,7 +43,7 @@ pub fn main() {
     println!("4️⃣  Generating proof...");
     let prove_start = Instant::now();
     
-    let (output, proof) = prove_fibonacci(fib_n);
+    let (output, proof, _commitments) = prove_fibonacci(fib_n);
     
     let prove_duration = prove_start.elapsed();
     println!("   ✓ Proof generated in {:.2}s", prove_duration.as_secs_f64());
@@ -53,7 +53,7 @@ pub fn main() {
     println!("5️⃣  Verifying proof...");
     let verify_start = Instant::now();
     
-    let is_valid = verify_fibonacci(fib_n, output, proof);
+    let is_valid = verify_fibonacci(fib_n, output, true, proof);
     
     let verify_duration = verify_start.elapsed();
     
