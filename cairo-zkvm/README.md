@@ -18,6 +18,26 @@ scarb cairo-run --available-gas=200000000 --print-full-memory > trace.txt
 **Expected Output**: `[10, 55, 55, 55, 89]` ✓  
 **Sierra JSON**: `target/dev/cairo_fibonacci.sierra.json` (ready for STARK prover)
 
+### 🚀 生成实际的 STARK Proof
+
+**推荐方法：使用 StarkNet + Katana**
+```bash
+# 安装 Starknet Foundry（包含 Katana 本地节点）
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+snfoundryup
+
+# 启动本地节点
+katana &
+
+# 声明合约并生成 proof
+starkli declare target/dev/cairo_fibonacci.contract_class.json --rpc http://localhost:5050
+```
+
+📖 **详细指南**：
+- `STARK_PROOF_GUIDE.md` - 所有proof生成方法对比
+- `PROOF_GENERATION_SUMMARY.md` - 快速总结和推荐
+- `STWO_PROOF_GUIDE.md` - 关于 Stwo prover 的说明（不推荐用于Cairo）
+
 ---
 
 ## Prerequisites

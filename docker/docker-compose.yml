@@ -10,7 +10,7 @@
 #   ZKVM_ARGS="--execute" docker compose --profile sp1 up sp1-zkvm
 #   docker compose run --rm sp1-zkvm bash
 #
-# Available profiles: nexus, risc0, sp1, zkm, all
+# Available profiles: nexus, risc0, sp1, zkm, zisk, all
 
 services:
   # Nexus ZKVM
@@ -108,6 +108,62 @@ services:
       - zkm
       - all
 
+  # ZisK ZKVM
+  zisk-zkvm:
+    platform: linux/amd64  # ZisK proof generation requires Linux x86_64
+    build:
+      context: ..
+      dockerfile: docker/dockerfiles/Dockerfile.zisk
+    image: zisk-zkvm:latest
+    container_name: zisk-zkvm
+    volumes:
+      - ../:/workspace
+      - zisk-cargo-cache:/usr/local/cargo/registry
+      - zisk-target-cache:/workspace/target
+      - zisk-zisk-cache:/root/.zisk
+    working_dir: /workspace/zisk-zkvm
+    environment:
+      - RUST_LOG=info
+      - FIBONACCI_N=${FIBONACCI_N:-10}
+      - ZKVM_MODE=${ZKVM_MODE:-test}
+    command: >
+      bash -c "
+      echo 'ZisK ZKVM - Fibonacci Demo';
+      echo 'Mode: ${ZKVM_MODE:-test}';
+      echo 'FIBONACCI_N: ${FIBONACCI_N:-10}';
+      echo '';
+      cd zisk-guest;
+      if [ \"${ZKVM_MODE}\" = \"prove\" ]; then
+        echo '=== Building guest program ===';
+        cargo-zisk build --release;
+        echo '';
+        echo '=== Testing with emulator ===';
+        cargo-zisk run --release -i ../build/input.bin;
+        echo '';
+        echo '=== Generating ROM setup (if needed) ===';
+        cargo-zisk rom-setup -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest || echo 'ROM setup already exists or failed';
+        echo '';
+        echo '=== Generating proof ===';
+        cargo-zisk prove -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest -i ../build/input.bin -o ../proof -a -y;
+        echo '';
+        echo '=== Verifying proof ===';
+        cargo-zisk verify -p ../proof/vadcop_final_proof.bin;
+      else
+        echo '=== Building guest program ===';
+        cargo-zisk build --release;
+        echo '';
+        echo '=== Testing with emulator ===';
+        cargo-zisk run --release -i ../build/input.bin;
+        echo '';
+        echo 'To generate proof, set ZKVM_MODE=prove';
+      fi
+      "
+    stdin_open: true
+    tty: true
+    profiles:
+      - zisk
+      - all
+
 # Persistent volumes for caching build artifacts and dependencies
 volumes:
   nexus-cargo-cache:
@@ -125,5 +181,11 @@ volumes:
   zkm-cargo-cache:
     driver: local
   zkm-target-cache:
+    driver: local
+  zisk-cargo-cache:
+    driver: local
+  zisk-target-cache:
+    driver: local
+  zisk-zisk-cache:
     driver: local
 
