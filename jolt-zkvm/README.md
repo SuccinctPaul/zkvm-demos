@@ -73,7 +73,7 @@ cargo build --release
 
 ```bash
 cd jolt-zkvm/jolt-host
-RUST_LOG=info FIBONACCI_N=10 cargo run --release
+RUST_LOG=debug FIBONACCI_N=10 cargo run --release
 ```
 
 ## Resources
