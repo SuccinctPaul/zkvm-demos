@@ -1,0 +1,49 @@
+# ================================================================
+# Risc0 zkVM Benchmark Configuration
+# ================================================================
+
+name = "risc0"
+version = "v1.0.0"
+enabled = false  # 设为 true 启用
+default_mode = "groth16"
+
+# 测试规模（Fibonacci N 值）
+test_scales = [10, 100, 1000]
+
+# 证明模式
+test_modes = ["stark", "groth16"]
+
+# Risc0 项目路径
+working_dir = "../risc0-zkvm/risc0-host"
+
+# 构建和运行命令
+build_command = "cargo build --release"
+run_command = "cargo run --release"
+
+# 超时设置（秒）
+timeout_seconds = 3600
+
+# 重复次数
+repeat_count = 1
+
+# ----------------------------------------------------------------
+# 环境变量
+# ----------------------------------------------------------------
+[env_vars]
+RUST_LOG = "debug"  # 改为 debug 以捕获详细日志
+RISC0_DEV_MODE = "0"
+
+# ----------------------------------------------------------------
+# 日志解析正则表达式
+# ----------------------------------------------------------------
+[log_patterns]
+# P0 核心指标（根据 Risc0 实际日志格式调整）
+total_cycles = 'BENCHMARK: total_cycles=(\d+)'
+total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
+final_proof_size_bytes = 'BENCHMARK: final_proof_size_bytes=(\d+)'
+verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+
+# P1 高优先级指标
+execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+peak_memory_mb = 'BENCHMARK: peak_memory_mb=([\d.]+)'
+

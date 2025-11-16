@@ -1,0 +1,93 @@
+# ================================================================
+# zkVM Benchmark Configuration Template
+# ================================================================
+# 复制这个模板创建新 zkVM 的配置文件
+# 文件名：configs/{zkvm_name}.toml
+
+name = "{zkvm_name}"       # zkVM 名称（小写）
+version = "v1.0.0"         # zkVM 版本
+enabled = false            # 设为 true 启用
+default_mode = "default"   # 默认证明模式
+
+# 测试规模（Fibonacci N 值）
+test_scales = [10, 100, 1000]
+
+# 证明模式列表
+# 常见模式: ["default"], ["stark", "groth16"], ["core", "compressed", "groth16"]
+test_modes = ["default"]
+
+# zkVM 项目路径（相对于 zkvm_benchmark_utils/）
+working_dir = "../{zkvm_name}-zkvm/host"
+
+# 构建和运行命令
+build_command = "cargo build --release"
+run_command = "cargo run --release"
+# 注意：不要在 run_command 中设置环境变量（如 RUST_LOG=debug），
+# 应该在下面的 [env_vars] 段落中设置
+
+# 超时设置（秒）
+timeout_seconds = 3600
+
+# 重复次数
+repeat_count = 1
+
+# ----------------------------------------------------------------
+# 环境变量（推荐设置）
+# ----------------------------------------------------------------
+[env_vars]
+# 设置为 debug 以获取详细的 benchmark 日志
+RUST_LOG = "debug"
+# 添加其他环境变量...
+# 例如：YOUR_ZKVM_OPTION = "value"
+
+# ----------------------------------------------------------------
+# 日志解析正则表达式（必需）
+# ----------------------------------------------------------------
+[log_patterns]
+# P0 核心指标（必需）
+total_cycles = 'BENCHMARK: total_cycles=(\d+)'
+total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
+final_proof_size_bytes = 'BENCHMARK: final_proof_size_bytes=(\d+)'
+verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+
+# P1 高优先级指标（推荐）
+# execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+# peak_memory_mb = 'BENCHMARK: peak_memory_mb=([\d.]+)'
+
+# P2 额外指标（可选）
+# segments = 'BENCHMARK: segments=(\d+)'
+# syscall_count = 'BENCHMARK: syscall_count=(\d+)'
+
+# ================================================================
+# 使用步骤
+# ================================================================
+# 1. 复制此文件为 configs/{zkvm_name}.toml
+# 2. 替换 {zkvm_name} 为实际名称（如 sp1, risc0）
+# 3. 调整 working_dir 路径
+# 4. 根据 zkVM 的日志格式调整 log_patterns
+# 5. 设置 enabled = true
+# 6. 运行: cargo run --bin zkvm-benchmark -- run --zkvms {zkvm_name}
+
+# ================================================================
+# zkVM Host 输出要求
+# ================================================================
+# 你的 zkVM host 代码需要输出以下格式：
+#
+# println!("BENCHMARK: total_cycles={}", cycles);
+# println!("BENCHMARK: total_prove_time_s={:.6}", time.as_secs_f64());
+# println!("BENCHMARK: final_proof_size_bytes={}", proof.len());
+# println!("BENCHMARK: verification_time_s={:.6}", verify_time.as_secs_f64());
+
+# ================================================================
+# 正则表达式说明
+# ================================================================
+# - (\d+)      匹配整数，如: 12345
+# - ([\d.]+)   匹配小数，如: 123.456
+# - (\w+)      匹配单词，如: success, failed
+# - .*         匹配任意字符（灵活匹配）
+#
+# 示例：
+# 'BENCHMARK: cycles=(\d+)'              → 提取 "BENCHMARK: cycles=12345" 中的 12345
+# 'time=([\d.]+)s'                       → 提取 "time=123.45s" 中的 123.45
+# 'BENCHMARK: .*_proof_size_bytes=(\d+)' → 匹配 groth16_proof_size_bytes=260
+

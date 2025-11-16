@@ -1,0 +1,61 @@
+# ================================================================
+# SP1 zkVM Benchmark Configuration
+# ================================================================
+
+name = "sp1"
+version = "v5.0.0"
+enabled = true
+default_mode = "groth16"
+
+# 测试规模（Fibonacci N 值）
+test_scales = [10, 100, 1000]
+
+# 证明模式
+test_modes = ["core", "compressed", "groth16"]
+
+# SP1 项目路径
+working_dir = "../sp1-zkvm/sp1-host"
+
+# 构建和运行命令
+build_command = "cargo build --release"
+run_command = "cargo run --release -- --prove"
+
+# 超时设置（秒）
+timeout_seconds = 3600
+
+# 重复次数
+repeat_count = 1
+
+# ----------------------------------------------------------------
+# 环境变量
+# ----------------------------------------------------------------
+[env_vars]
+RUST_LOG = "debug"
+
+# ----------------------------------------------------------------
+# 日志解析正则表达式
+# ----------------------------------------------------------------
+[log_patterns]
+# P0 核心指标
+total_cycles = 'BENCHMARK: total_cycles=(\d+)'
+total_instruction_count = 'BENCHMARK: total_instruction_count=(\d+)'
+total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
+final_proof_size_bytes = 'BENCHMARK: .*_proof_size_bytes=(\d+)'
+verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+success_status = 'BENCHMARK: success_status=(\w+)'
+
+# P1 高优先级指标
+execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+vm_prove_time_s = 'BENCHMARK: vm_prove_time_s=([\d.]+)'
+recursive_prove_time_s = 'BENCHMARK: recursive_prove_time_s=([\d.]+)'
+snark_prove_time_s = 'BENCHMARK: snark_prove_time_s=([\d.]+)'
+vm_core_proof_size_kb = 'BENCHMARK: vm_core_proof_size_kb=([\d.]+)'
+compressed_proof_size_kb = 'BENCHMARK: compressed_proof_size_kb=([\d.]+)'
+groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
+
+# P2 额外指标
+segments = 'BENCHMARK: segments=(\d+)'
+syscall_cycles = 'BENCHMARK: syscall_cycles=(\d+)'
+syscall_count = 'BENCHMARK: syscall_count=(\d+)'
+peak_memory_mb = 'BENCHMARK: peak_memory_mb=([\d.]+)'
+

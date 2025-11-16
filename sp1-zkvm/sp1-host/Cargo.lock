@@ -5557,6 +5557,7 @@ dependencies = [
 name = "sp1-host"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "clap",
  "common",
  "dotenv",
