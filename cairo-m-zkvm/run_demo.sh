@@ -58,7 +58,7 @@ if [ $MISSING_TOOLS -eq 1 ]; then
     echo "  cd ../scripts/sdk_installers"
     echo "  ./install_cairo_m_sdk.sh"
     echo ""
-    read -p "Press Enter to continue with simulation mode, or Ctrl+C to abort..."
+    echo "Continuing with simulation mode..."
     echo ""
 fi
 
