@@ -52,47 +52,15 @@ source ~/zkvm-workspaces/sp1-workspace/activate.sh
 📖 **Full Guide:
 ** [docs/ISOLATION-LOCAL-ENV.md](docs/ISOLATION-LOCAL-ENV.md) | [中文版](docs/ISOLATION-LOCAL-ENV.zh-CN.md)
 
-### 🔧 mise - Modern Toolchain Manager (Recommended for Local Development)
-
-Automatic toolchain switching using [mise](https://mise.jdx.dev/) - manages Rust versions, Python, and other tools per-directory.
-
-```bash
-# Install mise
-brew install mise  # or: curl https://mise.run | sh
-
-# Setup (in project root)
-cd zkvm-demos
-mise trust
-mise install
-
-# Automatic switching - just cd!
-cd jolt-zkvm    # Uses Rust 1.88
-cd ../sp1-zkvm  # Uses Rust nightly
-cd ../cairo-zkvm # Uses Python + Scarb
-```
-
-**Advantages:**
-
-- ✅ Automatic switching when you `cd`
-- ✅ Native performance
-- ✅ Manages multiple languages (Rust, Python, Node, etc.)
-- ✅ Simple configuration
-- ✅ Works with rust-toolchain.toml
-- ✅ Built-in tasks (mise run check-tools)
-
-📖 **Full Guide:** [MISE_SETUP.md](MISE_SETUP.md)
-
 ### 📊 Which Approach Should You Use?
 
 | Your Situation             | Recommended Solution |
 |----------------------------|----------------------|
 | Working in a team          | 🐳 Docker            |
 | Need CI/CD                 | 🐳 Docker            |
-| Just getting started       | 🐳 Docker or 🔧 mise |
-| Solo dev, frequent builds  | 🔧 mise (easiest)    |
-| Need hardware access (GPU) | 🔧 mise or 🏠 Local  |
-| Complex dependencies       | 🐳 Docker            |
-| Want auto-switching tools  | 🔧 mise              |
+| Just getting started       | 🐳 Docker            |
+| Solo dev, frequent builds  | 🏠 Local + direnv    |
+| Need hardware access (GPU) | 🏠 Local             |
 
 📖 **Detailed Comparison:
 ** [docs/ISOLATION-COMPARISON.md](docs/ISOLATION-COMPARISON.md) | [中文版](docs/ISOLATION-COMPARISON.zh-CN.md)
