@@ -157,13 +157,20 @@ fn compile_program() -> Result<()> {
 
 /// Execute the compiled program
 fn execute_program(n: u32) -> Result<(u32, u64)> {
+    // Check if the compiled file exists and is a valid placeholder
+    let is_placeholder = if let Ok(content) = fs::read_to_string(COMPILED_OUTPUT) {
+        content.contains("placeholder")
+    } else {
+        false
+    };
+
     // Check if cairo-m-runner is available
     let runner_check = Command::new("cairo-m-runner")
         .arg("--version")
         .output();
 
-    if runner_check.is_err() {
-        println!("   ⚠️  cairo-m-runner not found in PATH");
+    if runner_check.is_err() || is_placeholder {
+        println!("   ⚠️  cairo-m-runner not found in PATH or using placeholder compilation");
         println!("   ℹ️  Simulating execution (using Rust implementation)...");
         
         let result = calculate_fibonacci(n);
@@ -200,13 +207,20 @@ fn execute_program(n: u32) -> Result<(u32, u64)> {
 
 /// Generate proof of execution
 fn generate_proof(n: u32) -> Result<usize> {
+    // Check if the compiled file exists and is a valid placeholder
+    let is_placeholder = if let Ok(content) = fs::read_to_string(COMPILED_OUTPUT) {
+        content.contains("placeholder")
+    } else {
+        false
+    };
+
     // Check if cairo-m-prover is available
     let prover_check = Command::new("cairo-m-prover")
         .arg("--version")
         .output();
 
-    if prover_check.is_err() {
-        println!("   ⚠️  cairo-m-prover not found in PATH");
+    if prover_check.is_err() || is_placeholder {
+        println!("   ⚠️  cairo-m-prover not found in PATH or using placeholder compilation");
         println!("   ℹ️  Simulating proof generation (placeholder)...");
         
         // Simulate proof generation time
