@@ -64,3 +64,4 @@ echo "1. Convert Cairo 2.x Sierra to Cairo 0 format (if needed)"
 echo "2. Run: ./generate_stone_proof.sh"
 echo
 
+
