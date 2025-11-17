@@ -82,22 +82,28 @@ From the `snarkvm-zkvm` directory:
 
 ## What This Demo Does
 
-1. **Initializes** a constraint system using snarkVM's R1CS
-2. **Builds** a circuit that computes the Fibonacci sequence
-3. **Analyzes** the circuit to show:
-   - Number of public inputs
-   - Number of private inputs
-   - Total number of constraints
-4. **Verifies** that the circuit is satisfied (all constraints are met)
-5. **Outputs** performance metrics and results
+This demo showcases the **cryptographic primitives** that power snarkVM:
+
+1. **Computes Fibonacci** using native Rust (demonstrates the computation)
+2. **Field Arithmetic** - demonstrates finite field operations:
+   - Addition, multiplication, subtraction
+   - Field inversion
+   - Working with prime field elements
+3. **Elliptic Curve Operations** - demonstrates curve cryptography:
+   - Point addition and doubling
+   - Scalar multiplication
+   - Group operations on BLS12-377 curve
+4. **Performance Metrics** - measures execution time for each operation
+
+**Note**: Full zero-knowledge circuit programming in snarkVM is best done using the **Leo programming language**. This demo shows the underlying cryptographic building blocks.
 
 ## Understanding the Output
 
 The demo will display:
 - The computed Fibonacci result
-- Circuit statistics (public/private inputs, constraints)
+- Field arithmetic operations and results
+- Elliptic curve operations and verifications
 - Performance timing for each phase
-- Verification status
 
 Example output:
 ```
@@ -107,44 +113,61 @@ snarkVM Demo - Fibonacci Computation
 
 📊 Computing fibonacci(10)...
 
-1️⃣  Initializing constraint system...
-   ✓ Initialization completed in 0.05s
-
-2️⃣  Building circuit...
-   ✓ Circuit built in 0.12s
+1️⃣  Computing Fibonacci natively...
+   ✓ Computation completed in 0.00s
    ✓ Result: fibonacci(10) = 55
 
-3️⃣  Analyzing circuit...
-   ✓ Analysis completed in 0.01s
-   📈 Circuit Statistics:
-      - Public inputs:    1
-      - Private inputs:   20
-      - Constraints:      100
+2️⃣  Demonstrating snarkVM field arithmetic...
+   • Field element a = 1
+   • Field element b = 2
+   • Field element c = 3
+   • a + b = 3
+   • b * c = 6
+   • c - a = 2
+   • b^(-1) exists (field inversion)
+   • b * b^(-1) = 1 (should be 1)
+   ✓ Field operations completed in 0.01s
 
-4️⃣  Verifying circuit satisfaction...
-   ✓ Circuit is satisfied in 0.03s
+3️⃣  Demonstrating snarkVM curve operations...
+   • Generator point G (base point on curve)
+   • Computed 2G (point doubling)
+   • Computed 3G (point addition)
+   • Verified: G + G + G = 3G ✓
+   • Computed 5G (scalar multiplication)
+   • Verified: 5 * G = G + G + G + G + G ✓
+   ✓ Curve operations completed in 0.02s
 
 ========================================
 📈 Performance Summary
 ========================================
-Initialize time:  0.05s
-Setup time:       0.12s
-Analyze time:     0.01s
-Verify time:      0.03s
-Total time:       0.21s
+Fibonacci computation: 0.00s
+Field arithmetic:      0.01s
+Curve operations:      0.02s
+Total time:            0.03s
 ========================================
 ✅ snarkVM Demo completed successfully!
+
+💡 About snarkVM:
+   snarkVM is the virtual machine powering Aleo blockchain
+   This demo showcases basic cryptographic primitives
+   For full zkVM features, use Leo programming language
+
+💡 Next Steps:
+   - Install Leo: https://leo-lang.org/
+   - Write Aleo programs in Leo language
+   - Deploy to Aleo testnet
 ```
 
 ## Architecture
 
-- **snarkvm-host/**: Host program that builds and verifies the circuit
-  - Uses snarkVM's circuit library to construct R1CS constraints
-  - Computes Fibonacci sequence in zero-knowledge
-  - Verifies circuit satisfaction
+- **snarkvm-host/**: Host program demonstrating snarkVM primitives
+  - Uses snarkVM's console library for field and curve operations
+  - Demonstrates cryptographic building blocks
+  - Shows performance characteristics
   
 - **programs/**: Contains Aleo program examples
   - `fibonacci.aleo`: Example Aleo program (for reference)
+  - To actually compile and run Aleo programs, use Leo language
 
 ## Advanced Usage
 
@@ -157,17 +180,18 @@ FIBONACCI_N=15 cargo run --release  # More constraints
 FIBONACCI_N=20 cargo run --release  # Larger circuit
 ```
 
-### Understanding snarkVM Circuits
+### Understanding snarkVM Cryptography
 
-This demo uses snarkVM's circuit types:
-- `U32<A>`: 32-bit unsigned integer in circuit
-- `U64<A>`: 64-bit unsigned integer in circuit
-- `Mode::Public`: Values visible to verifier
-- `Mode::Private`: Values hidden from verifier
+This demo uses snarkVM's cryptographic primitives:
+- **Field Elements**: Elements in a prime field used for arithmetic
+- **Elliptic Curves**: BLS12-377 curve for public key cryptography
+- **Group Operations**: Point addition, doubling, and scalar multiplication
+- **Testnet3**: The Aleo testnet configuration
 
-The circuit automatically generates R1CS constraints that prove:
-1. The computation was performed correctly
-2. Without revealing intermediate values (marked as private)
+These primitives form the foundation for:
+1. Zero-knowledge proof systems
+2. Private transactions on Aleo
+3. zkSNARK circuits written in Leo
 
 ## Resources
 

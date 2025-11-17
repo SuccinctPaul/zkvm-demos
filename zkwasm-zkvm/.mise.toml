@@ -1,0 +1,36 @@
+# zkWasm zkVM specific toolchain configuration
+
+[tools]
+# zkWasm uses stable Rust and requires Node.js for some tooling
+rust = "1.86"
+node = "20"
+
+[env]
+# zkWasm-specific environment variables
+RUST_LOG = "info"
+_.path = ["$HOME/.local/bin"]
+
+[tasks.install-zkwasm]
+description = "Install zkWasm toolchain"
+run = "../scripts/sdk_installers/install_zkwasm_sdk.sh"
+
+[tasks.build-wasm]
+description = "Build WASM guest program"
+run = "cd zkwasm-host && cargo run -- build"
+
+[tasks.setup]
+description = "Setup zkWasm circuit (k=18)"
+run = "cd zkwasm-host && cargo run -- setup --k 18"
+
+[tasks.prove]
+description = "Generate zkWasm proof (n=10)"
+run = "cd zkwasm-host && cargo run -- prove --n 10"
+
+[tasks.verify]
+description = "Verify zkWasm proof"
+run = "cd zkwasm-host && cargo run -- verify"
+
+[tasks.run]
+description = "Run complete zkWasm workflow (n=15, k=18)"
+run = "cd zkwasm-host && cargo run -- run --n 15 --k 18"
+

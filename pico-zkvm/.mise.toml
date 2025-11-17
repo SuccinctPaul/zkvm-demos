@@ -1,0 +1,22 @@
+# Pico zkVM specific toolchain configuration
+
+[tools]
+# Pico requires nightly Rust
+rust = "nightly-2025-06-05"
+
+[env]
+# Pico-specific environment variables
+RUST_LOG = "info"
+
+[tasks.install-pico]
+description = "Install Pico toolchain"
+run = "../scripts/sdk_installers/install_pico_sdk.sh"
+
+[tasks.run]
+description = "Run Pico demo"
+run = "cd pico-host && RUST_LOG=info cargo run --release"
+
+[tasks.build-guest]
+description = "Build Pico guest program"
+run = "cd pico-guest && cargo build --release"
+

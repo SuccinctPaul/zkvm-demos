@@ -1,0 +1,31 @@
+# Powdr zkVM specific toolchain configuration
+
+[tools]
+# Powdr requires nightly Rust
+rust = "nightly-2025-06-05"
+
+[env]
+# Powdr-specific environment
+RUST_LOG = "info"
+FIBONACCI_N = "10"
+
+[tasks.install-powdr]
+description = "Install Powdr toolchain"
+run = "../scripts/sdk_installers/install_powdr_sdk.sh"
+
+[tasks.run]
+description = "Run Powdr demo"
+run = "./run_demo.sh"
+
+[tasks.run-custom]
+description = "Run with custom Fibonacci input"
+run = "FIBONACCI_N=15 ./run_demo.sh"
+
+[tasks.build]
+description = "Build Powdr project"
+run = "cd powdr-host && cargo build --release"
+
+[tasks.compile-guest]
+description = "Compile guest program"
+run = "cd powdr-guest && cargo build --release"
+

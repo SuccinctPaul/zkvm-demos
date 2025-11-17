@@ -1,6 +1,6 @@
 # zkvm-demos
 
-A collection of Zero-Knowledge Virtual Machine (zkVM) demonstrations for SP1, Risc0, Nexus, Novanet, ZKM, ZisK, Valida, OpenVM,
+A collection of Zero-Knowledge Virtual Machine (zkVM) demonstrations for SP1, Risc0, Nexus, Novanet, o1vm, ZKM, ZisK, Valida, OpenVM,
 Pico, Powdr, CENO, Cairo, Cairo-M, Jolt, Lean, Miden, Airbender, and other zkVM platforms. This repository shows how to build and run programs on different zkVM implementations.
 
 ## ⚠️ Toolchain Conflict Management
@@ -52,15 +52,47 @@ source ~/zkvm-workspaces/sp1-workspace/activate.sh
 📖 **Full Guide:
 ** [docs/ISOLATION-LOCAL-ENV.md](docs/ISOLATION-LOCAL-ENV.md) | [中文版](docs/ISOLATION-LOCAL-ENV.zh-CN.md)
 
+### 🔧 mise - Modern Toolchain Manager (Recommended for Local Development)
+
+Automatic toolchain switching using [mise](https://mise.jdx.dev/) - manages Rust versions, Python, and other tools per-directory.
+
+```bash
+# Install mise
+brew install mise  # or: curl https://mise.run | sh
+
+# Setup (in project root)
+cd zkvm-demos
+mise trust
+mise install
+
+# Automatic switching - just cd!
+cd jolt-zkvm    # Uses Rust 1.88
+cd ../sp1-zkvm  # Uses Rust nightly
+cd ../cairo-zkvm # Uses Python + Scarb
+```
+
+**Advantages:**
+
+- ✅ Automatic switching when you `cd`
+- ✅ Native performance
+- ✅ Manages multiple languages (Rust, Python, Node, etc.)
+- ✅ Simple configuration
+- ✅ Works with rust-toolchain.toml
+- ✅ Built-in tasks (mise run check-tools)
+
+📖 **Full Guide:** [MISE_SETUP.md](MISE_SETUP.md)
+
 ### 📊 Which Approach Should You Use?
 
 | Your Situation             | Recommended Solution |
 |----------------------------|----------------------|
 | Working in a team          | 🐳 Docker            |
 | Need CI/CD                 | 🐳 Docker            |
-| Just getting started       | 🐳 Docker            |
-| Solo dev, frequent builds  | 🏠 Local + direnv    |
-| Need hardware access (GPU) | 🏠 Local             |
+| Just getting started       | 🐳 Docker or 🔧 mise |
+| Solo dev, frequent builds  | 🔧 mise (easiest)    |
+| Need hardware access (GPU) | 🔧 mise or 🏠 Local  |
+| Complex dependencies       | 🐳 Docker            |
+| Want auto-switching tools  | 🔧 mise              |
 
 📖 **Detailed Comparison:
 ** [docs/ISOLATION-COMPARISON.md](docs/ISOLATION-COMPARISON.md) | [中文版](docs/ISOLATION-COMPARISON.zh-CN.md)
@@ -498,6 +530,101 @@ For production use, consider:
 - Adding circuit compilation infrastructure
 - Implementing actual proof generation and verification
 - Optimizing for your specific use case
+
+## o1vm zkvm
+
+### Resources
+
+* https://github.com/o1-labs/proof-systems (Main repository)
+* https://github.com/o1-labs/proof-systems/tree/master/o1vm (o1vm module)
+* https://o1-labs.github.io/proof-systems/ (Documentation)
+* https://minaprotocol.com/ (Mina Protocol)
+
+### About o1vm
+
+o1vm is a zero-knowledge virtual machine developed by O(1) Labs for proving MIPS program execution. Key features:
+- **MIPS32 Architecture**: Proves execution of standard MIPS programs
+- **Kimchi Proof System**: PLONK-based proof system with custom gates
+- **Pasta Curves**: Pallas/Vesta curves for efficient recursive proofs
+- **Production Use**: Part of Mina Protocol's zkApp infrastructure
+
+o1vm is particularly suited for:
+- Mina blockchain zkApp development
+- MIPS-based computations
+- Recursive proof composition
+- Integration with Kimchi ecosystem
+
+### how to run the o1vm demo
+
+⚠️ **Important Note**: This is a **conceptual demonstration** showing o1vm's architecture and workflow. It **does not generate actual zero-knowledge proofs**. For real proof generation, use mature zkVMs like RISC Zero or SP1, or integrate with the full proof-systems repository.
+
+* Install dependencies (optional for MIPS compilation):
+
+```bash
+# Option 1: Use the installation script
+./scripts/sdk_installers/install_o1vm_sdk.sh
+
+# Option 2: Manual setup for MIPS cross-compiler
+# Ubuntu/Debian:
+sudo apt-get install gcc-mips-linux-gnu binutils-mips-linux-gnu
+
+# macOS: Use Docker (see documentation)
+```
+
+* cd to the target demo directory
+
+```bash
+cd o1vm-zkvm
+```
+
+* run the o1vm demo
+
+```bash
+# Using the convenient run script
+./run_demo.sh
+
+# Or directly with cargo (works without MIPS toolchain)
+cd o1vm-host
+cargo run --release
+```
+
+* compile MIPS guest program (optional)
+
+```bash
+cd o1vm-guest
+make
+```
+
+### Implementation Status
+
+**Current Demo Provides:**
+- ✅ Project structure and configuration
+- ✅ MIPS guest program (Fibonacci in C)
+- ✅ Conceptual workflow demonstration
+- ✅ Comprehensive documentation
+
+**Not Implemented (requires full integration):**
+- ❌ MIPS interpreter/simulator
+- ❌ Execution trace generation
+- ❌ Witness generation
+- ❌ Kimchi proof generation
+- ❌ Proof verification
+
+**For Real Proof Generation, Consider:**
+1. **RISC Zero** or **SP1** - mature, production-ready zkVMs
+2. **Full o1vm Integration** - requires 3-6 months development (see `PROOF_GENERATION_ROADMAP.md`)
+3. **Mina zkApps** - use o1js for high-level Mina development
+
+📖 **Detailed Status**: See `o1vm-zkvm/IMPLEMENTATION_STATUS.md` and `o1vm-zkvm/SUMMARY.md`
+
+### Educational Value
+
+This demo is excellent for:
+- Understanding zkVM architecture
+- Learning MIPS programming for zkVMs
+- Comparing different zkVM designs
+- Studying Kimchi proof system
+- Research and educational purposes
 
 ## OpenVM zkvm
 

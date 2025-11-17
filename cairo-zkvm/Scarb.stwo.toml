@@ -1,0 +1,25 @@
+# Scarb.toml for Stwo-Cairo Integration
+# 使用此配置来运行 Stwo-Cairo 证明器
+
+[package]
+name = "cairo_fibonacci"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = ">=2.10.0"
+
+# ⚠️ 关键配置：Stwo-Cairo 要求禁用 Gas tracking
+[cairo]
+enable-gas = false
+
+[dev-dependencies]
+cairo_test = "2.10.0"
+
+[lib]
+
+[scripts]
+test = "scarb cairo-test"
+# 注意：不需要 --available-gas 参数，因为已禁用 gas
+run = "scarb cairo-run"
+
