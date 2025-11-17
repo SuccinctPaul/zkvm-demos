@@ -1,0 +1,26 @@
+# OpenVM zkVM specific toolchain configuration
+
+[tools]
+# OpenVM requires nightly Rust
+rust = "nightly-2025-06-05"
+
+[env]
+# OpenVM-specific environment variables
+RUST_LOG = "info"
+
+[tasks.install-openvm]
+description = "Install OpenVM toolchain"
+run = '''
+echo "Installing OpenVM zkVM toolchain..."
+cargo install --git https://github.com/openvm-org/openvm cargo-openvm
+echo "✓ OpenVM toolchain installed"
+'''
+
+[tasks.run]
+description = "Run OpenVM demo"
+run = "cd openvm-host && RUST_LOG=info cargo run --release"
+
+[tasks.build-guest]
+description = "Build OpenVM guest program"
+run = "cd openvm-guest && cargo build --release --target riscv32im-risc0-zkvm-elf"
+

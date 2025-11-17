@@ -1,0 +1,33 @@
+# SP1 zkVM specific toolchain configuration
+
+[tools]
+# SP1 requires nightly Rust
+rust = "nightly-2025-06-05"
+
+[env]
+# SP1-specific environment variables
+RUST_LOG = "info"
+SP1_PROVER = "network"  # or "local" for local proving
+
+[tasks.install-sp1]
+description = "Install SP1 toolchain"
+run = '''
+echo "Installing SP1 zkVM toolchain..."
+curl -L https://sp1.succinct.xyz | bash
+sp1up
+cargo prove --version
+echo "✓ SP1 toolchain installed"
+'''
+
+[tasks.run-execute]
+description = "Run SP1 demo (execute only, no proof)"
+run = "cd sp1-host && RUST_LOG=info cargo run --release -- --execute"
+
+[tasks.run-prove]
+description = "Run SP1 demo (generate proof)"
+run = "cd sp1-host && RUST_LOG=debug cargo run --release -- --prove"
+
+[tasks.build-guest]
+description = "Build SP1 guest program"
+run = "cd sp1-guest && cargo prove build"
+

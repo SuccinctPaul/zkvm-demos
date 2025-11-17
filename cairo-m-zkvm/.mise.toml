@@ -1,0 +1,36 @@
+# Cairo-M zkVM specific toolchain configuration
+
+[tools]
+# Cairo-M uses stable Rust
+rust = "1.86"
+
+[env]
+# Cairo-M specific environment
+RUST_LOG = "info"
+FIBONACCI_N = "10"
+_.path = ["$HOME/.cargo/bin", "$HOME/.local/bin"]
+
+[tasks.install-cairo-m]
+description = "Install Cairo-M toolchain"
+run = "../scripts/sdk_installers/install_cairo_m_sdk.sh"
+
+[tasks.compile]
+description = "Compile Cairo-M program"
+run = "cairo-m-compiler --input programs/fibonacci.cm --output compiled/fibonacci.json"
+
+[tasks.run-program]
+description = "Execute Cairo-M program"
+run = "cairo-m-runner compiled/fibonacci.json --entrypoint fibonacci --arguments 10"
+
+[tasks.prove]
+description = "Generate STARK proof"
+run = "cairo-m-prover compiled/fibonacci.json --entrypoint fibonacci --arguments 10"
+
+[tasks.run]
+description = "Run Cairo-M host demo"
+run = "cd cairo-m-host && RUST_LOG=info cargo run --release"
+
+[tasks.run-custom]
+description = "Run with custom Fibonacci input"
+run = "FIBONACCI_N=20 ./run_demo.sh"
+

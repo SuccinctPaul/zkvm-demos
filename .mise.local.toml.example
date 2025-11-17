@@ -1,0 +1,32 @@
+# Local mise configuration example
+# Copy this file to .mise.local.toml and customize for your local development
+# .mise.local.toml is gitignored and won't be committed
+
+[tools]
+# Override global tool versions if needed
+# rust = "nightly-2025-06-15"  # Use a different nightly
+# python = "3.12"
+
+[env]
+# Local environment variables
+# RUST_LOG = "debug"
+# RISC0_DEV_MODE = "1"
+
+# Custom paths for your machine
+# LLVM_SYS_180_PREFIX = "/usr/local/opt/llvm@18"
+
+# GPU acceleration (if you have CUDA)
+# CUDA_VISIBLE_DEVICES = "0"
+
+[settings]
+# Local settings
+# verbose = true
+# log_level = "debug"
+
+[tasks.my-workflow]
+description = "Your custom development workflow"
+run = '''
+echo "Running my custom workflow..."
+# Add your custom commands here
+'''
+

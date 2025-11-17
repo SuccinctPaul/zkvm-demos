@@ -1,0 +1,26 @@
+# CENO zkVM specific toolchain configuration
+
+[tools]
+# CENO requires nightly Rust
+rust = "nightly-2025-06-05"
+
+[env]
+# CENO-specific environment variables
+RUST_LOG = "info"
+
+[tasks.install-ceno]
+description = "Install CENO toolchain (when available)"
+run = '''
+echo "⚠️  CENO zkVM is under active development by Scroll"
+echo "The SDK is not yet publicly available"
+echo "Check https://github.com/scroll-tech/ceno for updates"
+'''
+
+[tasks.run]
+description = "Run CENO demo (template)"
+run = "cd ceno-host && RUST_LOG=info cargo run --release"
+
+[tasks.build-guest]
+description = "Build CENO guest program"
+run = "cd ceno-guest && cargo build --release"
+

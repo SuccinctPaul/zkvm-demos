@@ -1,0 +1,40 @@
+# Cairo zkVM specific toolchain configuration
+
+[tools]
+# Cairo primarily uses Python/Scarb, but may need Rust for some tools
+python = "3.11"
+
+# Note: Scarb (Cairo package manager) is not directly managed by mise
+# It should be installed via the install script
+
+[env]
+# Cairo-specific environment
+_.path = ["$HOME/.local/bin"]
+
+# Add Cairo binaries to PATH
+CAIRO_PATH = "$HOME/.local/bin"
+
+[tasks.install-scarb]
+description = "Install Scarb (Cairo 2.x package manager)"
+run = "../scripts/sdk_installers/install_cairo_sdk.sh"
+
+[tasks.build]
+description = "Build Cairo project"
+run = "scarb build"
+
+[tasks.test]
+description = "Run Cairo tests"
+run = "scarb test"
+
+[tasks.run]
+description = "Run Cairo program"
+run = "scarb cairo-run --available-gas=200000000"
+
+[tasks.compile-fib]
+description = "Compile Fibonacci example"
+run = "cairo-compile src/fib_simple.cairo --output fib_simple.json"
+
+[tasks.run-fib]
+description = "Run compiled Fibonacci"
+run = "cairo-run --program=fib_simple.json --print_output --layout=small"
+

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use miden_assembly::Assembler;
 use miden_vm::{
-    DefaultHost, MemAdviceProvider, ProgramInfo, ProvingOptions, StackInputs,
+    AdviceInputs, DefaultHost, MemAdviceProvider, ProgramInfo, ProvingOptions, StackInputs,
 };
 use std::time::Instant;
 
@@ -19,7 +19,7 @@ fn main() -> Result<()> {
     let source_file = std::env::current_dir()?
         .parent()
         .unwrap()
-        .join("programs/fib_simple.masm");
+        .join("programs/fib_working.masm");
     
     let source = std::fs::read_to_string(&source_file)
         .map_err(|e| anyhow::anyhow!("Failed to read assembly file: {}. File: {:?}", e, source_file))?;
@@ -43,21 +43,20 @@ fn main() -> Result<()> {
     // Step 3: Prepare inputs
     println!("\n3. Preparing inputs...");
     
-    // Empty stack inputs
-    let stack_inputs = StackInputs::try_from_ints(vec![])
-        .map_err(|e| anyhow::anyhow!("Failed to create stack inputs: {}", e))?;
+    // Empty stack inputs - Miden requires exactly 16 elements or less
+    let stack_inputs = StackInputs::default();
     
-    // Empty advice provider (reserved for future use)
-    let _advice_provider = MemAdviceProvider::default();
+    // Empty advice provider for now
+    let advice_provider = MemAdviceProvider::default();
     
-    println!("   ✓ Using hardcoded Fibonacci calculation for n = {}", fib_n);
+    println!("   ✓ Inputs prepared for n = {}", fib_n);
 
     // Step 4: Execute and prove
     println!("\n4. Executing program and generating proof...");
     let prove_start = Instant::now();
     
-    let host = DefaultHost::default();
-    let options = ProvingOptions::with_96_bit_security(false);
+    let host = DefaultHost::new(advice_provider);
+    let options = ProvingOptions::default();
     
     let (mut stack_outputs, proof) = miden_vm::prove(
         &program,
