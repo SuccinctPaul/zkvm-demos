@@ -28,8 +28,3 @@ debug
 .data
 
 **/*.pb
-# mise toolchain manager
-.mise.local.toml
-.mise/
-.mise.lock
-.tool-versions.local
