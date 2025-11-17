@@ -87,19 +87,19 @@ fi
 # Build and install cairo-m-compiler
 echo "Building cairo-m-compiler..."
 cd "$CAIRO_M_DIR"
-cargo install --path crates/cairo-m-compiler --force --locked
+cargo install --path crates/compiler --force --locked
 echo -e "${GREEN}✓${NC} cairo-m-compiler installed"
 echo ""
 
 # Build and install cairo-m-runner
 echo "Building cairo-m-runner..."
-cargo install --path crates/cairo-m-runner --force --locked
+cargo install --path crates/runner --force --locked
 echo -e "${GREEN}✓${NC} cairo-m-runner installed"
 echo ""
 
 # Build and install cairo-m-prover
 echo "Building cairo-m-prover..."
-cargo install --path crates/cairo-m-prover --force --locked
+cargo install --path crates/prover --force --locked
 echo -e "${GREEN}✓${NC} cairo-m-prover installed"
 echo ""
 
