@@ -1,6 +1,13 @@
-# SP1 zkVM Fibonacci Demo
+# SP1 zkVM Multi-Program Demo
 
-This is a demonstration of using [Succinct SP1 zkVM](https://github.com/succinctlabs/sp1) to compute Fibonacci numbers with zero-knowledge proofs.
+This is a demonstration of using [Succinct SP1 zkVM](https://github.com/succinctlabs/sp1) to run multiple programs with zero-knowledge proofs.
+
+## 🎯 Multi-Program Support
+
+This demo showcases a **single guest binary** that can execute **7 different programs**:
+- Fibonacci, Sum, Factorial, IsPrime, PopCount, Hash (SHA256), Signature (ECDSA)
+
+**Key Innovation:** Runtime program selection via `program_id` parameter, eliminating the need for multiple guest binaries.
 
 ## About SP1 zkVM
 
@@ -49,19 +56,58 @@ sp1-zkvm/
    - Install the Succinct Rust toolchain
    - Setup the SP1 proving infrastructure
 
+## Available Programs
+
+| Program | Environment Variable | Description | Recommended Test Value |
+|---------|---------------------|-------------|------------------------|
+| Fibonacci | `fibonacci` or `fib` | Compute nth Fibonacci number | 20, 30, 100 |
+| Sum | `sum` | Sum integers from 1 to n | 100, 1000 |
+| Factorial | `factorial` or `fact` | Compute n factorial | 5, 10, 12 |
+| IsPrime | `isprime` or `prime` | Check if n is prime | 97, 1009 |
+| PopCount | `popcount` or `bitcount` | Count set bits in n | 255, 65535 |
+| Hash | `hash` or `sha256` | SHA256 hash computation | 256, 1024 |
+| Signature | `signature` or `sig` | ECDSA signature verification | 10, 50 |
+
+**Example:**
+```bash
+cd sp1-zkvm/sp1-host
+
+# Run Fibonacci
+PROGRAM=fibonacci INPUT_N=20 cargo run --release -- --execute
+
+# Run Sum
+PROGRAM=sum INPUT_N=100 cargo run --release -- --execute
+
+# Run Factorial
+PROGRAM=factorial INPUT_N=10 cargo run --release -- --execute
+```
+
+## 📚 Documentation
+
+- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Quick start guide and program reference
+- **[MULTI_PROGRAM_ANALYSIS.md](./MULTI_PROGRAM_ANALYSIS.md)** - Detailed architecture analysis and verification
+- **[FIBONACCI_VS_SUM.md](./FIBONACCI_VS_SUM.md)** - Mathematical comparison and common confusion explained
+- **[compare_programs.sh](./compare_programs.sh)** - Script to compare different programs
+
+**Important Note:** When testing with `n=10`, both `fibonacci(10)` and `sum(10)` return `55`. This is a **mathematical coincidence**, not a bug. See [FIBONACCI_VS_SUM.md](./FIBONACCI_VS_SUM.md) for detailed explanation.
+
 ## Configuration
 
-Set the Fibonacci number to compute via environment variable:
+Configure the program to run via environment variables:
 
 ```bash
-# Create .env file in the project root or set environment variable
-export FIBONACCI_N=10
+# Select program and input value
+export PROGRAM=fibonacci  # or sum, factorial, isprime, popcount, hash, signature
+export INPUT_N=20         # input parameter
 ```
 
 Or create a `.env` file in the workspace root:
 ```
-FIBONACCI_N=10
+PROGRAM=fibonacci
+INPUT_N=20
 ```
+
+**Backward Compatibility:** The old `FIBONACCI_N` environment variable is still supported for Fibonacci program.
 
 ## Building
 
@@ -83,19 +129,37 @@ Fast execution without proof generation:
 
 ```bash
 cd sp1-zkvm/sp1-host
-RUST_LOG=info cargo run --release -- --execute
+
+# Fibonacci
+PROGRAM=fibonacci INPUT_N=20 cargo run --release -- --execute
+
+# Sum
+PROGRAM=sum INPUT_N=100 cargo run --release -- --execute
+
+# Factorial
+PROGRAM=factorial INPUT_N=10 cargo run --release -- --execute
 ```
 
-Output:
+Output example (Sum):
 ```
-fib_n = 10
+╔════════════════════════════════════════╗
+║         SP1 Multi-Program Demo        ║
+╚════════════════════════════════════════╝
+📋 Program: sum (Sum integers from 1 to n)
+📊 Input N: 100
 
-Executing program in zkVM...
-fib result: 89
+⚙️  Executing program...
+stdout: SP1 Guest: program_id=1, n=100
+stdout: Running Sum(100)
+stdout: Result: 5050
 
-Number of instructions: XXXX
-Number of cycles: XXXX
-Program executed successfully.
+✅ Execution Results:
+─────────────────────────────────────
+📤 Output: 5050
+📊 Instructions: 9263
+🔄 Cycles: 25
+
+✨ Program executed successfully!
 ```
 
 ### Generate and Verify Proof
@@ -104,22 +168,31 @@ Generate a zero-knowledge proof:
 
 ```bash
 cd sp1-zkvm/sp1-host
-RUST_LOG=info cargo run --release -- --prove
+PROGRAM=fibonacci INPUT_N=20 cargo run --release -- --prove
 ```
 
 Output:
 ```
-fib_n = 10
+╔════════════════════════════════════════╗
+║         SP1 Multi-Program Demo        ║
+╚════════════════════════════════════════╝
+📋 Program: fibonacci (Compute the nth Fibonacci number)
+📊 Input N: 20
 
-Setting up prover...
-Generating proof...
-fib result: 89
+🔧 Setting up proving environment...
+🔐 Generating proof...
 
-Successfully generated proof!
-proof_mode: Groth16, proof size: XXXX Bytes
+✅ Successfully generated proof!
 
-Verifying proof...
-Successfully verified proof!
+📊 Proof Information:
+─────────────────────────────────────
+🔒 Mode: Groth16
+📦 Size: XXXX bytes (XX.XX KB)
+
+🔍 Verifying proof...
+
+✨ Successfully verified proof!
+╚════════════════════════════════════════╝
 ```
 
 ## Proof Modes
