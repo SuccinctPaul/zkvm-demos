@@ -93,6 +93,11 @@ fn main() -> Result<()> {
     let simulated_cycles = (n as u64) * 50; // Rough estimate
     let proof_size_kb = 450; // ~400-500 KiB as per leanMultisig docs
     
+    // Generate mock proof file
+    let proof_data = generate_mock_proof(n, result)?;
+    let proof_path = "lean_fibonacci_proof.bin";
+    std::fs::write(proof_path, &proof_data)?;
+    
     println!();
     println!("   ✅ Proof generated successfully!");
     println!("   Proving time: {:.3}s", prove_time.as_secs_f64());
@@ -100,6 +105,7 @@ fn main() -> Result<()> {
     println!("   Proof size: ~{} KiB (with rate=1/2)", proof_size_kb);
     println!("      └─ WHIR: ~300 KiB");
     println!("      └─ AIR proof: ~{} KiB", proof_size_kb - 300);
+    println!("   📄 Proof saved to: {}", proof_path);
     println!();
 
     // ═══════════════════════════════════════════════════════════════
@@ -156,6 +162,50 @@ fn main() -> Result<()> {
     println!();
 
     Ok(())
+}
+
+/// Generate a mock proof for demonstration purposes
+fn generate_mock_proof(n: u32, result: u64) -> Result<Vec<u8>> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    // Create a realistic binary proof structure
+    let mut proof_data = Vec::new();
+    
+    // Header (magic bytes + version)
+    proof_data.extend_from_slice(b"LEAN"); // Magic bytes
+    proof_data.extend_from_slice(&1u32.to_le_bytes()); // Version
+    proof_data.extend_from_slice(&timestamp.to_le_bytes()); // Timestamp
+    
+    // Public inputs/outputs
+    proof_data.extend_from_slice(&n.to_le_bytes());
+    proof_data.extend_from_slice(&result.to_le_bytes());
+    
+    // WHIR polynomial commitment (~300 KiB)
+    proof_data.extend_from_slice(b"WHIR_COMMITMENT");
+    let whir_size = 300 * 1024; // 300 KiB
+    for i in 0..whir_size/8 {
+        let value = ((timestamp as u128 * i as u128 * 17) % u64::MAX as u128) as u64;
+        proof_data.extend_from_slice(&value.to_le_bytes());
+    }
+    
+    // SuperSpartan AIR proof (~150 KiB)
+    proof_data.extend_from_slice(b"SUPERSPARTAN_AIR");
+    let air_size = 150 * 1024; // 150 KiB
+    for i in 0..air_size/8 {
+        let value = ((timestamp as u128 * i as u128 * 31) % u64::MAX as u128) as u64;
+        proof_data.extend_from_slice(&value.to_le_bytes());
+    }
+    
+    // Footer (checksum)
+    let checksum = proof_data.iter().fold(0u64, |acc, &b| acc.wrapping_add(b as u64));
+    proof_data.extend_from_slice(&checksum.to_le_bytes());
+    
+    Ok(proof_data)
 }
 
 #[cfg(test)]

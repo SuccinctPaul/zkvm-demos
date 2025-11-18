@@ -221,14 +221,23 @@ fn generate_proof(n: u32) -> Result<usize> {
 
     if prover_check.is_err() || is_placeholder {
         println!("   ⚠️  cairo-m-prover not found in PATH or using placeholder compilation");
-        println!("   ℹ️  Simulating proof generation (placeholder)...");
+        println!("   ℹ️  Simulating proof generation (creating mock proof)...");
         
         // Simulate proof generation time
         std::thread::sleep(std::time::Duration::from_millis(500));
         
-        // Return estimated proof size
-        let estimated_size = estimate_proof_size(n);
-        return Ok(estimated_size);
+        // Generate a mock proof file for demonstration
+        let proof_data = generate_mock_proof(n)?;
+        let proof_size = proof_data.len();
+        
+        // Save proof to file
+        let proof_path = "../compiled/fibonacci_proof.json";
+        fs::write(proof_path, proof_data)
+            .context("Failed to write mock proof file")?;
+        
+        println!("   📄 Mock proof saved to: {}", proof_path);
+        
+        return Ok(proof_size);
     }
 
     // Run cairo-m-prover
@@ -296,5 +305,82 @@ fn estimate_proof_size(n: u32) -> usize {
     let per_cycle = 5; // ~5 bytes per cycle
     let cycles = estimate_cycles(n);
     base + (cycles as usize * per_cycle)
+}
+
+/// Generate a mock proof for demonstration purposes
+fn generate_mock_proof(n: u32) -> Result<String> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    let result = calculate_fibonacci(n);
+    let cycles = estimate_cycles(n);
+    
+    // Create a realistic-looking proof structure
+    let proof = serde_json::json!({
+        "proof_type": "STARK",
+        "version": "1.0",
+        "backend": "Stwo (simulated)",
+        "field": "M31",
+        "field_modulus": "2^31 - 2^24 + 1",
+        "timestamp": timestamp,
+        "program": {
+            "name": "fibonacci",
+            "source": PROGRAM_SOURCE,
+            "entrypoint": ENTRYPOINT,
+        },
+        "public_inputs": {
+            "n": n,
+        },
+        "public_outputs": {
+            "result": result,
+        },
+        "execution": {
+            "cycles": cycles,
+            "memory_cells": cycles / 3,
+        },
+        "commitment": {
+            "type": "FRI",
+            "root": format!("0x{:064x}", (timestamp * n as u64) % u64::MAX),
+            "fri_layers": 12,
+            "blowup_factor": 8,
+        },
+        "trace": {
+            "width": 16,
+            "height": cycles,
+            "trace_commitment": format!("0x{:064x}", (timestamp * cycles) % u64::MAX),
+        },
+        "constraints": {
+            "boundary_constraints": 4,
+            "transition_constraints": 8,
+            "degree": 2,
+        },
+        "proof_data": {
+            "fri_proof_layers": vec![
+                format!("layer_0_{:032x}", timestamp % u32::MAX as u64),
+                format!("layer_1_{:032x}", (timestamp * 2) % u32::MAX as u64),
+                format!("layer_2_{:032x}", (timestamp * 3) % u32::MAX as u64),
+            ],
+            "evaluation_proofs": vec![
+                format!("eval_0_{:032x}", (timestamp * 4) % u32::MAX as u64),
+                format!("eval_1_{:032x}", (timestamp * 5) % u32::MAX as u64),
+            ],
+            "opening_proofs": vec![
+                format!("open_0_{:032x}", (timestamp * 6) % u32::MAX as u64),
+                format!("open_1_{:032x}", (timestamp * 7) % u32::MAX as u64),
+            ],
+        },
+        "security": {
+            "conjectured_bits": 128,
+            "grinding_factor": 20,
+            "query_count": 27,
+        },
+        "note": "This is a simulated proof for demonstration purposes. Real proofs require the cairo-m SDK.",
+    });
+    
+    Ok(serde_json::to_string_pretty(&proof)?)
 }
 
