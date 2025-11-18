@@ -16,7 +16,10 @@ use sha2::{Digest, Sha256};
 /// 
 /// This is the recommended implementation for zkVM environments.
 pub fn fibonacci(n: u32) -> u32 {
-    match n {
+    #[cfg(feature = "std")]
+    eprintln!("📊 [COMMON] Executing: Fibonacci({})", n);
+    
+    let result = match n {
         0 => 0,
         1 => 1,
         _ => {
@@ -31,7 +34,12 @@ pub fn fibonacci(n: u32) -> u32 {
             
             curr
         }
-    }
+    };
+    
+    #[cfg(feature = "std")]
+    eprintln!("✅ [COMMON] Fibonacci({}) = {}", n, result);
+    
+    result
 }
 
 /// Sum integers from 1 to n
@@ -39,10 +47,17 @@ pub fn fibonacci(n: u32) -> u32 {
 /// Time complexity: O(n)
 /// Space complexity: O(1)
 pub fn sum(n: u32) -> u32 {
+    #[cfg(feature = "std")]
+    eprintln!("📊 [COMMON] Executing: Sum(1..={})", n);
+    
     let mut result = 0u32;
     for i in 1..=n {
         result = result.wrapping_add(i);
     }
+    
+    #[cfg(feature = "std")]
+    eprintln!("✅ [COMMON] Sum(1..={}) = {}", n, result);
+    
     result
 }
 
@@ -51,14 +66,22 @@ pub fn sum(n: u32) -> u32 {
 /// Time complexity: O(n)
 /// Space complexity: O(1)
 pub fn factorial(n: u32) -> u32 {
-    if n == 0 || n == 1 {
-        return 1;
-    }
+    #[cfg(feature = "std")]
+    eprintln!("📊 [COMMON] Executing: Factorial({})", n);
     
-    let mut result = 1u32;
-    for i in 2..=n {
-        result = result.wrapping_mul(i);
-    }
+    let result = if n == 0 || n == 1 {
+        1
+    } else {
+        let mut res = 1u32;
+        for i in 2..=n {
+            res = res.wrapping_mul(i);
+        }
+        res
+    };
+    
+    #[cfg(feature = "std")]
+    eprintln!("✅ [COMMON] Factorial({}) = {}", n, result);
+    
     result
 }
 
@@ -69,26 +92,33 @@ pub fn factorial(n: u32) -> u32 {
 /// 
 /// Returns 1 if prime, 0 otherwise
 pub fn is_prime(n: u32) -> u32 {
-    if n < 2 {
-        return 0; // Not prime
-    }
-    if n == 2 {
-        return 1; // Prime
-    }
-    if n % 2 == 0 {
-        return 0; // Not prime (even)
-    }
+    #[cfg(feature = "std")]
+    eprintln!("📊 [COMMON] Executing: IsPrime({})", n);
     
-    // Check odd divisors up to sqrt(n)
-    let mut i = 3;
-    while i * i <= n {
-        if n % i == 0 {
-            return 0; // Not prime
+    let result = if n < 2 {
+        0 // Not prime
+    } else if n == 2 {
+        1 // Prime
+    } else if n % 2 == 0 {
+        0 // Not prime (even)
+    } else {
+        // Check odd divisors up to sqrt(n)
+        let mut i = 3;
+        let mut is_prime_flag = 1;
+        while i * i <= n {
+            if n % i == 0 {
+                is_prime_flag = 0; // Not prime
+                break;
+            }
+            i += 2;
         }
-        i += 2;
-    }
+        is_prime_flag
+    };
     
-    1 // Prime
+    #[cfg(feature = "std")]
+    eprintln!("✅ [COMMON] IsPrime({}) = {} ({})", n, result, if result == 1 { "PRIME" } else { "NOT PRIME" });
+    
+    result
 }
 
 /// Count the number of set bits (population count)
@@ -96,11 +126,19 @@ pub fn is_prime(n: u32) -> u32 {
 /// Time complexity: O(log n)
 /// Space complexity: O(1)
 pub fn popcount(mut n: u32) -> u32 {
+    #[cfg(feature = "std")]
+    eprintln!("📊 [COMMON] Executing: PopCount({}) [binary: {:032b}]", n, n);
+    
+    let original_n = n;
     let mut count = 0u32;
     while n > 0 {
         count += n & 1;
         n >>= 1;
     }
+    
+    #[cfg(feature = "std")]
+    eprintln!("✅ [COMMON] PopCount({}) = {} set bits", original_n, count);
+    
     count
 }
 
@@ -110,6 +148,9 @@ pub fn popcount(mut n: u32) -> u32 {
 /// The parameter n is used to generate test data of length n bytes.
 #[cfg(feature = "crypto")]
 pub fn hash_sha256(n: u32) -> u32 {
+    #[cfg(feature = "std")]
+    eprintln!("📊 [COMMON] Executing: SHA256 Hash (data_len={})", n.min(1024));
+    
     let mut hasher = Sha256::new();
     
     // Generate test data: repeat pattern based on n
@@ -121,12 +162,19 @@ pub fn hash_sha256(n: u32) -> u32 {
     let result = hasher.finalize();
     
     // Return first 4 bytes as u32 (for simplicity in zkVM)
-    u32::from_be_bytes([result[0], result[1], result[2], result[3]])
+    let hash_value = u32::from_be_bytes([result[0], result[1], result[2], result[3]]);
+    
+    #[cfg(feature = "std")]
+    eprintln!("✅ [COMMON] SHA256 Hash = 0x{:08x}", hash_value);
+    
+    hash_value
 }
 
 /// Stub for hash_sha256 when crypto feature is disabled
 #[cfg(not(feature = "crypto"))]
-pub fn hash_sha256(_n: u32) -> u32 {
+pub fn hash_sha256(n: u32) -> u32 {
+    #[cfg(feature = "std")]
+    eprintln!("⚠️  [COMMON] SHA256 Hash requested but crypto feature is disabled (n={})", n);
     0 // Return dummy value
 }
 
@@ -138,6 +186,11 @@ pub fn hash_sha256(_n: u32) -> u32 {
 /// Returns 1 if verification succeeds, 0 otherwise.
 #[cfg(feature = "crypto")]
 pub fn verify_signature(n: u32) -> u32 {
+    let iterations = n.max(1).min(100);
+    
+    #[cfg(feature = "std")]
+    eprintln!("📊 [COMMON] Executing: ECDSA Signature Verification (iterations={})", iterations);
+    
     // Simulated public key hash
     let mut pubkey_hash = [0u8; 32];
     pubkey_hash[0] = 0x02; // Compressed pubkey prefix
@@ -150,8 +203,6 @@ pub fn verify_signature(n: u32) -> u32 {
     let sig_s = [0x69u8; 32];
     
     // Perform n iterations of cryptographic operations
-    let iterations = n.max(1).min(100);
-    
     for i in 0..iterations {
         // Hash the message + nonce (simulating signature verification steps)
         let mut hasher = Sha256::new();
@@ -173,16 +224,23 @@ pub fn verify_signature(n: u32) -> u32 {
         }
         
         if is_zero {
+            #[cfg(feature = "std")]
+            eprintln!("❌ [COMMON] ECDSA Signature Verification FAILED at iteration {}", i);
             return 0; // Verification failed
         }
     }
+    
+    #[cfg(feature = "std")]
+    eprintln!("✅ [COMMON] ECDSA Signature Verification SUCCEEDED after {} iterations", iterations);
     
     1 // Verification succeeded
 }
 
 /// Stub for verify_signature when crypto feature is disabled
 #[cfg(not(feature = "crypto"))]
-pub fn verify_signature(_n: u32) -> u32 {
+pub fn verify_signature(n: u32) -> u32 {
+    #[cfg(feature = "std")]
+    eprintln!("⚠️  [COMMON] ECDSA Signature Verification requested but crypto feature is disabled (n={})", n);
     1 // Return success
 }
 
@@ -197,7 +255,24 @@ pub fn verify_signature(_n: u32) -> u32 {
 /// - 5: Hash (SHA256)
 /// - 6: Signature (ECDSA)
 pub fn execute_program(program_id: u32, n: u32) -> u32 {
-    match program_id {
+    #[cfg(feature = "std")]
+    {
+        let program_name = match program_id {
+            0 => "Fibonacci",
+            1 => "Sum",
+            2 => "Factorial",
+            3 => "IsPrime",
+            4 => "PopCount",
+            5 => "Hash (SHA256)",
+            6 => "Signature (ECDSA)",
+            _ => "Unknown",
+        };
+        eprintln!("\n🚀 [COMMON] ==================================================");
+        eprintln!("🚀 [COMMON] Starting Program: {} (ID={}, n={})", program_name, program_id, n);
+        eprintln!("🚀 [COMMON] ==================================================\n");
+    }
+    
+    let result = match program_id {
         0 => fibonacci(n),
         1 => sum(n),
         2 => factorial(n),
@@ -205,8 +280,21 @@ pub fn execute_program(program_id: u32, n: u32) -> u32 {
         4 => popcount(n),
         5 => hash_sha256(n),
         6 => verify_signature(n),
-        _ => 0, // Unknown program
+        _ => {
+            #[cfg(feature = "std")]
+            eprintln!("❌ [COMMON] Unknown program_id: {}", program_id);
+            0
+        }
+    };
+    
+    #[cfg(feature = "std")]
+    {
+        eprintln!("\n🏁 [COMMON] ==================================================");
+        eprintln!("🏁 [COMMON] Program Completed: Result = {}", result);
+        eprintln!("🏁 [COMMON] ==================================================\n");
     }
+    
+    result
 }
 
 #[cfg(test)]

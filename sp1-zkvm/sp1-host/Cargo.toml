@@ -10,7 +10,7 @@ sp1-sdk = { version = "5.2.2", default-features = false, features = ["profiling"
 # To avoid build error
 once_cell = "*"
 
-common = { path = "../../common" }
+common = { path = "../../common", features = ["std", "crypto"] }
 clap = { version = "4.0", features = ["derive", "env"] }
 
 dotenv = "0.15.0"
