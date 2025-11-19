@@ -6,11 +6,33 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+use std::collections::HashMap;
+
+// 1. Standard Key Constants (Standard Metric Protocol)
+pub mod std_keys {
+    pub const TOTAL_CYCLES: &str = "total_cycles";
+    pub const PROVE_TIME: &str = "total_prove_time_s";
+    pub const EXEC_TIME: &str = "execution_time_s";
+    pub const VERIFY_TIME: &str = "verification_time_s";
+    pub const TOTAL_TIME: &str = "total_time_s";
+    pub const PROOF_SIZE: &str = "final_proof_size_bytes";
+    pub const PEAK_RAM: &str = "peak_memory_mb";
+    pub const KHZ: &str = "khz";
+    pub const THROUGHPUT: &str = "execution_throughput";
+    pub const CYCLES_PER_SECOND: &str = "cycles_per_second";
+    pub const COMPRESSION_RATIO: &str = "compression_ratio";
+    pub const TRACE_SIZE_MB: &str = "trace_size_mb";
+}
+
 /// Complete benchmark metrics for a single zkVM run
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkMetrics {
     /// Metadata
     pub metadata: Metadata,
+
+    /// Custom/Dynamic metrics parsed from logs
+    #[serde(default)]
+    pub custom_metrics: HashMap<String, String>,
 
     /// Execution phase metrics
     pub execution_phase: Option<ExecutionPhase>,
@@ -282,6 +304,7 @@ impl BenchmarkMetrics {
                 platform: None,
                 hardware: None,
             },
+            custom_metrics: HashMap::new(),
             execution_phase: None,
             trace_generation: None,
             proving_phase: None,
@@ -298,44 +321,144 @@ impl BenchmarkMetrics {
     }
 
     /// Calculate derived metrics based on existing data
+    /// 
+    /// This function serves as the "Derivation Engine" in the ETL pipeline.
+    /// It uses standardized keys from `custom_metrics` to compute derived values.
     pub fn calculate_derived_metrics(&mut self) {
-        // Calculate throughput
-        if let Some(exec) = &self.execution_phase {
-            if let (Some(cycles), Some(time)) = (exec.total_cycles, exec.execution_time_s) {
-                if time > 0.0 {
-                    self.execution_phase.as_mut().unwrap().execution_throughput =
-                        Some(cycles as f64 / time);
+        use std_keys::*;
+
+        // Helper closure to safely parse data
+        let get_f64 = |key: &str| -> Option<f64> {
+            self.custom_metrics.get(key).and_then(|v| v.parse::<f64>().ok())
+        };
+        let get_u64 = |key: &str| -> Option<u64> {
+            self.custom_metrics.get(key).and_then(|v| v.parse::<u64>().ok())
+        };
+        let set_val = |key: &str, val: String| {
+            self.custom_metrics.insert(key.to_string(), val);
+        };
+
+        // 1. Calculate Performance Metrics (KHz / Throughput)
+        // Logic: Derive if cycles and prove time are available
+        if let (Some(cycles), Some(time)) = (get_u64(TOTAL_CYCLES), get_f64(PROVE_TIME)) {
+            if time > 0.0 {
+                let khz = (cycles as f64) / (time * 1000.0);
+                // Only calculate if not present (respect raw data priority)
+                if !self.custom_metrics.contains_key(KHZ) {
+                    set_val(KHZ, format!("{:.3}", khz));
+                }
+                
+                // Cycles per second (Hz)
+                let hz = (cycles as f64) / time;
+                 if !self.custom_metrics.contains_key(CYCLES_PER_SECOND) {
+                    set_val(CYCLES_PER_SECOND, format!("{:.0}", hz));
+                }
+
+                // Throughput (usually same as Hz for proving throughput)
+                if !self.custom_metrics.contains_key(THROUGHPUT) {
+                    set_val(THROUGHPUT, format!("{:.0}", hz));
                 }
             }
         }
 
-        // Calculate proving efficiency metrics
-        if let Some(proving) = &mut self.proving_phase {
-            if let Some(exec) = &self.execution_phase {
-                if let Some(cycles) = exec.total_cycles {
-                    let prove_time = proving.total_prove_time_s;
-                    if prove_time > 0.0 {
-                        proving.performance_metrics.khz =
-                            Some(cycles as f64 / (prove_time * 1000.0));
-                        proving
-                            .performance_metrics
-                            .proving_throughput_kcycles_per_sec =
-                            Some(cycles as f64 / (prove_time * 1000.0));
-                    }
-                }
+        // 2. Calculate Total Time
+        // Logic: Sum execution, proving, and verification times if total is missing
+        if !self.custom_metrics.contains_key(TOTAL_TIME) {
+            let exec = get_f64(EXEC_TIME).unwrap_or(0.0);
+            let prove = get_f64(PROVE_TIME).unwrap_or(0.0);
+            let verify = get_f64(VERIFY_TIME).unwrap_or(0.0);
+            let total = exec + prove + verify;
+            if total > 0.0 {
+                set_val(TOTAL_TIME, format!("{:.3}", total));
+                self.summary.total_time_s = total; // Also update summary struct
             }
+        }
 
-            // Calculate compression ratio
-            if let (Some(trace_size), final_size) = (
-                proving.proof_size_evolution.stage_0_proof_size_mb,
-                proving.proof_size_evolution.final_proof_size_bytes,
-            ) {
-                if final_size > 0 {
-                    let trace_bytes = trace_size * 1024.0 * 1024.0;
-                    proving.proof_size_evolution.total_compression_ratio =
-                        Some(trace_bytes / final_size as f64);
-                }
+        // 3. Calculate Compression Ratio
+        if let (Some(trace_mb), Some(final_bytes)) = (get_f64(TRACE_SIZE_MB), get_f64(PROOF_SIZE)) {
+            if final_bytes > 0.0 {
+                let trace_bytes = trace_mb * 1024.0 * 1024.0;
+                let ratio = trace_bytes / final_bytes;
+                set_val(COMPRESSION_RATIO, format!("{:.2}", ratio));
             }
+        }
+    }
+
+    /// Get a metric value by key string (for dynamic reporting)
+    pub fn get_value(&self, key: &str) -> String {
+        // First check custom metrics (highest priority for raw values)
+        if let Some(val) = self.custom_metrics.get(key) {
+            return val.clone();
+        }
+
+        match key {
+            // Execution
+            "total_cycles" => self
+                .execution_phase
+                .as_ref()
+                .and_then(|e| e.total_cycles)
+                .map(|v| v.to_string())
+                .unwrap_or("N/A".to_string()),
+            "total_instruction_count" => self
+                .execution_phase
+                .as_ref()
+                .and_then(|e| e.total_instruction_count)
+                .map(|v| v.to_string())
+                .unwrap_or("N/A".to_string()),
+            "execution_time_s" => self
+                .execution_phase
+                .as_ref()
+                .and_then(|e| e.execution_time_s)
+                .map(|v| format!("{:.4}", v))
+                .unwrap_or("N/A".to_string()),
+
+            // Proving
+            "total_prove_time_s" => self
+                .proving_phase
+                .as_ref()
+                .map(|p| format!("{:.3}", p.total_prove_time_s))
+                .unwrap_or("N/A".to_string()),
+            "vm_core_proof_size_kb" => self
+                .proving_phase
+                .as_ref()
+                .and_then(|p| p.proof_size_evolution.stage_1_proof_size_kb)
+                .map(|v| format!("{:.2}", v))
+                .unwrap_or("N/A".to_string()),
+            "compressed_proof_size_kb" => self
+                .proving_phase
+                .as_ref()
+                .and_then(|p| p.proof_size_evolution.stage_2_proof_size_kb)
+                .map(|v| format!("{:.2}", v))
+                .unwrap_or("N/A".to_string()),
+            "groth16_proof_size_bytes" => self
+                .proving_phase
+                .as_ref()
+                .and_then(|p| p.proof_size_evolution.stage_4_proof_size_bytes)
+                .map(|v| v.to_string())
+                .unwrap_or("N/A".to_string()),
+            "khz" => self
+                .proving_phase
+                .as_ref()
+                .and_then(|p| p.performance_metrics.khz)
+                .map(|v| format!("{:.3}", v))
+                .unwrap_or("N/A".to_string()),
+
+            // Verification
+            "verification_time_s" => self
+                .verification_phase
+                .as_ref()
+                .map(|v| format!("{:.6}", v.verification_time_s))
+                .unwrap_or("N/A".to_string()),
+
+            // Summary
+            "total_time_s" => format!("{:.3}", self.summary.total_time_s),
+            "success_status" => format!("{:?}", self.summary.success_status),
+
+            // Metadata
+            "zkvm_name" => self.metadata.zkvm_name.clone(),
+            "program_name" => self.metadata.program_name.clone(),
+
+            _ => "N/A".to_string(),
         }
     }
 }

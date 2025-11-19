@@ -1,0 +1,20 @@
+use crate::core::metrics::BenchmarkMetrics;
+use crate::execution::resource_monitor::ResourceStats;
+
+#[derive(Debug, Clone)]
+pub struct TestRun {
+    pub zkvm_name: String,
+    pub mode: String,
+    pub scale: u32,
+    pub repeat: u32,
+}
+
+#[derive(Debug)]
+pub struct ExecutionResult {
+    pub test_run: TestRun,
+    pub metrics: Option<BenchmarkMetrics>,
+    pub log_content: String,
+    pub success: bool,
+    pub error: Option<String>,
+    pub resource_stats: Option<ResourceStats>,
+}

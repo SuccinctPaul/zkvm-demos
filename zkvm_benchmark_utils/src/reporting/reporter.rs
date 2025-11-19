@@ -8,9 +8,10 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use crate::error::Result;
-use crate::executor::ExecutionResult;
-use crate::statistics::{calculate_statistics, Statistics};
+use crate::core::config::ReportingConfig;
+use crate::core::error::Result;
+use crate::execution::types::ExecutionResult;
+use crate::reporting::statistics::{calculate_statistics, Statistics};
 
 /// Report format types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -39,11 +40,12 @@ impl ReportFormat {
 
 pub struct BenchmarkReporter {
     results: Vec<ExecutionResult>,
+    config: Option<ReportingConfig>,
 }
 
 impl BenchmarkReporter {
-    pub fn new(results: Vec<ExecutionResult>) -> Self {
-        Self { results }
+    pub fn new(results: Vec<ExecutionResult>, config: Option<ReportingConfig>) -> Self {
+        Self { results, config }
     }
 
     /// Group results by zkvm, mode, and scale (ignoring repeat count)
@@ -136,103 +138,150 @@ impl BenchmarkReporter {
     pub fn generate_csv<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let mut writer = Writer::from_path(path)?;
 
+        let headers = if let Some(config) = &self.config {
+            if !config.metrics.is_empty() {
+                let mut h = vec![
+                    "zkvm_name".to_string(),
+                    "mode".to_string(),
+                    "scale".to_string(),
+                ];
+                h.extend(config.metrics.clone());
+                h.push("success".to_string());
+                h
+            } else {
+                Self::default_headers()
+            }
+        } else {
+            Self::default_headers()
+        };
+
         // Write header
-        writer.write_record(&[
-            "zkvm_name",
-            "mode",
-            "scale",
-            "total_cycles",
-            "total_prove_time_s",
-            "vm_core_proof_size_kb",
-            "compressed_proof_size_kb",
-            "groth16_proof_size_bytes",
-            "verification_time_s",
-            "khz",
-            "total_time_s",
-            "peak_memory_mb",
-            "avg_cpu_percent",
-            "disk_read_mb",
-            "disk_write_mb",
-            "success",
-        ])?;
+        writer.write_record(&headers)?;
 
         // Write data rows
         for result in &self.results {
-            if let Some(metrics) = &result.metrics {
-                let row = vec![
-                    metrics.metadata.zkvm_name.clone(),
-                    result.test_run.mode.clone(),
-                    result.test_run.scale.to_string(),
-                    metrics
-                        .execution_phase
-                        .as_ref()
-                        .and_then(|e| e.total_cycles)
-                        .map(|c| c.to_string())
-                        .unwrap_or_default(),
-                    metrics
-                        .proving_phase
-                        .as_ref()
-                        .map(|p| format!("{:.3}", p.total_prove_time_s))
-                        .unwrap_or_default(),
-                    metrics
-                        .proving_phase
-                        .as_ref()
-                        .and_then(|p| p.proof_size_evolution.stage_1_proof_size_kb)
-                        .map(|s| format!("{:.2}", s))
-                        .unwrap_or_else(|| "N/A".to_string()),
-                    metrics
-                        .proving_phase
-                        .as_ref()
-                        .and_then(|p| p.proof_size_evolution.stage_2_proof_size_kb)
-                        .map(|s| format!("{:.2}", s))
-                        .unwrap_or_else(|| "N/A".to_string()),
-                    metrics
-                        .proving_phase
-                        .as_ref()
-                        .and_then(|p| p.proof_size_evolution.stage_4_proof_size_bytes)
-                        .map(|s| s.to_string())
-                        .unwrap_or_else(|| "N/A".to_string()),
-                    metrics
-                        .verification_phase
-                        .as_ref()
-                        .map(|v| format!("{:.6}", v.verification_time_s))
-                        .unwrap_or_default(),
-                    metrics
-                        .proving_phase
-                        .as_ref()
-                        .and_then(|p| p.performance_metrics.khz)
-                        .map(|k| format!("{:.3}", k))
-                        .unwrap_or_default(),
-                    format!("{:.3}", metrics.summary.total_time_s),
-                    result
-                        .resource_stats
-                        .as_ref()
-                        .map(|r| format!("{:.1}", r.peak_memory_mb))
-                        .unwrap_or_default(),
-                    result
-                        .resource_stats
-                        .as_ref()
-                        .map(|r| format!("{:.1}", r.avg_cpu_percent))
-                        .unwrap_or_default(),
-                    result
-                        .resource_stats
-                        .as_ref()
-                        .map(|r| format!("{:.2}", r.total_disk_read_mb))
-                        .unwrap_or_default(),
-                    result
-                        .resource_stats
-                        .as_ref()
-                        .map(|r| format!("{:.2}", r.total_disk_write_mb))
-                        .unwrap_or_default(),
-                    result.success.to_string(),
-                ];
+            let mut row = vec![
+                result.test_run.zkvm_name.clone(),
+                result.test_run.mode.clone(),
+                result.test_run.scale.to_string(),
+            ];
 
-                writer.write_record(&row)?;
+            if let Some(metrics) = &result.metrics {
+                // If config exists, use it to fetch metrics dynamically
+                if let Some(config) = &self.config {
+                    if !config.metrics.is_empty() {
+                        for metric_key in &config.metrics {
+                            row.push(metrics.get_value(metric_key));
+                        }
+                    } else {
+                        row.extend(Self::get_default_metric_values(result, metrics));
+                    }
+                } else {
+                    row.extend(Self::get_default_metric_values(result, metrics));
+                }
+            } else {
+                // Fill with N/A if metrics missing (except first 3 columns)
+                for _ in 3..headers.len() - 1 {
+                    row.push("N/A".to_string());
+                }
             }
+            row.push(result.success.to_string());
+
+            writer.write_record(&row)?;
         }
 
         writer.flush()?;
         Ok(())
+    }
+
+    fn default_headers() -> Vec<String> {
+        vec![
+            "zkvm_name".to_string(),
+            "mode".to_string(),
+            "scale".to_string(),
+            "total_cycles".to_string(),
+            "total_prove_time_s".to_string(),
+            "vm_core_proof_size_kb".to_string(),
+            "compressed_proof_size_kb".to_string(),
+            "groth16_proof_size_bytes".to_string(),
+            "verification_time_s".to_string(),
+            "khz".to_string(),
+            "total_time_s".to_string(),
+            "peak_memory_mb".to_string(),
+            "avg_cpu_percent".to_string(),
+            "disk_read_mb".to_string(),
+            "disk_write_mb".to_string(),
+            "success".to_string(),
+        ]
+    }
+
+    fn get_default_metric_values(
+        result: &ExecutionResult,
+        metrics: &crate::core::metrics::BenchmarkMetrics,
+    ) -> Vec<String> {
+        vec![
+            metrics
+                .execution_phase
+                .as_ref()
+                .and_then(|e| e.total_cycles)
+                .map(|c| c.to_string())
+                .unwrap_or_default(),
+            metrics
+                .proving_phase
+                .as_ref()
+                .map(|p| format!("{:.3}", p.total_prove_time_s))
+                .unwrap_or_default(),
+            metrics
+                .proving_phase
+                .as_ref()
+                .and_then(|p| p.proof_size_evolution.stage_1_proof_size_kb)
+                .map(|s| format!("{:.2}", s))
+                .unwrap_or_else(|| "N/A".to_string()),
+            metrics
+                .proving_phase
+                .as_ref()
+                .and_then(|p| p.proof_size_evolution.stage_2_proof_size_kb)
+                .map(|s| format!("{:.2}", s))
+                .unwrap_or_else(|| "N/A".to_string()),
+            metrics
+                .proving_phase
+                .as_ref()
+                .and_then(|p| p.proof_size_evolution.stage_4_proof_size_bytes)
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "N/A".to_string()),
+            metrics
+                .verification_phase
+                .as_ref()
+                .map(|v| format!("{:.6}", v.verification_time_s))
+                .unwrap_or_default(),
+            metrics
+                .proving_phase
+                .as_ref()
+                .and_then(|p| p.performance_metrics.khz)
+                .map(|k| format!("{:.3}", k))
+                .unwrap_or_default(),
+            format!("{:.3}", metrics.summary.total_time_s),
+            result
+                .resource_stats
+                .as_ref()
+                .map(|r| format!("{:.1}", r.peak_memory_mb))
+                .unwrap_or_default(),
+            result
+                .resource_stats
+                .as_ref()
+                .map(|r| format!("{:.1}", r.avg_cpu_percent))
+                .unwrap_or_default(),
+            result
+                .resource_stats
+                .as_ref()
+                .map(|r| format!("{:.2}", r.total_disk_read_mb))
+                .unwrap_or_default(),
+            result
+                .resource_stats
+                .as_ref()
+                .map(|r| format!("{:.2}", r.total_disk_write_mb))
+                .unwrap_or_default(),
+        ]
     }
 
     /// Generate JSON summary
@@ -644,8 +693,6 @@ impl BenchmarkReporter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::executor::TestRun;
-    use crate::metrics::*;
 
     #[test]
     fn test_reporter_creation() {

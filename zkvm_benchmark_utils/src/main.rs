@@ -37,7 +37,6 @@ enum Commands {
         /// Report formats to generate (csv,json,markdown,console). Default: all
         #[arg(long)]
         report_formats: Option<String>,
-
     },
 
     /// Analyze log file and extract metrics
@@ -79,13 +78,6 @@ enum Commands {
         /// Report formats to generate (csv,json,markdown,console). Default: all
         #[arg(long)]
         formats: Option<String>,
-    },
-
-    /// List all available plugins
-    ListPlugins {
-        /// Filter by plugin type: analyzer, reporter, executor, transformer
-        #[arg(short, long)]
-        plugin_type: Option<String>,
     },
 
     /// Extract metrics from zkVM log using config patterns
@@ -146,9 +138,7 @@ async fn main() -> anyhow::Result<()> {
         } => {
             generate_report(metrics_dir, output, formats)?;
         }
-        Commands::ListPlugins { plugin_type } => {
-            list_plugins(plugin_type)?;
-        }
+
         Commands::Extract {
             log_file,
             zkvm,
@@ -169,8 +159,6 @@ async fn run_benchmarks(
     scales_filter: Option<String>,
     report_formats: Option<String>,
 ) -> anyhow::Result<()> {
-
-
     // Determine which zkVMs to run
     let zkvm_names: Vec<String> = if let Some(zkvms) = zkvms_filter {
         zkvms.split(',').map(|s| s.trim().to_string()).collect()
@@ -221,20 +209,18 @@ async fn run_benchmarks(
         repeat_count: Some(1),
     };
 
-    let executor = BenchmarkExecutor::new(config)?;
+    let executor = BenchmarkExecutor::new(config.clone())?;
     let results = executor.run_all().await?;
 
     let total = results.len();
     let successful = results.iter().filter(|r| r.success).count();
     let failed = total - successful;
 
-
     info!(
-            "Completed: {} total, {} success, {} failed",
-            total, successful, failed
-        );
+        "Completed: {} total, {} success, {} failed",
+        total, successful, failed
+    );
     info!("Results: {}", executor.output_dir().display());
-
 
     // Parse report formats
     let formats = if let Some(formats_str) = report_formats {
@@ -251,7 +237,11 @@ async fn run_benchmarks(
         None // Generate all formats
     };
 
-    let reporter = BenchmarkReporter::new(results);
+    // Try to get reporting config from one of the enabled zkVMs
+    // Ideally this should be a global config, but for now we use the first one found
+    let reporting_config = config.zkvms.values().next().map(|c| c.reporting.clone());
+
+    let reporter = BenchmarkReporter::new(results, reporting_config);
     // Generate reports in the reports/ subdirectory
     let reports_dir = executor.output_dir().join("reports");
     reporter.generate(&reports_dir, formats)?;
@@ -314,91 +304,132 @@ fn analyze_log(
     format: String,
     output: Option<PathBuf>,
 ) -> anyhow::Result<()> {
-    use std::collections::HashMap;
-    use zkvm_benchmark_utils::formatters;
-    use zkvm_benchmark_utils::plugin::{AnalyzerInput, DataSource};
-    use zkvm_benchmark_utils::{LogAnalyzer, PatternConfig};
+    use std::fs;
+    use zkvm_benchmark_utils::core::config::ParsedMetrics;
+    use zkvm_benchmark_utils::{BenchmarkReporter, ExecutionResult, LogParser, TestRun};
 
-    // Create analyzer
-    let analyzer = if let Some(pattern_file) = patterns {
-        let patterns = PatternConfig::from_file(pattern_file)?;
-        LogAnalyzer::with_patterns(patterns)
-    } else {
-        LogAnalyzer::new()
-    };
-
-    // Analyze log
-    let input = AnalyzerInput {
-        source: DataSource::File(log_file),
-        format: Some("log".to_string()),
-        options: HashMap::new(),
-    };
-
-    let result = analyzer.parse_log(&std::fs::read_to_string(match &input.source {
-        DataSource::File(p) => p,
-        _ => unreachable!(),
-    })?)?;
-
-    // Format output
-    let formatter = formatters::get_formatter(&format)
-        .ok_or_else(|| anyhow::anyhow!("Unknown format: {}", format))?;
-
-    let output_str = formatter.format(&result)?;
-
-    // Write output
-    if let Some(output_file) = output {
-        std::fs::write(&output_file, output_str)?;
-        info!("Saved: {:?}", output_file);
-    } else {
-        println!("{}", output_str);
-    }
-
-    Ok(())
-}
-
-fn list_plugins(plugin_type_filter: Option<String>) -> anyhow::Result<()> {
-    use comfy_table::{presets::UTF8_FULL, Table};
-    use zkvm_benchmark_utils::global_registry;
-
-    let registry = global_registry().read().unwrap();
-    let plugins = registry.list_plugins();
-
-    let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
-    table.set_header(vec!["Type", "Name", "Version", "Description"]);
-
-    for (ptype, metadata) in plugins {
-        // Apply filter if specified
-        if let Some(ref filter) = plugin_type_filter {
-            let type_str = format!("{:?}", ptype).to_lowercase();
-            if !type_str.contains(&filter.to_lowercase()) {
-                continue;
+    // Load patterns
+    let metrics_config = if let Some(pattern_file) = patterns {
+        let content = fs::read_to_string(&pattern_file)?;
+        // Try to parse as ParsedMetrics directly first
+        if let Ok(m) = toml::from_str::<ParsedMetrics>(&content) {
+            m
+        } else {
+            // Try to parse as ZkVmConfig (e.g. sp1.toml) and extract parsed_metrics
+            match toml::from_str::<ZkVmConfig>(&content) {
+                Ok(config) => config.parsed_metrics,
+                Err(_) => {
+                    // Try to parse as full BenchmarkConfig and take the first zkVM's metrics?
+                    // Or just fail with a helpful message.
+                    // Let's try to support a simple file with [parsed_metrics] section too
+                    #[derive(serde::Deserialize)]
+                    struct ConfigWrapper {
+                        parsed_metrics: ParsedMetrics,
+                    }
+                    if let Ok(wrapper) = toml::from_str::<ConfigWrapper>(&content) {
+                        wrapper.parsed_metrics
+                    } else {
+                        anyhow::bail!("Failed to parse patterns file. Expected ParsedMetrics, ZkVmConfig, or a file with [parsed_metrics] section.");
+                    }
+                }
             }
         }
+    } else {
+        // Default generic patterns for fallback
+        let mut p = HashMap::new();
+        p.insert(
+            "total_cycles".to_string(),
+            r"BENCHMARK: total_cycles=(\d+)".to_string(),
+        );
+        p.insert(
+            "execution_time_s".to_string(),
+            r"BENCHMARK: execution_time_s=([\d.]+)".to_string(),
+        );
+        p.insert(
+            "total_prove_time_s".to_string(),
+            r"BENCHMARK: total_prove_time_s=([\d.]+)".to_string(),
+        );
+        ParsedMetrics { patterns: p }
+    };
 
-        table.add_row(vec![
-            format!("{:?}", ptype),
-            metadata.name,
-            metadata.version,
-            metadata.description,
-        ]);
+    // Create parser
+    let parser = LogParser::new(&metrics_config)?;
+    let log_content = fs::read_to_string(&log_file)?;
+
+    let program_name = log_file
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+
+    // Try to extract zkvm name from log content or filename, otherwise "unknown"
+    let zkvm_name = if log_content.contains("sp1") {
+        "sp1"
+    } else if log_content.contains("risc0") {
+        "risc0"
+    } else {
+        "unknown"
+    };
+
+    let metrics = parser.parse(&log_content, zkvm_name, &program_name, None)?;
+
+    // If format is markdown or we want to use BenchmarkReporter capabilities
+    if format == "markdown" || format == "md" {
+        // Wrap in ExecutionResult for BenchmarkReporter
+        let result = ExecutionResult {
+            test_run: TestRun {
+                zkvm_name: metrics.metadata.zkvm_name.clone(),
+                mode: "unknown".to_string(), // Could try to infer
+                scale: 0,
+                repeat: 1,
+            },
+            metrics: Some(metrics),
+            log_content: String::new(),
+            success: true,
+            error: None,
+            resource_stats: None,
+        };
+
+        let reporter = BenchmarkReporter::new(vec![result], None);
+
+        if let Some(output_file) = output {
+            reporter.generate_markdown(&output_file)?;
+            info!("Saved: {:?}", output_file);
+        } else {
+            // Printing markdown to stdout is a bit weird with BenchmarkReporter which writes to file
+            // We can use a temp file or just print a summary table
+            reporter.print_summary_table();
+        }
+    } else {
+        // Use simple formatter for json, csv, text
+        let output_str = format_benchmark_metrics_simple(&metrics, &format)?;
+
+        // Write output
+        if let Some(output_file) = output {
+            fs::write(&output_file, output_str)?;
+            info!("Saved: {:?}", output_file);
+        } else {
+            println!("{}", output_str);
+        }
     }
 
-    println!("\n{}\n", table);
     Ok(())
 }
-
 fn generate_report(
     metrics_dir: PathBuf,
     output_dir: PathBuf,
     formats: Option<String>,
 ) -> anyhow::Result<()> {
     // Read all JSON files from metrics directory
+    use regex::Regex;
     use std::fs;
-    use zkvm_benchmark_utils::executor::{ExecutionResult, TestRun};
-    use zkvm_benchmark_utils::BenchmarkMetrics;
+    use zkvm_benchmark_utils::{BenchmarkMetrics, ExecutionResult, TestRun};
 
     let mut results = Vec::new();
+
+    // Regex for new filename format: {zkvm}-{mode}-{timestamp}-scale{scale}
+    // Example: sp1-groth16-20251119-204348-scale10
+    let re_new = Regex::new(r"^([^-]+)-([^-]+)-(\d{8}-\d{6})-scale(\d+)$").unwrap();
 
     for entry in fs::read_dir(&metrics_dir)? {
         let entry = entry?;
@@ -407,26 +438,37 @@ fn generate_report(
         if path.extension().and_then(|s| s.to_str()) == Some("json") {
             let content = fs::read_to_string(&path)?;
             if let Ok(metrics) = serde_json::from_str::<BenchmarkMetrics>(&content) {
-                // Extract info from filename (e.g., "sp1_fib10_groth16_1.json")
+                // Extract info from filename
                 let filename = path
                     .file_stem()
                     .and_then(|s| s.to_str())
                     .unwrap_or("unknown");
 
-                let parts: Vec<&str> = filename.split('_').collect();
-                if parts.len() >= 4 {
-                    let zkvm_name = parts[0].to_string();
-                    let scale_str = parts[1].trim_start_matches("fib");
-                    let mode = parts[2].to_string();
-                    let repeat_str = parts.get(3).unwrap_or(&"1");
+                let test_run = if let Some(caps) = re_new.captures(filename) {
+                    // New format
+                    Some(TestRun {
+                        zkvm_name: caps[1].to_string(),
+                        mode: caps[2].to_string(),
+                        scale: caps[4].parse().unwrap_or(0),
+                        repeat: 1, // Default to 1 as it's not in filename
+                    })
+                } else {
+                    // Try old format: sp1_fib10_groth16_1.json
+                    let parts: Vec<&str> = filename.split('_').collect();
+                    if parts.len() >= 4 {
+                        let scale_str = parts[1].trim_start_matches("fib");
+                        Some(TestRun {
+                            zkvm_name: parts[0].to_string(),
+                            mode: parts[2].to_string(),
+                            scale: scale_str.parse().unwrap_or(0),
+                            repeat: parts.get(3).unwrap_or(&"1").parse().unwrap_or(1),
+                        })
+                    } else {
+                        None
+                    }
+                };
 
-                    let test_run = TestRun {
-                        zkvm_name,
-                        mode,
-                        scale: scale_str.parse().unwrap_or(0),
-                        repeat: repeat_str.parse().unwrap_or(1),
-                    };
-
+                if let Some(test_run) = test_run {
                     results.push(ExecutionResult {
                         test_run,
                         metrics: Some(metrics),
@@ -460,7 +502,7 @@ fn generate_report(
     };
 
     fs::create_dir_all(&output_dir)?;
-    let reporter = BenchmarkReporter::new(results);
+    let reporter = BenchmarkReporter::new(results, None);
     reporter.generate(&output_dir, report_formats)?;
 
     info!("Reports: {:?}", output_dir);
@@ -489,12 +531,12 @@ fn extract_metrics(
     let log_content = fs::read_to_string(&log_file)?;
 
     // Create parser and extract metrics
-    let parser = LogParser::new(&zkvm_config.log_patterns)?;
+    let parser = LogParser::new(&zkvm_config.parsed_metrics)?;
     let program_name = log_file
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("unknown");
-    let metrics = parser.parse(&log_content, &zkvm_name, program_name)?;
+    let metrics = parser.parse(&log_content, &zkvm_name, program_name, Some(&zkvm_config.metric_mapping))?;
 
     // Format output using module formatter
     let output_str = format_benchmark_metrics_simple(&metrics, &format)?;

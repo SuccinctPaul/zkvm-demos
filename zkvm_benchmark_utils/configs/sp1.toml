@@ -33,29 +33,389 @@ repeat_count = 1
 RUST_LOG = "debug"
 
 # ----------------------------------------------------------------
-# 日志解析正则表达式
+# 解析规则 (Parsed Metrics)
 # ----------------------------------------------------------------
-[log_patterns]
-# P0 核心指标
-total_cycles = 'BENCHMARK: total_cycles=(\d+)'
-total_instruction_count = 'BENCHMARK: total_instruction_count=(\d+)'
-total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
-final_proof_size_bytes = 'BENCHMARK: .*_proof_size_bytes=(\d+)'
-verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
-success_status = 'BENCHMARK: success_status=(\w+)'
+[parsed_metrics]
+# Raw 提取 (Extract)
+# 这里我们使用 raw_ 前缀来区分原始数据和标准数据
+raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
+raw_total_instruction_count = 'BENCHMARK: total_instruction_count=(\d+)'
+raw_total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
+raw_final_proof_size_bytes = 'BENCHMARK: .*_proof_size_bytes=(\d+)'
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_on_chain_gas_estimate = 'BENCHMARK: on_chain_gas_estimate=(\d+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_execution_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
 
-# P1 高优先级指标
-execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
-vm_prove_time_s = 'BENCHMARK: vm_prove_time_s=([\d.]+)'
-recursive_prove_time_s = 'BENCHMARK: recursive_prove_time_s=([\d.]+)'
-snark_prove_time_s = 'BENCHMARK: snark_prove_time_s=([\d.]+)'
+# 其他指标保持原样提取，稍后在 metric_mapping 中决定是否标准化
+gas = 'gas: (\d+)'
+total_syscall_cycles = 'total_syscall_cycles=(\d+)'
+touched_memory_addresses = 'touched_memory_addresses=(\d+)'
 vm_core_proof_size_kb = 'BENCHMARK: vm_core_proof_size_kb=([\d.]+)'
 compressed_proof_size_kb = 'BENCHMARK: compressed_proof_size_kb=([\d.]+)'
 groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
 
-# P2 额外指标
-segments = 'BENCHMARK: segments=(\d+)'
-syscall_cycles = 'BENCHMARK: syscall_cycles=(\d+)'
-syscall_count = 'BENCHMARK: syscall_count=(\d+)'
-peak_memory_mb = 'BENCHMARK: peak_memory_mb=([\d.]+)'
+# ================================================================
+# P1 证明阶段指标 (Proving Phase Metrics)
+# ================================================================
 
+# Core Proof 阶段
+core_proof_total_time_s = 'prove_core:.*close time\.busy=([\d.]+)s'
+phase2_trace_generation_time_ms = 'phase 2 trace generation:.*close time\.busy=([\d.]+)ms'
+main_traces_generation_time_ms = 'generate main traces:.*close time\.busy=([\d.]+)ms'
+recursion_program_build_time_ms = 'build recursion program:.*close time\.busy=([\d.]+)ms'
+recursion_program_compile_time_ms = 'compile recursion program:.*close time\.busy=([\d.]+)ms'
+core_merkle_tree_build_time_ms = 'phase 2 prover:batch:commit:build merkle tree:.*close time\.busy=([\d.]+)ms'
+core_permutation_generation_time_ms = 'phase 2 prover:batch:opening:generate permutation traces:.*close time\.busy=([\d.]+)ms'
+core_quotient_compute_time_ms = 'phase 2 prover:batch:opening:compute quotient values:.*close time\.busy=([\d.]+)ms'
+core_multi_batch_opening_time_s = 'phase 2 prover:batch:opening:open multi batches:.*close time\.busy=([\d.]+)s'
+
+# Compress 阶段
+compress_total_time_s = 'compress:.*close time\.busy=([\d.]+)s time\.idle=[\d.]+ns$'
+compress_generate_records_time_ms = 'compress:generate records and traces:.*close time\.busy=([\d.]+)ms'
+compress_setup_time_ms = 'compress:prove:batch:Setup compress program:setup machine:.*close time\.busy=([\d.]+)ms'
+compress_commit_time_ms = 'compress:prove:batch:commit:.*close time\.busy=([\d.]+)ms'
+compress_permutation_time_ms = 'compress:prove:batch:open:generate permutation traces:.*close time\.busy=([\d.]+)ms'
+compress_quotient_compute_time_ms = 'compress:prove:batch:open:compute quotient values:.*close time\.busy=([\d.]+)ms'
+compress_opening_time_s = 'compress:prove:batch:open:.*close time\.busy=([\d.]+)s time\.idle=[\d.]+ns$'
+compress_merkle_tree_build_time_ms = 'compress:prove:batch:commit:build merkle tree:.*close time\.busy=([\d.]+)ms'
+
+# Shrink 阶段
+shrink_total_time_s = 'shrink:.*close time\.busy=([\d.]+)s time\.idle=[\d.]+ns$'
+shrink_program_build_time_ms = 'shrink:build shrink program:.*close time\.busy=([\d.]+)ms'
+shrink_program_compile_time_ms = 'shrink:compile shrink program:.*close time\.busy=([\d.]+)ms'
+shrink_setup_time_ms = 'shrink:setup shrink:setup machine:.*close time\.busy=([\d.]+)ms'
+shrink_prove_time_s = 'shrink:prove_shards:.*close time\.busy=([\d.]+)s'
+shrink_merkle_tree_build_time_ms = 'shrink:prove_shards:build merkle tree:.*close time\.busy=([\d.]+)ms'
+shrink_permutation_time_ms = 'shrink:prove_shards:generate permutation traces:.*close time\.busy=([\d.]+)ms'
+shrink_quotient_compute_time_ms = 'shrink:prove_shards:compute quotient values:.*close time\.busy=([\d.]+)ms'
+
+# Shrink 事件计数
+shrink_total_events = 'shrink: total events: (\d+)'
+shrink_base_alu_events = 'shrink:   base_alu_events: (\d+)'
+shrink_batch_fri_events = 'shrink:   batch_fri_events: (\d+)'
+shrink_ext_alu_events = 'shrink:   ext_alu_events: (\d+)'
+shrink_mem_const_count = 'shrink:   mem_const_count: (\d+)'
+shrink_mem_var_events = 'shrink:   mem_var_events: (\d+)'
+shrink_poseidon2_events = 'shrink:   poseidon2_events: (\d+)'
+shrink_select_events = 'shrink:   select_events: (\d+)'
+shrink_exp_reverse_bits_len_events = 'shrink:   exp_reverse_bits_len_events: (\d+)'
+
+# Wrap BN254 阶段
+wrap_total_time_s = 'wrap_bn254:.*close time\.busy=([\d.]+)s time\.idle=[\d.]+ns$'
+wrap_program_build_time_ms = 'wrap_bn254:build compress program:.*close time\.busy=([\d.]+)ms'
+wrap_program_compile_time_ms = 'wrap_bn254:compile compress program:.*close time\.busy=([\d.]+)ms'
+wrap_setup_time_s = 'wrap_bn254:setup wrap:setup machine:.*close time\.busy=([\d.]+)s'
+wrap_prove_time_s = 'wrap_bn254:prove_shards:.*close time\.busy=([\d.]+)s'
+wrap_verify_time_ms = 'wrap_bn254:verify:.*close time\.busy=([\d.]+)ms'
+wrap_merkle_tree_build_time_s = 'wrap_bn254:prove_shards:build merkle tree:.*close time\.busy=([\d.]+)s'
+wrap_permutation_time_ms = 'wrap_bn254:prove_shards:generate permutation traces:.*close time\.busy=([\d.]+)ms'
+
+# Wrap BN254 事件计数
+wrap_total_events = 'wrap_bn254: total events: (\d+)'
+wrap_base_alu_events = 'wrap_bn254:   base_alu_events: (\d+)'
+wrap_ext_alu_events = 'wrap_bn254:   ext_alu_events: (\d+)'
+wrap_mem_const_count = 'wrap_bn254:   mem_const_count: (\d+)'
+wrap_mem_var_events = 'wrap_bn254:   mem_var_events: (\d+)'
+wrap_poseidon2_events = 'wrap_bn254:   poseidon2_events: (\d+)'
+wrap_select_events = 'wrap_bn254:   select_events: (\d+)'
+
+# ================================================================
+# P1 Groth16 阶段指标 (Groth16 Phase Metrics)
+# ================================================================
+groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
+groth16_r1cs_reading_time_s = 'Reading R1CS took ([\d.]+)s'
+groth16_proving_key_reading_time_s = 'Reading proving key took ([\d.]+)s'
+groth16_witness_reading_time_ms = 'Reading witness file took ([\d.]+)ms'
+groth16_witness_generation_time_ms = 'Generating witness took ([\d.]+)ms'
+groth16_constraint_count = 'nbConstraints=(\d+)'
+groth16_solver_time_s = 'constraint system solver done.*took=([\d.]+)'
+groth16_prover_time_s = 'prover done.*took=([\d.]+)'
+groth16_generation_time_s = 'Generating proof took ([\d.]+)s'
+groth16_verifier_time_ms = 'verifier done.*took=([\d.]+)'
+groth16_total_time_s = 'wrap_groth16_bn254:.*close time\.busy=([\d.]+)s'
+
+# ================================================================
+# P2 验证指标 (Verification Metrics)
+# ================================================================
+on_chain_gas_estimate = 'BENCHMARK: on_chain_gas_estimate=(\d+)'
+
+# ================================================================
+# P2 性能效率指标 (Performance Metrics)
+# ================================================================
+khz = 'khz=([\d.]+)'
+e2e_time_s = 'e2e=([\d.]+)s'
+cycles_per_second = 'summary: cycles=(\d+).*khz=([\d.]+)'
+
+# ================================================================
+# P2 初始化指标 (Initialization Metrics)
+# ================================================================
+prover_initialization_time_s = 'initialize prover:.*close time\.busy=([\d.]+)s'
+compress_program_build_total_time_ms = 'initialize prover:build compress program:.*close time\.busy=([\d.]+)ms'
+compress_program_compile_total_time_ms = 'initialize prover:compile compress program:.*close time\.busy=([\d.]+)ms'
+
+# ================================================================
+# P3 指令统计 (Instruction Statistics)
+# ================================================================
+# RISC-V 基础指令
+opcode_add = 'execution report.*\n.*(\d+) add'
+opcode_sub = 'execution report.*\n.*(\d+) sub'
+opcode_mul = 'execution report.*\n.*(\d+) mul'
+opcode_and = 'execution report.*\n.*(\d+) and'
+opcode_or = 'execution report.*\n.*(\d+) or'
+opcode_xor = 'execution report.*\n.*(\d+) xor'
+opcode_sll = 'execution report.*\n.*(\d+) sll'
+opcode_srl = 'execution report.*\n.*(\d+) srl'
+opcode_sra = 'execution report.*\n.*(\d+) sra'
+
+# 内存访问指令
+opcode_lw = 'execution report.*\n.*(\d+) lw'
+opcode_sw = 'execution report.*\n.*(\d+) sw'
+opcode_lb = 'execution report.*\n.*(\d+) lb'
+opcode_lbu = 'execution report.*\n.*(\d+) lbu'
+opcode_sb = 'execution report.*\n.*(\d+) sb'
+opcode_lh = 'execution report.*\n.*(\d+) lh'
+opcode_lhu = 'execution report.*\n.*(\d+) lhu'
+opcode_sh = 'execution report.*\n.*(\d+) sh'
+
+# 分支和跳转指令
+opcode_beq = 'execution report.*\n.*(\d+) beq'
+opcode_bne = 'execution report.*\n.*(\d+) bne'
+opcode_blt = 'execution report.*\n.*(\d+) blt'
+opcode_bge = 'execution report.*\n.*(\d+) bge'
+opcode_bltu = 'execution report.*\n.*(\d+) bltu'
+opcode_bgeu = 'execution report.*\n.*(\d+) bgeu'
+opcode_jal = 'execution report.*\n.*(\d+) jal'
+opcode_jalr = 'execution report.*\n.*(\d+) jalr'
+
+# 其他指令
+opcode_lui = 'execution report.*\n.*(\d+) lui'
+opcode_auipc = 'execution report.*\n.*(\d+) auipc'
+opcode_ecall = 'execution report.*\n.*(\d+) ecall'
+opcode_sltu = 'execution report.*\n.*(\d+) sltu'
+
+# ================================================================
+# P3 系统调用统计 (Syscall Statistics)
+# ================================================================
+syscall_commit = 'syscall counts.*\n.*(\d+) commit$'
+syscall_commit_deferred_proofs = 'syscall counts.*\n.*(\d+) commit_deferred_proofs'
+syscall_halt = 'syscall counts.*\n.*(\d+) halt'
+syscall_write = 'syscall counts.*\n.*(\d+) write$'
+syscall_hint_len = 'syscall counts.*\n.*(\d+) hint_len'
+syscall_hint_read = 'syscall counts.*\n.*(\d+) hint_read'
+syscall_sha_compress = 'syscall counts.*\n.*(\d+) sha_compress'
+syscall_ed_add = 'syscall counts.*\n.*(\d+) ed_add'
+syscall_ed_decompress = 'syscall counts.*\n.*(\d+) ed_decompress'
+syscall_keccak_permute = 'syscall counts.*\n.*(\d+) keccak_permute'
+syscall_secp256k1_add = 'syscall counts.*\n.*(\d+) secp256k1_add'
+syscall_secp256k1_double = 'syscall counts.*\n.*(\d+) secp256k1_double'
+syscall_secp256k1_decompress = 'syscall counts.*\n.*(\d+) secp256k1_decompress'
+syscall_bn254_add = 'syscall counts.*\n.*(\d+) bn254_add'
+syscall_bn254_double = 'syscall counts.*\n.*(\d+) bn254_double'
+syscall_bls12381_add = 'syscall counts.*\n.*(\d+) bls12381_add'
+syscall_bls12381_double = 'syscall counts.*\n.*(\d+) bls12381_double'
+syscall_bls12381_decompress = 'syscall counts.*\n.*(\d+) bls12381_decompress'
+syscall_uint256_mul = 'syscall counts.*\n.*(\d+) uint256_mul'
+
+# ================================================================
+# P3 芯片资源统计 (Chip Resource Statistics)
+# ================================================================
+# 格式: "Chip Name | Main Cols = X | Pre Cols = Y | Perm Cols = Z | Rows = R | Cells = C"
+
+# Core 阶段芯片统计
+chip_cpu_rows = 'phase 2 prover.*Cpu.*Rows = (\d+)'
+chip_cpu_cells = 'phase 2 prover.*Cpu.*Cells = (\d+)'
+chip_program_rows = 'phase 2 prover.*Program.*Rows = (\d+)'
+chip_program_cells = 'phase 2 prover.*Program.*Cells = (\d+)'
+chip_global_rows = 'phase 2 prover.*Global.*Rows = (\d+)'
+chip_global_cells = 'phase 2 prover.*Global.*Cells = (\d+)'
+chip_byte_rows = 'phase 2 prover.*Byte.*Rows = (\d+)'
+chip_byte_cells = 'phase 2 prover.*Byte.*Cells = (\d+)'
+chip_memory_global_init_rows = 'phase 2 prover.*MemoryGlobalInit.*Rows = (\d+)'
+chip_memory_global_init_cells = 'phase 2 prover.*MemoryGlobalInit.*Cells = (\d+)'
+chip_memory_global_finalize_rows = 'phase 2 prover.*MemoryGlobalFinalize.*Rows = (\d+)'
+chip_memory_global_finalize_cells = 'phase 2 prover.*MemoryGlobalFinalize.*Cells = (\d+)'
+
+# Compress 阶段芯片统计
+chip_compress_batch_fri_rows = 'compress:prove:batch:open.*BatchFRI.*Rows = (\d+)'
+chip_compress_batch_fri_cells = 'compress:prove:batch:open.*BatchFRI.*Cells = (\d+)'
+chip_compress_memory_var_rows = 'compress:prove:batch:open.*MemoryVar.*Rows = (\d+)'
+chip_compress_memory_var_cells = 'compress:prove:batch:open.*MemoryVar.*Cells = (\d+)'
+chip_compress_poseidon2_rows = 'compress:prove:batch:open.*Poseidon2WideDeg3.*Rows = (\d+)'
+chip_compress_poseidon2_cells = 'compress:prove:batch:open.*Poseidon2WideDeg3.*Cells = (\d+)'
+chip_compress_base_alu_rows = 'compress:prove:batch:open.*BaseAlu.*Rows = (\d+)'
+chip_compress_base_alu_cells = 'compress:prove:batch:open.*BaseAlu.*Cells = (\d+)'
+chip_compress_ext_alu_rows = 'compress:prove:batch:open.*ExtAlu.*Rows = (\d+)'
+chip_compress_ext_alu_cells = 'compress:prove:batch:open.*ExtAlu.*Cells = (\d+)'
+
+# ================================================================
+# P3 Merkle Tree 维度信息 (Merkle Tree Dimensions)
+# ================================================================
+# 提取 Merkle Tree 的维度信息，例如 "dimensions="[14x1048576, 11x131072]""
+core_merkle_dimensions = 'phase 2 prover:batch:commit:build merkle tree:.*dimensions="([^"]+)"'
+compress_merkle_dimensions = 'compress:prove:batch:commit:build merkle tree:.*dimensions="([^"]+)"'
+shrink_merkle_dimensions = 'shrink:prove_shards:build merkle tree:.*dimensions="([^"]+)"'
+wrap_merkle_dimensions = 'wrap_bn254:prove_shards:build merkle tree:.*dimensions="([^"]+)"'
+
+# ================================================================
+# P3 内存优化提示 (Memory Optimization Hints)
+# ================================================================
+# 记录可以优化的行数
+rows_reduction_hint_count = '(fixed log2 rows can be potentially reduced.*)'
+
+# ----------------------------------------------------------------
+# 指标映射 (Metric Mapping)
+# ----------------------------------------------------------------
+[metric_mapping]
+# 映射规则: Standard Key = Raw Key (Transform)
+# 这些标准 Key 将会被框架识别并用于衍生计算 (Derivation)
+
+# 核心指标
+total_cycles = "raw_total_cycles"
+total_instruction_count = "raw_total_instruction_count"
+total_prove_time_s = "raw_total_prove_time_s"
+execution_time_s = "raw_execution_time_s"
+verification_time_s = "raw_verification_time_s"
+final_proof_size_bytes = "raw_final_proof_size_bytes"
+success_status = "raw_success_status"
+
+# 自定义标准指标 (横向对比用)
+on_chain_gas_estimate = "raw_on_chain_gas_estimate"
+trace_size_mb = "vm_core_proof_size_kb" # 临时映射，仅作示例
+
+# ----------------------------------------------------------------
+# 报告配置 (Reporting)
+# ----------------------------------------------------------------
+[reporting]
+# 核心汇总指标（用于报告输出）
+metrics = [
+    # 衍生指标 (Derived Metrics - 框架自动计算)
+    "khz",
+    "cycles_per_second",
+    "execution_throughput",
+    "total_time_s",
+    
+    # 核心指标 (Mapped Standard Metrics)
+    "total_cycles",
+    "total_instruction_count",
+    "total_prove_time_s",
+    "execution_time_s",
+    "final_proof_size_bytes",
+    "verification_time_s",
+    
+    # 其他直接提取的指标
+    "vm_core_proof_size_kb",
+    "compressed_proof_size_kb",
+    "groth16_proof_size_bytes",
+    "success_status"
+]
+output_formats = ["csv", "json", "console"]
+
+# 分组报告（可选：用于更详细的报告）
+[reporting.groups]
+# 执行阶段组
+execution = [
+    "total_cycles",
+    "total_instruction_count",
+    "execution_time_s",
+    "gas",
+    "total_syscall_cycles",
+    "touched_memory_addresses"
+]
+
+# 证明阶段组
+proving = [
+    "total_prove_time_s",
+    "core_proof_total_time_s",
+    "compress_total_time_s",
+    "shrink_total_time_s",
+    "wrap_total_time_s",
+    "groth16_total_time_s"
+]
+
+# Core 阶段详细指标
+core_details = [
+    "core_proof_total_time_s",
+    "phase2_trace_generation_time_ms",
+    "main_traces_generation_time_ms",
+    "recursion_program_build_time_ms",
+    "core_merkle_tree_build_time_ms",
+    "core_permutation_generation_time_ms",
+    "core_quotient_compute_time_ms"
+]
+
+# Compress 阶段详细指标
+compress_details = [
+    "compress_total_time_s",
+    "compress_setup_time_ms",
+    "compress_commit_time_ms",
+    "compress_permutation_time_ms",
+    "compress_quotient_compute_time_ms",
+    "compress_opening_time_s"
+]
+
+# Shrink 阶段详细指标
+shrink_details = [
+    "shrink_total_time_s",
+    "shrink_program_build_time_ms",
+    "shrink_setup_time_ms",
+    "shrink_prove_time_s",
+    "shrink_total_events",
+    "shrink_base_alu_events",
+    "shrink_ext_alu_events"
+]
+
+# Wrap 阶段详细指标
+wrap_details = [
+    "wrap_total_time_s",
+    "wrap_setup_time_s",
+    "wrap_prove_time_s",
+    "wrap_verify_time_ms",
+    "wrap_total_events"
+]
+
+# Groth16 阶段详细指标
+groth16_details = [
+    "groth16_total_time_s",
+    "groth16_r1cs_reading_time_s",
+    "groth16_proving_key_reading_time_s",
+    "groth16_witness_generation_time_ms",
+    "groth16_constraint_count",
+    "groth16_solver_time_s",
+    "groth16_prover_time_s",
+    "groth16_proof_size_bytes"
+]
+
+# 指令统计组
+instruction_stats = [
+    "opcode_add",
+    "opcode_sub",
+    "opcode_mul",
+    "opcode_lw",
+    "opcode_sw",
+    "opcode_beq",
+    "opcode_bne",
+    "opcode_jal",
+    "opcode_jalr"
+]
+
+# 系统调用统计组
+syscall_stats = [
+    "syscall_commit",
+    "syscall_halt",
+    "syscall_write",
+    "syscall_sha_compress",
+    "syscall_keccak_permute"
+]
+
+# 芯片资源统计组
+chip_resources = [
+    "chip_cpu_rows",
+    "chip_cpu_cells",
+    "chip_program_rows",
+    "chip_program_cells",
+    "chip_global_rows",
+    "chip_global_cells",
+    "chip_byte_rows",
+    "chip_byte_cells"
+]

@@ -55,7 +55,3 @@ indicatif = "0.17"
 tempfile = "3.13"
 criterion = "0.5"
 atty = "0.2"
-
-[[example]]
-name = "phase2_parallel_benchmark"
-path = "examples/phase2_parallel_benchmark.rs"

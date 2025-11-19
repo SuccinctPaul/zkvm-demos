@@ -54,6 +54,19 @@ verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
 # execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
 # peak_memory_mb = 'BENCHMARK: peak_memory_mb=([\d.]+)'
 
+[reporting]
+metrics = [
+    "total_cycles",
+    "total_prove_time_s",
+    "vm_core_proof_size_kb",
+    "compressed_proof_size_kb",
+    "groth16_proof_size_bytes",
+    "verification_time_s",
+    "khz",
+    "peak_memory_mb"
+]
+output_formats = ["csv", "json", "console"]
+
 # P2 额外指标（可选）
 # segments = 'BENCHMARK: segments=(\d+)'
 # syscall_count = 'BENCHMARK: syscall_count=(\d+)'

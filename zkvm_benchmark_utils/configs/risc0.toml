@@ -47,3 +47,12 @@ verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
 execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
 peak_memory_mb = 'BENCHMARK: peak_memory_mb=([\d.]+)'
 
+[reporting]
+metrics = [
+    "total_cycles",
+    "total_prove_time_s",
+    "groth16_proof_size_bytes",
+    "verification_time_s",
+    "peak_memory_mb"
+]
+

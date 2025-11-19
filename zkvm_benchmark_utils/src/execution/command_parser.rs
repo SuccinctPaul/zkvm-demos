@@ -5,7 +5,7 @@
 ///! - 命令缓存
 ///! - 安全验证
 ///! - 环境变量展开
-use crate::error::{BenchmarkError, Result};
+use crate::core::error::{BenchmarkError, Result};
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use std::collections::HashMap;
@@ -52,7 +52,7 @@ impl CommandParser {
     /// # Examples
     ///
     /// ```
-    /// use zkvm_benchmark_utils::command_parser::CommandParser;
+    /// use zkvm_benchmark_utils::CommandParser;
     ///
     /// let parser = CommandParser::new();
     /// let cmd = parser.parse("cargo run --bin test").unwrap();

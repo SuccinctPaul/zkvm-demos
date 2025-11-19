@@ -1,13 +1,13 @@
-//! 并行执行模块 - Phase 2 优化
+//! Benchmark executor - runs zkVM benchmarks and collects metrics
 //!
-//! 提供高性能的并行 benchmark 执行能力
+//! Supports both sequential and parallel execution strategies.
 
-use crate::command_parser::CommandParser;
-use crate::config::{BenchmarkConfig, ZkVmConfig};
-use crate::error::{BenchmarkError, Result};
-use crate::executor::{ExecutionResult, TestRun};
-use crate::log_parser::LogParser;
-use crate::resource_monitor::{monitor_process_async, ResourceStats};
+use crate::analysis::log_parser::LogParser;
+use crate::core::config::{BenchmarkConfig, ZkVmConfig};
+use crate::core::error::{BenchmarkError, Result};
+use crate::execution::command_parser::CommandParser;
+use crate::execution::resource_monitor::{monitor_process_async, ResourceStats};
+use crate::execution::types::{ExecutionResult, TestRun};
 
 use std::collections::HashMap;
 use std::fs;
@@ -19,30 +19,37 @@ use std::time::Duration;
 use chrono;
 use futures::stream::{self, StreamExt};
 use log::{error, info, warn};
+use regex::Regex;
 use tokio::process::Command;
 use tokio::sync::Semaphore;
 use tokio::time::timeout;
 
-/// 并行执行配置
+/// Parallel execution configuration
 #[derive(Debug, Clone)]
 pub struct ParallelExecutionConfig {
-    /// 最大并发 zkVM 数量
+    /// Max concurrent zkVMs
     pub max_concurrent_zkvms: usize,
-    /// 单个 zkVM 的最大并发测试数
+    /// Max concurrent tests per zkVM
     pub max_concurrent_tests_per_zkvm: usize,
-    /// 是否允许跨 zkVM 并行
+    /// Allow parallel across zkVMs
     pub parallel_across_zkvms: bool,
-    /// 是否启用资源监控
+    /// Enable resource monitoring
     pub enable_resource_monitoring: bool,
 }
 
 impl ParallelExecutionConfig {
-    /// 创建默认配置（根据 CPU 核心数自动调整）
+    /// Default configuration (Sequential execution by default for accurate benchmarking)
     pub fn default() -> Self {
+        Self::conservative()
+    }
+
+    /// Automatic parallel configuration (auto-adjusted based on CPU cores)
+    /// Use this when throughput is more important than individual benchmark accuracy.
+    pub fn auto_parallel() -> Self {
         let cpu_count = num_cpus::get();
 
         Self {
-            // 避免资源争用，限制并发数
+            // Limit concurrency to avoid resource contention
             max_concurrent_zkvms: (cpu_count / 2).max(1).min(4),
             max_concurrent_tests_per_zkvm: 2,
             parallel_across_zkvms: true,
@@ -50,7 +57,7 @@ impl ParallelExecutionConfig {
         }
     }
 
-    /// 创建保守配置（适合资源受限环境）
+    /// Conservative configuration (sequential execution)
     pub fn conservative() -> Self {
         Self {
             max_concurrent_zkvms: 1,
@@ -60,7 +67,7 @@ impl ParallelExecutionConfig {
         }
     }
 
-    /// 创建激进配置（适合高性能服务器）
+    /// Aggressive configuration (for high-performance servers)
     pub fn aggressive() -> Self {
         let cpu_count = num_cpus::get();
 
@@ -73,17 +80,34 @@ impl ParallelExecutionConfig {
     }
 }
 
-/// 并行 Benchmark 执行器
-pub struct ParallelBenchmarkExecutor {
+/// Remove ANSI escape sequences from a string
+/// This cleans up terminal color codes and formatting from log output
+fn strip_ansi_codes(text: &str) -> String {
+    // Match ANSI escape sequences like \x1b[0m, \x1b[34m, etc.
+    // Pattern: ESC [ (any number of digits/semicolons) followed by a letter
+    let re = Regex::new(r"\x1b\[[0-9;]*[a-zA-Z]").unwrap();
+    re.replace_all(text, "").to_string()
+}
+
+/// Benchmark Executor
+pub struct BenchmarkExecutor {
     config: Arc<BenchmarkConfig>,
     output_dir: PathBuf,
     exec_config: ParallelExecutionConfig,
     command_parser: Arc<CommandParser>,
 }
 
-impl ParallelBenchmarkExecutor {
-    /// 创建新的并行执行器
-    pub fn new(config: BenchmarkConfig, exec_config: ParallelExecutionConfig) -> Result<Self> {
+impl BenchmarkExecutor {
+    /// Create a new benchmark executor with default parallelism
+    pub fn new(config: BenchmarkConfig) -> Result<Self> {
+        Self::with_parallelism(config, ParallelExecutionConfig::default())
+    }
+
+    /// Create a new benchmark executor with custom parallelism
+    pub fn with_parallelism(
+        config: BenchmarkConfig,
+        exec_config: ParallelExecutionConfig,
+    ) -> Result<Self> {
         let output_dir = PathBuf::from(&config.output_dir);
 
         // Create output directories
@@ -100,14 +124,9 @@ impl ParallelBenchmarkExecutor {
         })
     }
 
-    /// 使用默认并行配置创建
-    pub fn with_default_parallelism(config: BenchmarkConfig) -> Result<Self> {
-        Self::new(config, ParallelExecutionConfig::default())
-    }
-
-    /// 并行执行所有 benchmarks
-    pub async fn run_all_parallel(&self) -> Result<Vec<ExecutionResult>> {
-        info!("Starting parallel benchmark execution");
+    /// Run all benchmarks
+    pub async fn run_all(&self) -> Result<Vec<ExecutionResult>> {
+        info!("Starting benchmark execution");
         info!(
             "Parallelism: {} concurrent zkVMs, {} tests per zkVM",
             self.exec_config.max_concurrent_zkvms, self.exec_config.max_concurrent_tests_per_zkvm
@@ -119,23 +138,23 @@ impl ParallelBenchmarkExecutor {
             return Err(BenchmarkError::Config("No enabled zkVMs found".to_string()));
         }
 
-        // 构建所有测试任务
+        // Build all test tasks
         let test_tasks = self.build_test_tasks(&enabled_zkvms);
         let total_tasks = test_tasks.len();
 
         info!("Prepared {} test tasks", total_tasks);
 
-        // 创建信号量控制并发
+        // Create semaphore to control concurrency
         let semaphore = Arc::new(Semaphore::new(self.exec_config.max_concurrent_zkvms));
 
-        // 并行执行所有任务
+        // Execute all tasks
         let results: Vec<ExecutionResult> = stream::iter(test_tasks)
             .map(|(zkvm_name, zkvm_config, test_run)| {
                 let sem = Arc::clone(&semaphore);
                 let executor = self.clone_for_task();
 
                 async move {
-                    // 获取并发许可
+                    // Acquire permit
                     let _permit = sem.acquire().await.unwrap();
 
                     info!(
@@ -189,7 +208,7 @@ impl ParallelBenchmarkExecutor {
 
         info!("✅ Completed {} test runs", results.len());
 
-        // 统计成功/失败
+        // Stats
         let successful = results.iter().filter(|r| r.success).count();
         let failed = results.len() - successful;
 
@@ -200,7 +219,7 @@ impl ParallelBenchmarkExecutor {
         Ok(results)
     }
 
-    /// 构建所有测试任务
+    /// Build all test tasks
     fn build_test_tasks(
         &self,
         enabled_zkvms: &[(&String, &ZkVmConfig)],
@@ -229,7 +248,7 @@ impl ParallelBenchmarkExecutor {
         tasks
     }
 
-    /// 克隆用于任务执行
+    /// Clone for task execution
     fn clone_for_task(&self) -> Self {
         Self {
             config: Arc::clone(&self.config),
@@ -239,14 +258,14 @@ impl ParallelBenchmarkExecutor {
         }
     }
 
-    /// 执行单个测试任务
+    /// Run a single test task
     async fn run_single_task(
         &self,
         zkvm_name: &str,
         zkvm_config: &ZkVmConfig,
         test_run: &TestRun,
     ) -> Result<ExecutionResult> {
-        // 准备环境变量
+        // Prepare env vars
         let mut env_vars = zkvm_config.env_vars.clone().unwrap_or_default();
         env_vars.insert("FIBONACCI_N".to_string(), test_run.scale.to_string());
         env_vars.insert(
@@ -259,14 +278,14 @@ impl ParallelBenchmarkExecutor {
 
         let work_dir = Path::new(&zkvm_config.working_dir);
 
-        // 运行构建命令（如果指定）
+        // Run build command if specified
         if let Some(build_cmd) = &zkvm_config.build_command {
             if let Err(e) = self.run_command(build_cmd, work_dir, &env_vars).await {
                 warn!("Build warning: {}", e);
             }
         }
 
-        // 执行 benchmark
+        // Execute benchmark
         let timeout_secs = self.config.timeout_seconds.unwrap_or(3600);
 
         let output_result = timeout(
@@ -304,24 +323,31 @@ impl ParallelBenchmarkExecutor {
             }
         };
 
-        // 保存原始日志
+        // Save raw log (strip ANSI escape codes for clean text output)
         let timestamp = chrono::Local::now().format("%Y%m%d-%H%M%S").to_string();
         let log_filename = format!(
             "{}-{}-{}-scale{}.log",
             zkvm_name, test_run.mode, timestamp, test_run.scale
         );
         let log_path = self.output_dir.join("raw-logs").join(&log_filename);
-        fs::write(&log_path, &log_content)?;
+        let cleaned_log = strip_ansi_codes(&log_content);
+        fs::write(&log_path, &cleaned_log)?;
 
-        // 解析指标
-        let parser = LogParser::new(&zkvm_config.log_patterns)?;
+        // Parse metrics
+        let parser = LogParser::new(&zkvm_config.parsed_metrics)?;
         let program_name = format!("fibonacci_{}", test_run.scale);
 
-        let metrics = match parser.parse(&log_content, zkvm_name, &program_name) {
+        // Pass metric mapping to parser
+        let metrics = match parser.parse(
+            &log_content, 
+            zkvm_name, 
+            &program_name, 
+            Some(&zkvm_config.metric_mapping)
+        ) {
             Ok(m) => {
                 let metrics_filename = format!(
-                    "{}-{}-{}-scale{}.json",
-                    zkvm_name, test_run.mode, timestamp, test_run.scale
+                    "{}-{}-{}-{}.json",
+                    zkvm_name, test_run.mode, timestamp, program_name
                 );
                 let metrics_path = self
                     .output_dir
@@ -350,7 +376,7 @@ impl ParallelBenchmarkExecutor {
         })
     }
 
-    /// 运行命令
+    /// Run command helper
     async fn run_command(
         &self,
         command: &str,
@@ -362,7 +388,7 @@ impl ParallelBenchmarkExecutor {
             .map(|(output, _)| output)
     }
 
-    /// 运行命令（带资源监控）
+    /// Run command with monitoring helper
     async fn run_command_with_monitoring(
         &self,
         command: &str,
@@ -370,7 +396,7 @@ impl ParallelBenchmarkExecutor {
         env_vars: &HashMap<String, String>,
         enable_monitoring: bool,
     ) -> Result<(String, Option<ResourceStats>)> {
-        // 使用优化的命令解析器
+        // Use command parser
         let parsed = self.command_parser.parse(command)?;
 
         let mut cmd = Command::new(&parsed.program);
@@ -447,7 +473,7 @@ impl ParallelBenchmarkExecutor {
         }
     }
 
-    /// 获取输出目录
+    /// Get output directory
     pub fn output_dir(&self) -> &Path {
         &self.output_dir
     }
@@ -460,6 +486,13 @@ mod tests {
     #[test]
     fn test_parallel_config_default() {
         let config = ParallelExecutionConfig::default();
+        assert_eq!(config.max_concurrent_zkvms, 1);
+        assert_eq!(config.max_concurrent_tests_per_zkvm, 1);
+    }
+
+    #[test]
+    fn test_parallel_config_auto() {
+        let config = ParallelExecutionConfig::auto_parallel();
         assert!(config.max_concurrent_zkvms > 0);
         assert!(config.max_concurrent_tests_per_zkvm > 0);
     }

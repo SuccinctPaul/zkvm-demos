@@ -2,7 +2,7 @@
 //!
 //! Collects system hardware information for benchmark reproducibility
 
-use crate::metrics::HardwareInfo;
+use crate::core::metrics::HardwareInfo;
 use sysinfo::System;
 
 /// Collect current system hardware information
