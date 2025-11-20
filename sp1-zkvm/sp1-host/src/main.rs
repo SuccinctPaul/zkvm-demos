@@ -77,7 +77,15 @@ fn main() {
 
         // Generate the proof
         println!("🔐 Generating proof...");
-        let proof_mode = SP1ProofMode::Groth16;
+        
+        // Allow configuring proof mode via environment variable
+        let proof_mode = match std::env::var("PROOF_MODE").unwrap_or_default().as_str() {
+            "core" => SP1ProofMode::Core,
+            "compressed" => SP1ProofMode::Compressed,
+            "plonk" => SP1ProofMode::Plonk,
+            _ => SP1ProofMode::Groth16,
+        };
+        
         let prover = client.prove(&pk, &stdin).mode(proof_mode);
         let proof = prover.run().expect("failed to generate proof");
 
