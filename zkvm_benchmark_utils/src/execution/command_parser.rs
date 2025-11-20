@@ -283,7 +283,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "sequential-tests"), ignore)]
+    #[ignore] // This test depends on global state and should run sequentially
+              // Run with: cargo test -- --test-threads=1
     fn test_cache_functionality() {
         // 注意：这个测试依赖全局状态，应该串行运行
         // 使用：cargo test -- --test-threads=1

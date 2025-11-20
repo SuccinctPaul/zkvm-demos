@@ -9,7 +9,7 @@
 //! - **Execution**: Executor, Command Parsing, Resource Monitoring
 //! - **Analysis**: Log Parsing, Analyzers
 //! - **Reporting**: Reporters, Formatters, Statistics
-//! - **System**: Hardware, Plugin Architecture
+//! - **System**: Hardware
 
 pub mod analysis;
 pub mod core;
@@ -20,10 +20,11 @@ pub mod system;
 // Re-exports for convenience
 pub use core::config::{BenchmarkConfig, ParsedMetrics, ZkVmConfig};
 pub use core::error::{BenchmarkError, Result};
-pub use core::metrics::{BenchmarkMetrics, DataSource, ProofMode};
+// Re-export UnifiedMetrics instead of BenchmarkMetrics
+pub use core::metrics::UnifiedMetrics;
 
 pub use execution::command_parser::{CommandParser, ParsedCommand};
-pub use execution::executor::{BenchmarkExecutor, ParallelExecutionConfig};
+pub use execution::executor::BenchmarkExecutor;
 pub use execution::resource_monitor::{ResourceMonitor, ResourceSample, ResourceStats};
 pub use execution::types::{ExecutionResult, TestRun};
 
@@ -36,6 +37,3 @@ pub use reporting::statistics::{
 };
 
 pub use system::hardware::{collect_hardware_info, format_hardware_info};
-pub use system::plugin::{
-    AnalyzerPlugin, ExecutorPlugin, Plugin, PluginType, ReporterPlugin, TransformerPlugin,
-};

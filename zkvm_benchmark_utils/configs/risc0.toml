@@ -4,14 +4,14 @@
 
 name = "risc0"
 version = "v1.0.0"
-enabled = false  # 设为 true 启用
+enabled = true
 default_mode = "groth16"
 
 # 测试规模（Fibonacci N 值）
-test_scales = [10, 100, 1000]
+test_scales = [10, 20]
 
 # 证明模式
-test_modes = ["stark", "groth16"]
+prove_modes = ["core", "compressed", "groth16"]
 
 # Risc0 项目路径
 working_dir = "../risc0-zkvm/risc0-host"
@@ -30,29 +30,41 @@ repeat_count = 1
 # 环境变量
 # ----------------------------------------------------------------
 [env_vars]
-RUST_LOG = "debug"  # 改为 debug 以捕获详细日志
+RUST_LOG = "debug"
 RISC0_DEV_MODE = "0"
 
 # ----------------------------------------------------------------
-# 日志解析正则表达式
+# 解析规则 (Parsed Metrics)
 # ----------------------------------------------------------------
-[log_patterns]
-# P0 核心指标（根据 Risc0 实际日志格式调整）
-total_cycles = 'BENCHMARK: total_cycles=(\d+)'
-total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
-final_proof_size_bytes = 'BENCHMARK: final_proof_size_bytes=(\d+)'
-verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+[parsed_metrics]
+# Execution Phase
+raw_total_cycles = 'INFO.*session:\s+(\d+) total cycles'
+raw_user_cycles = 'INFO.*session:\s+(\d+) user cycles'
+raw_execution_time_ms = 'execution time: ([\d.]+)ms'
 
-# P1 高优先级指标
-execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
-peak_memory_mb = 'BENCHMARK: peak_memory_mb=([\d.]+)'
+# VM Circuit Phase (Core)
+# Use 'raw_proof_time' for all phases as Risc0 reports total time
+raw_proof_time = 'proof time.*cost\(s\):\s+([\d.]+)'
+raw_segment_count = 'number of segments:\s+(\d+)'
+# STARK proof size from debug logs (might be missing in INFO mode)
+raw_stark_proof_size = 'DEBUG.*Proof size\s*=\s*(\d+)'
 
-[reporting]
-metrics = [
-    "total_cycles",
-    "total_prove_time_s",
-    "groth16_proof_size_bytes",
-    "verification_time_s",
-    "peak_memory_mb"
-]
+# SNARK Phase (Groth16)
+# From: "proof mode: {:?}, proof size: {:?} Bytes, proof time total cost(s): {:?}"
+raw_final_proof_size = 'proof size: (\d+) Bytes'
+raw_snark_type = 'proof mode: (\w+)'
 
+# ----------------------------------------------------------------
+# 指标映射 (Metric Mapping)
+# ----------------------------------------------------------------
+[metric_mapping]
+"total_cycles" = "raw_total_cycles"
+"instruction_count" = "raw_user_cycles"
+"vm_chunk_count" = "raw_segment_count"
+"vm_prove_time_s" = "raw_proof_time"
+"vm_prove_proof_size_bytes" = "raw_stark_proof_size"
+"aggressive_prove_time_s" = "raw_proof_time"
+"aggressive_proof_size_bytes" = "raw_final_proof_size"
+"snark_proof_time_s" = "raw_proof_time"
+"snark_proof_size_bytes" = "raw_final_proof_size"
+"snark_type" = "raw_snark_type"

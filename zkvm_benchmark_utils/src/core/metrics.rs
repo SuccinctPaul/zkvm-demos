@@ -1,53 +1,231 @@
-//! Benchmark metrics definitions
+//! Unified metrics definitions for zkVM benchmarking
 //!
-//! Defines the complete metric structure for zkVM benchmarking,
-//! following the multi-stage execution model.
+//! Defines the standard metric structure that all zkVM benchmark results
+//! must be mapped to. This enables cross-vm comparison and standardized reporting.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
 use std::collections::HashMap;
 
 // 1. Standard Key Constants (Standard Metric Protocol)
 pub mod std_keys {
+    // Execution
     pub const TOTAL_CYCLES: &str = "total_cycles";
-    pub const PROVE_TIME: &str = "total_prove_time_s";
+    pub const INSTRUCTION_COUNT: &str = "instruction_count";
     pub const EXEC_TIME: &str = "execution_time_s";
-    pub const VERIFY_TIME: &str = "verification_time_s";
+    pub const SYSCALL_CYCLES: &str = "total_syscall_cycles";
+    pub const TOUCHED_MEMORY: &str = "touched_memory_addresses";
+
+    // VM Circuit
+    pub const VM_CHUNK_COUNT: &str = "vm_chunk_count";
+    // pub const CHUNK_SIZE: &str = "vm_chunk_size_rows";
+    pub const VM_PROVE_TIME: &str = "vm_prove_time_s";
+    pub const VM_PROOF_SIZE: &str = "vm_prove_proof_size_bytes";
+
+    // Recursion
+    pub const RECURSION_LAYERS: &str = "recursion_layers";
+    // pub const RECURSION_NODE_COUNT: &str = "recursion_node_count";
+    // pub const RECURSION_TIME: &str = "recursion_time_s";
+    pub const AGGRESIVE_PROVE_TIME_S: &str = "aggressive_prove_time_s";
+    pub const AGGRESIVE_PROVE_SIZE_BYTES: &str = "aggressive_proof_size_bytes";
+
+    // SNARK
+    pub const SNARK_SETUP_TIME: &str = "snark_setup_time_s";
+    pub const SNARK_WITNESS_TIME: &str = "snark_witness_time_s";
+    pub const SNARK_PROVE_TIME: &str = "snark_proof_time_s";
+    pub const SNARK_PROOF_SIZE: &str = "snark_proof_size_bytes";
+    pub const SNARK_TYPE: &str = "snark_type";
+    pub const SNARK_CONSTRAINTS: &str = "snark_constraint_count";
+
+    // Verification
+    pub const VERIFICATION_TIME: &str = "verification_time_s";
+    pub const VERIFICATION_GAS: &str = "on_chain_gas_estimate";
+    pub const SUCCESS_STATUS: &str = "success_status";
+
+    // General
     pub const TOTAL_TIME: &str = "total_time_s";
-    pub const PROOF_SIZE: &str = "final_proof_size_bytes";
+    pub const TOTAL_PROVE_TIME: &str = "total_prove_time_s";
     pub const PEAK_RAM: &str = "peak_memory_mb";
-    pub const KHZ: &str = "khz";
-    pub const THROUGHPUT: &str = "execution_throughput";
-    pub const CYCLES_PER_SECOND: &str = "cycles_per_second";
-    pub const COMPRESSION_RATIO: &str = "compression_ratio";
-    pub const TRACE_SIZE_MB: &str = "trace_size_mb";
+    pub const VM_PROVE_KHZ: &str = "vm_prove_khz";
 }
 
-/// Complete benchmark metrics for a single zkVM run
+// Keep for backward compatibility or explicit usage if needed
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BenchmarkMetrics {
-    /// Metadata
+#[serde(rename_all = "snake_case")]
+pub enum DataSource {
+    Instrumented,
+    LogParsed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum ProofMode {
+    Core,
+    Compressed,
+    Groth16,
+    Plonk,
+}
+
+impl std::fmt::Display for ProofMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProofMode::Core => write!(f, "core"),
+            ProofMode::Compressed => write!(f, "compressed"),
+            ProofMode::Groth16 => write!(f, "groth16"),
+            ProofMode::Plonk => write!(f, "plonk"),
+        }
+    }
+}
+
+impl std::str::FromStr for ProofMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "core" => Ok(ProofMode::Core),
+            "compressed" | "aggressive" | "shrink" => Ok(ProofMode::Compressed),
+            "groth16" => Ok(ProofMode::Groth16),
+            "plonk" => Ok(ProofMode::Plonk),
+            _ => Err(format!("Unknown proof mode: {}", s)),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum ZkVmName {
+    Airbender,
+    Cairo,
+    CairoM,
+    Ceno,
+    Jolt,
+    Lean,
+    Miden,
+    Nexus,
+    Novanet,
+    OpenVm,
+    Pico,
+    Powdr,
+    Risc0,
+    Sp1,
+    Valida,
+    Zisk,
+    Zkm,
+    ZkWasm,
+}
+
+impl std::fmt::Display for ZkVmName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ZkVmName::Airbender => write!(f, "airbender"),
+            ZkVmName::Cairo => write!(f, "cairo"),
+            ZkVmName::CairoM => write!(f, "cairo-m"),
+            ZkVmName::Ceno => write!(f, "ceno"),
+            ZkVmName::Jolt => write!(f, "jolt"),
+            ZkVmName::Lean => write!(f, "lean"),
+            ZkVmName::Miden => write!(f, "miden"),
+            ZkVmName::Nexus => write!(f, "nexus"),
+            ZkVmName::Novanet => write!(f, "novanet"),
+            ZkVmName::OpenVm => write!(f, "openvm"),
+            ZkVmName::Pico => write!(f, "pico"),
+            ZkVmName::Powdr => write!(f, "powdr"),
+            ZkVmName::Risc0 => write!(f, "risc0"),
+            ZkVmName::Sp1 => write!(f, "sp1"),
+            ZkVmName::Valida => write!(f, "valida"),
+            ZkVmName::Zisk => write!(f, "zisk"),
+            ZkVmName::Zkm => write!(f, "zkm"),
+            ZkVmName::ZkWasm => write!(f, "zkwasm"),
+        }
+    }
+}
+
+impl std::str::FromStr for ZkVmName {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "airbender" => Ok(ZkVmName::Airbender),
+            "cairo" => Ok(ZkVmName::Cairo),
+            "cairo-m" | "cairom" => Ok(ZkVmName::CairoM),
+            "ceno" => Ok(ZkVmName::Ceno),
+            "jolt" => Ok(ZkVmName::Jolt),
+            "lean" => Ok(ZkVmName::Lean),
+            "miden" => Ok(ZkVmName::Miden),
+            "nexus" => Ok(ZkVmName::Nexus),
+            "novanet" => Ok(ZkVmName::Novanet),
+            "openvm" => Ok(ZkVmName::OpenVm),
+            "pico" => Ok(ZkVmName::Pico),
+            "powdr" => Ok(ZkVmName::Powdr),
+            "risc0" => Ok(ZkVmName::Risc0),
+            "sp1" => Ok(ZkVmName::Sp1),
+            "valida" => Ok(ZkVmName::Valida),
+            "zisk" => Ok(ZkVmName::Zisk),
+            "zkm" => Ok(ZkVmName::Zkm),
+            "zkwasm" => Ok(ZkVmName::ZkWasm),
+            _ => Err(format!("Unknown zkVM name: {}", s)),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum ProgramName {
+    Fibonacci,
+    Sha256,
+    #[serde(untagged)]
+    Custom(String),
+}
+
+impl std::fmt::Display for ProgramName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProgramName::Fibonacci => write!(f, "fibonacci"),
+            ProgramName::Sha256 => write!(f, "sha256"),
+            ProgramName::Custom(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl std::str::FromStr for ProgramName {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "fibonacci" => Ok(ProgramName::Fibonacci),
+            "sha256" => Ok(ProgramName::Sha256),
+            _ => Ok(ProgramName::Custom(s.to_string())),
+        }
+    }
+}
+
+/// Unified metrics for a single zkVM run.
+/// This struct is the "lingua franca" of the benchmark framework.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnifiedMetrics {
+    /// Metadata about the run
     pub metadata: Metadata,
 
-    /// Custom/Dynamic metrics parsed from logs
+    /// Raw metrics parsed directly from logs (for extensibility)
     #[serde(default)]
     pub custom_metrics: HashMap<String, String>,
 
-    /// Execution phase metrics
-    pub execution_phase: Option<ExecutionPhase>,
+    /// Phase 1: Execution (Guest Program Running)
+    pub execution: ExecutionMetrics,
 
-    /// Trace generation phase
-    pub trace_generation: Option<TraceGeneration>,
+    /// Phase 2: VM Circuit Proving (Trace generation & Base proving)
+    pub vm_circuit: VmCircuitMetrics,
 
-    /// Proving phase (multi-stage)
-    pub proving_phase: Option<ProvingPhase>,
+    /// Phase 3: Recursive Proving (Aggregation & Compression)
+    pub aggressive: AggressiveMetrics,
 
-    /// Verification phase
-    pub verification_phase: Option<VerificationPhase>,
+    /// Phase 4: Final SNARK Proving (Groth16/Plonk wrapping)
+    pub snark: SnarkMetrics,
 
-    /// Resource usage
-    pub resources: Option<ResourceMetrics>,
+    /// Verification Phase
+    pub verification: VerificationMetrics,
+
+    /// Resource Usage (Memory, CPU)
+    pub resources: ResourceMetrics,
 
     /// End-to-end summary
     pub summary: Summary,
@@ -55,16 +233,32 @@ pub struct BenchmarkMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metadata {
-    pub program_name: String,
-    pub zkvm_name: String,
+    pub zkvm_name: ZkVmName,
     pub zkvm_version: Option<String>,
+    pub program_name: ProgramName,
+    pub mode: Option<ProofMode>,
+    pub scale: Option<u32>,
     pub timestamp: DateTime<Utc>,
     pub platform: Option<String>,
     pub hardware: Option<HardwareInfo>,
 }
 
-/// Hardware information for benchmark reproducibility
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl Default for Metadata {
+    fn default() -> Self {
+        Self {
+            zkvm_name: ZkVmName::Sp1, // Default to Sp1 as fallback
+            zkvm_version: None,
+            program_name: ProgramName::Fibonacci, // Default to Fibonacci
+            mode: None,
+            scale: None,
+            timestamp: Utc::now(),
+            platform: None,
+            hardware: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HardwareInfo {
     // CPU information
     pub cpu_brand: String,
@@ -86,392 +280,350 @@ pub struct HardwareInfo {
     pub arch: String,
 }
 
-/// Execution Phase: Program running in zkVM
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExecutionPhase {
-    // Computation metrics
+/// Execution Phase: The "VM" part.
+/// Metrics related to running the guest program.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ExecutionMetrics {
+    /// Total cycles consumed by the execution
     pub total_cycles: Option<u64>,
-    pub total_instruction_count: Option<u64>,
-    pub user_cycles: Option<u64>,
-    pub syscall_cycles: Option<u64>,
-    pub syscall_count: Option<u64>,
-    pub memory_accesses: Option<u64>,
+    /// Total number of instructions executed
+    pub instruction_count: Option<u64>,
+    /// Time taken for execution (witness generation)
+    pub duration_s: Option<f64>,
+    /// Cycles per second during execution
+    pub cycles_per_sec: Option<f64>,
+    /// Total syscall cycles
+    pub total_syscall_cycles: Option<u64>,
+    /// Number of touched memory addresses
     pub touched_memory_addresses: Option<u64>,
-
-    // Performance metrics
-    pub execution_time_s: Option<f64>,
-    pub execution_throughput: Option<f64>,
-
-    // Segmentation (if applicable)
-    pub segments: Option<u64>,
-    pub segment_size: Option<u64>,
-    pub max_segment_cycles: Option<u64>,
 }
 
-/// Trace Generation Phase
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TraceGeneration {
-    pub trace_generation_time_s: Option<f64>,
-    pub trace_rows: Option<u64>,
-    pub trace_columns: Option<u64>,
-    pub trace_cells: Option<u64>,
-    pub trace_commitment_time_s: Option<f64>,
+/// VM Circuit Phase: The "Trace" part.
+/// Metrics related to generating the initial execution trace and base proofs.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct VmCircuitMetrics {
+    /// Number of chunks/shards/segments the execution was split into.
+    /// This represents parallelism potential.
+    pub chunk_count: Option<u64>,
+
+    /// Size of each chunk (e.g., trace rows per shard).
+    /// Represents the "granularity" of the proof.
+    pub chunk_size_rows: Option<u64>,
+
+    /// Size of the core proof in bytes
+    pub proof_size_bytes: Option<u64>,
+
+    /// Time taken for this specific phase
+    pub duration_s: Option<f64>,
+
+    /// Throughput for this phase (cycles / duration)
+    pub proving_khz: Option<f64>,
 }
 
-/// Proving Phase: Multi-stage proof generation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProvingPhase {
-    pub proof_mode: ProofMode,
-    pub security_bits: Option<u32>,
-    pub fri_queries: Option<u32>,
-    pub blowup_factor: Option<u32>,
-    pub recursion_enabled: Option<bool>,
+/// Aggressive Phase: The "Compression" part.
+/// Metrics related to aggregating multiple chunk proofs into fewer proofs.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct AggressiveMetrics {
+    /// Number of recursion layers (depth of the tree).
+    pub recursion_layers: Option<u32>,
 
-    // Overall timing
-    pub total_prove_time_s: f64,
+    /// Size of the recursive/compressed proof in bytes
+    pub proof_size_bytes: Option<u64>,
+
+    /// Time taken for recursion/aggregation
+    pub duration_s: Option<f64>,
+
+    /// Compression ratio achieved in this phase
+    pub compression_ratio: Option<f64>,
+}
+
+/// SNARK Phase: The "Wrapping" part.
+/// Metrics related to generating the final constant-size proof (e.g., Groth16).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SnarkMetrics {
+    /// The protocol used (e.g., "Groth16", "Plonk")
+    pub protocol: Option<String>,
+
+    /// Setup time (CRS generation, loading keys)
     pub setup_time_s: Option<f64>,
 
-    // Stage 0: Execute (if measured separately)
-    pub stage_0_execute: Option<Stage0Execute>,
+    /// Witness generation time for the SNARK circuit
+    pub witness_gen_time_s: Option<f64>,
 
-    // Stage 1: VM Prove
-    pub stage_1_vm_prove: Option<Stage1VmProve>,
+    /// Core proof generation time
+    pub proof_gen_time_s: Option<f64>,
 
-    // Stage 2: Recursive Prove
-    pub stage_2_recursive: Option<Stage2Recursive>,
+    /// Final proof size in bytes (on-chain size)
+    pub proof_size_bytes: Option<u64>,
 
-    // Stage 3: Aggressive Compression
-    pub stage_3_aggressive: Option<Stage3Aggressive>,
-
-    // Stage 4: SNARK Wrapping
-    pub stage_4_snark: Option<Stage4Snark>,
-
-    // Time breakdown percentages
-    pub time_breakdown_percent: Option<TimeBreakdown>,
-
-    // Proof size evolution
-    pub proof_size_evolution: ProofSizeEvolution,
-
-    // Performance metrics
-    pub performance_metrics: PerformanceMetrics,
+    /// Number of constraints in the SNARK circuit
+    pub constraint_count: Option<u64>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ProofMode {
-    Core,
-    Compressed,
-    Groth16,
-    Plonk,
-    Recursive,
-    Custom(String),
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct VerificationMetrics {
+    pub duration_s: Option<f64>,
+    pub gas_cost: Option<u64>,
+    pub result: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Stage0Execute {
-    pub execute_time_s: f64,
-    pub execute_cycles: u64,
-    pub trace_generation_time_s: Option<f64>,
-    pub trace_size_mb: Option<f64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Stage1VmProve {
-    pub vm_prove_time_s: f64,
-    pub vm_prove_segments: Option<u64>,
-    pub vm_prove_cycles_per_segment: Option<u64>,
-    pub vm_core_proof_size_kb: Option<f64>,
-    pub vm_prove_memory_mb: Option<f64>,
-    pub data_source: Option<DataSource>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Stage2Recursive {
-    pub recursive_prove_time_s: f64,
-    pub recursion_layers: Option<u32>,
-    pub recursive_input_size_kb: Option<f64>,
-    pub recursive_output_size_kb: Option<f64>,
-    pub recursive_proof_count: Option<u32>,
-    pub compressed_proof_size_kb: Option<f64>,
-    pub data_source: Option<DataSource>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Stage3Aggressive {
-    pub aggressive_prove_time_s: f64,
-    pub compression_ratio: Option<f64>,
-    pub aggressive_proof_size_kb: Option<f64>,
-    pub data_source: Option<DataSource>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Stage4Snark {
-    pub snark_prove_time_s: f64,
-    pub snark_setup_time_s: Option<f64>,
-    pub snark_witness_time_s: Option<f64>,
-    pub snark_proof_time_s: Option<f64>,
-    pub groth16_proof_size_bytes: Option<u64>,
-    pub data_source: Option<DataSource>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TimeBreakdown {
-    pub execute_time_percent: Option<f32>,
-    pub vm_prove_time_percent: Option<f32>,
-    pub recursive_time_percent: Option<f32>,
-    pub aggressive_time_percent: Option<f32>,
-    pub snark_time_percent: Option<f32>,
-}
-
-/// Proof size evolution across stages
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProofSizeEvolution {
-    pub stage_0_proof_size_mb: Option<f64>,
-    pub stage_1_proof_size_kb: Option<f64>,
-    pub stage_2_proof_size_kb: Option<f64>,
-    pub stage_3_proof_size_kb: Option<f64>,
-    pub stage_4_proof_size_bytes: Option<u64>,
-    pub final_proof_size_bytes: u64,
-    pub total_compression_ratio: Option<f64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PerformanceMetrics {
-    pub proving_throughput_kcycles_per_sec: Option<f64>,
-    pub khz: Option<f64>,
-    pub cycles_per_constraint: Option<f64>,
-    pub proof_efficiency_score: Option<f64>,
-}
-
-/// Verification Phase
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VerificationPhase {
-    pub verification_time_s: f64,
-    pub verification_time_ms: f64,
-    pub on_chain_gas_estimate: Option<u64>,
-}
-
-/// Resource usage metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResourceMetrics {
     pub peak_memory_mb: Option<f64>,
-    pub execution_memory_mb: Option<f64>,
-    pub proving_memory_mb: Option<f64>,
-    pub avg_cpu_percent: Option<f32>,
-    pub peak_cpu_percent: Option<f32>,
-    pub cpu_cores_used: Option<u32>,
+    pub avg_cpu_usage_percent: Option<f32>,
 }
 
-/// End-to-end summary
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Summary {
     pub total_time_s: f64,
-    pub e2e_throughput: Option<f64>,
-    pub proof_compression_ratio: Option<f64>,
-    pub success_status: SuccessStatus,
-    pub error_message: Option<String>,
+    pub end_to_end_khz: Option<f64>,
+    pub success: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum SuccessStatus {
-    Success,
-    Failed,
-    Timeout,
-}
-
-/// Data source annotation for transparency
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum DataSource {
-    Instrumented,
-    LogParsed,
-    Estimated,
-    MeasuredCoreMode,
-    MeasuredCompressedMode,
-    MeasuredGroth16Mode,
-}
-
-impl BenchmarkMetrics {
-    /// Create a new metrics instance with minimal required fields
-    pub fn new(program_name: String, zkvm_name: String) -> Self {
+impl UnifiedMetrics {
+    pub fn new(program_name: ProgramName, zkvm_name: ZkVmName) -> Self {
         Self {
             metadata: Metadata {
                 program_name,
                 zkvm_name,
-                zkvm_version: None,
                 timestamp: Utc::now(),
-                platform: None,
-                hardware: None,
+                ..Default::default()
             },
             custom_metrics: HashMap::new(),
-            execution_phase: None,
-            trace_generation: None,
-            proving_phase: None,
-            verification_phase: None,
-            resources: None,
-            summary: Summary {
-                total_time_s: 0.0,
-                e2e_throughput: None,
-                proof_compression_ratio: None,
-                success_status: SuccessStatus::Success,
-                error_message: None,
-            },
+            execution: Default::default(),
+            vm_circuit: Default::default(),
+            aggressive: Default::default(),
+            snark: Default::default(),
+            verification: Default::default(),
+            resources: Default::default(),
+            summary: Default::default(),
         }
     }
 
-    /// Calculate derived metrics based on existing data
-    /// 
-    /// This function serves as the "Derivation Engine" in the ETL pipeline.
-    /// It uses standardized keys from `custom_metrics` to compute derived values.
-    pub fn calculate_derived_metrics(&mut self) {
-        use std_keys::*;
-
-        // Helper closure to safely parse data
-        let get_f64 = |key: &str| -> Option<f64> {
-            self.custom_metrics.get(key).and_then(|v| v.parse::<f64>().ok())
-        };
+    /// Populate struct fields from custom_metrics map using standard keys
+    /// Also checks for raw keys (with "raw_" prefix) as fallback
+    pub fn populate_from_custom_metrics(&mut self) {
         let get_u64 = |key: &str| -> Option<u64> {
-            self.custom_metrics.get(key).and_then(|v| v.parse::<u64>().ok())
+            // Try standard key first, then raw key
+            self.custom_metrics
+                .get(key)
+                .or_else(|| self.custom_metrics.get(&format!("raw_{}", key)))
+                .and_then(|v| v.parse().ok())
         };
-        let set_val = |key: &str, val: String| {
-            self.custom_metrics.insert(key.to_string(), val);
+        let get_u32 = |key: &str| -> Option<u32> {
+            self.custom_metrics
+                .get(key)
+                .or_else(|| self.custom_metrics.get(&format!("raw_{}", key)))
+                .and_then(|v| v.parse().ok())
+        };
+        let get_f64 = |key: &str| -> Option<f64> {
+            self.custom_metrics
+                .get(key)
+                .or_else(|| self.custom_metrics.get(&format!("raw_{}", key)))
+                .and_then(|v| v.parse().ok())
+        };
+        let get_bool = |key: &str| -> Option<bool> {
+            self.custom_metrics
+                .get(key)
+                .or_else(|| self.custom_metrics.get(&format!("raw_{}", key)))
+                .and_then(|v| match v.to_lowercase().as_str() {
+                    "true" | "success" | "1" => Some(true),
+                    "false" | "failed" | "0" => Some(false),
+                    _ => None,
+                })
+        };
+        let get_string = |key: &str| -> Option<String> {
+            self.custom_metrics
+                .get(key)
+                .or_else(|| self.custom_metrics.get(&format!("raw_{}", key)))
+                .cloned()
         };
 
-        // 1. Calculate Performance Metrics (KHz / Throughput)
-        // Logic: Derive if cycles and prove time are available
-        if let (Some(cycles), Some(time)) = (get_u64(TOTAL_CYCLES), get_f64(PROVE_TIME)) {
-            if time > 0.0 {
-                let khz = (cycles as f64) / (time * 1000.0);
-                // Only calculate if not present (respect raw data priority)
-                if !self.custom_metrics.contains_key(KHZ) {
-                    set_val(KHZ, format!("{:.3}", khz));
-                }
-                
-                // Cycles per second (Hz)
-                let hz = (cycles as f64) / time;
-                 if !self.custom_metrics.contains_key(CYCLES_PER_SECOND) {
-                    set_val(CYCLES_PER_SECOND, format!("{:.0}", hz));
-                }
+        // Execution
+        if let Some(v) = get_u64(std_keys::TOTAL_CYCLES) {
+            self.execution.total_cycles = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::INSTRUCTION_COUNT) {
+            self.execution.instruction_count = Some(v);
+        }
+        if let Some(v) = get_f64(std_keys::EXEC_TIME) {
+            self.execution.duration_s = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::SYSCALL_CYCLES) {
+            self.execution.total_syscall_cycles = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::TOUCHED_MEMORY) {
+            self.execution.touched_memory_addresses = Some(v);
+        }
 
-                // Throughput (usually same as Hz for proving throughput)
-                if !self.custom_metrics.contains_key(THROUGHPUT) {
-                    set_val(THROUGHPUT, format!("{:.0}", hz));
+        // VM Circuit
+        if let Some(v) = get_u64(std_keys::VM_CHUNK_COUNT) {
+            self.vm_circuit.chunk_count = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::VM_PROOF_SIZE) {
+            self.vm_circuit.proof_size_bytes = Some(v);
+        }
+        if let Some(v) = get_f64(std_keys::VM_PROVE_TIME) {
+            self.vm_circuit.duration_s = Some(v);
+        }
+
+        // Aggressive
+        if let Some(v) = get_u32(std_keys::RECURSION_LAYERS) {
+            self.aggressive.recursion_layers = Some(v);
+        }
+        if let Some(v) = get_f64(std_keys::AGGRESIVE_PROVE_TIME_S) {
+            self.aggressive.duration_s = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::AGGRESIVE_PROVE_SIZE_BYTES) {
+            self.aggressive.proof_size_bytes = Some(v);
+        }
+
+        // SNARK
+        if let Some(v) = get_f64(std_keys::SNARK_SETUP_TIME) {
+            self.snark.setup_time_s = Some(v);
+        }
+        if let Some(v) = get_f64(std_keys::SNARK_WITNESS_TIME) {
+            self.snark.witness_gen_time_s = Some(v);
+        }
+        if let Some(v) = get_f64(std_keys::SNARK_PROVE_TIME) {
+            self.snark.proof_gen_time_s = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::SNARK_PROOF_SIZE) {
+            self.snark.proof_size_bytes = Some(v);
+        }
+        if let Some(v) = get_string(std_keys::SNARK_TYPE) {
+            self.snark.protocol = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::SNARK_CONSTRAINTS) {
+            self.snark.constraint_count = Some(v);
+        }
+
+        // Verification & Summary (Success Status)
+        if let Some(v) = get_bool(std_keys::SUCCESS_STATUS) {
+            self.verification.result = v;
+            self.summary.success = v;
+        }
+
+        // Verification
+        if let Some(v) = get_f64(std_keys::VERIFICATION_TIME) {
+            self.verification.duration_s = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::VERIFICATION_GAS) {
+            self.verification.gas_cost = Some(v);
+        }
+
+        // Summary
+        if let Some(v) = get_f64(std_keys::TOTAL_TIME) {
+            self.summary.total_time_s = v;
+        } else if let Some(v) = get_f64(std_keys::TOTAL_PROVE_TIME) {
+            // Fallback: use prove time as total time if total_time not available
+            self.summary.total_time_s = v;
+        }
+
+        // Resources
+        if let Some(v) = get_f64(std_keys::PEAK_RAM) {
+            self.resources.peak_memory_mb = Some(v);
+        }
+
+        // KHZ (already calculated or provided)
+        if let Some(v) = get_f64(std_keys::VM_PROVE_KHZ) {
+            self.vm_circuit.proving_khz = Some(v);
+        }
+    }
+
+    /// Update derived metrics based on raw values
+    pub fn update_derived_metrics(&mut self) {
+        // Ensure fields are populated first
+        self.populate_from_custom_metrics();
+
+        // Calculate total_time_s if not set
+        if self.summary.total_time_s == 0.0 {
+            let exec_time = self.execution.duration_s.unwrap_or(0.0);
+            let vm_time = self.vm_circuit.duration_s.unwrap_or(0.0);
+            let rec_time = self.aggressive.duration_s.unwrap_or(0.0);
+            let snark_time = self.snark.proof_gen_time_s.unwrap_or(0.0);
+            let verify_time = self.verification.duration_s.unwrap_or(0.0);
+
+            // Try to get total_prove_time_s from custom_metrics
+            let prove_time: f64 = self
+                .custom_metrics
+                .get("total_prove_time_s")
+                .or_else(|| self.custom_metrics.get("raw_total_prove_time_s"))
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(vm_time + rec_time + snark_time);
+
+            self.summary.total_time_s = exec_time + prove_time + verify_time;
+        }
+
+        // 1. Calculate KHZ (Execution Speed vs Proving Time)
+        // If not already provided
+        if self.vm_circuit.proving_khz.is_none() {
+            // Try to calculate from total_prove_time_s
+            if let Some(prove_time_str) = self
+                .custom_metrics
+                .get("total_prove_time_s")
+                .or_else(|| self.custom_metrics.get("raw_total_prove_time_s"))
+            {
+                if let (Some(cycles), Ok(prove_time)) =
+                    (self.execution.total_cycles, prove_time_str.parse::<f64>())
+                {
+                    if prove_time > 0.0 {
+                        self.vm_circuit.proving_khz = Some((cycles as f64) / (prove_time * 1000.0));
+                    }
+                }
+            } else if let (Some(cycles), Some(time)) =
+                (self.execution.total_cycles, self.vm_circuit.duration_s)
+            {
+                if time > 0.0 {
+                    self.vm_circuit.proving_khz = Some((cycles as f64) / (time * 1000.0));
                 }
             }
         }
 
-        // 2. Calculate Total Time
-        // Logic: Sum execution, proving, and verification times if total is missing
-        if !self.custom_metrics.contains_key(TOTAL_TIME) {
-            let exec = get_f64(EXEC_TIME).unwrap_or(0.0);
-            let prove = get_f64(PROVE_TIME).unwrap_or(0.0);
-            let verify = get_f64(VERIFY_TIME).unwrap_or(0.0);
-            let total = exec + prove + verify;
-            if total > 0.0 {
-                set_val(TOTAL_TIME, format!("{:.3}", total));
-                self.summary.total_time_s = total; // Also update summary struct
-            }
-        }
-
-        // 3. Calculate Compression Ratio
-        if let (Some(trace_mb), Some(final_bytes)) = (get_f64(TRACE_SIZE_MB), get_f64(PROOF_SIZE)) {
-            if final_bytes > 0.0 {
-                let trace_bytes = trace_mb * 1024.0 * 1024.0;
-                let ratio = trace_bytes / final_bytes;
-                set_val(COMPRESSION_RATIO, format!("{:.2}", ratio));
+        // 2. Calculate End-to-End Throughput
+        if let Some(cycles) = self.execution.total_cycles {
+            if self.summary.total_time_s > 0.0 {
+                self.summary.end_to_end_khz =
+                    Some((cycles as f64) / (self.summary.total_time_s * 1000.0));
             }
         }
     }
 
-    /// Get a metric value by key string (for dynamic reporting)
+    /// Helper to access flattened string values for reporting
     pub fn get_value(&self, key: &str) -> String {
-        // First check custom metrics (highest priority for raw values)
+        // Check custom metrics first
         if let Some(val) = self.custom_metrics.get(key) {
             return val.clone();
         }
 
         match key {
-            // Execution
             "total_cycles" => self
-                .execution_phase
-                .as_ref()
-                .and_then(|e| e.total_cycles)
-                .map(|v| v.to_string())
-                .unwrap_or("N/A".to_string()),
-            "total_instruction_count" => self
-                .execution_phase
-                .as_ref()
-                .and_then(|e| e.total_instruction_count)
+                .execution
+                .total_cycles
                 .map(|v| v.to_string())
                 .unwrap_or("N/A".to_string()),
             "execution_time_s" => self
-                .execution_phase
-                .as_ref()
-                .and_then(|e| e.execution_time_s)
-                .map(|v| format!("{:.4}", v))
-                .unwrap_or("N/A".to_string()),
-
-            // Proving
-            "total_prove_time_s" => self
-                .proving_phase
-                .as_ref()
-                .map(|p| format!("{:.3}", p.total_prove_time_s))
-                .unwrap_or("N/A".to_string()),
-            "vm_core_proof_size_kb" => self
-                .proving_phase
-                .as_ref()
-                .and_then(|p| p.proof_size_evolution.stage_1_proof_size_kb)
-                .map(|v| format!("{:.2}", v))
-                .unwrap_or("N/A".to_string()),
-            "compressed_proof_size_kb" => self
-                .proving_phase
-                .as_ref()
-                .and_then(|p| p.proof_size_evolution.stage_2_proof_size_kb)
-                .map(|v| format!("{:.2}", v))
-                .unwrap_or("N/A".to_string()),
-            "groth16_proof_size_bytes" => self
-                .proving_phase
-                .as_ref()
-                .and_then(|p| p.proof_size_evolution.stage_4_proof_size_bytes)
-                .map(|v| v.to_string())
-                .unwrap_or("N/A".to_string()),
-            "khz" => self
-                .proving_phase
-                .as_ref()
-                .and_then(|p| p.performance_metrics.khz)
+                .execution
+                .duration_s
                 .map(|v| format!("{:.3}", v))
                 .unwrap_or("N/A".to_string()),
-
-            // Verification
-            "verification_time_s" => self
-                .verification_phase
-                .as_ref()
-                .map(|v| format!("{:.6}", v.verification_time_s))
+            "vm_chunk_count" => self
+                .vm_circuit
+                .chunk_count
+                .map(|v| v.to_string())
                 .unwrap_or("N/A".to_string()),
-
-            // Summary
+            "aggressive_layers" => self
+                .aggressive
+                .recursion_layers
+                .map(|v| v.to_string())
+                .unwrap_or("N/A".to_string()),
+            "proof_size_bytes" => self
+                .snark
+                .proof_size_bytes
+                .map(|v| v.to_string())
+                .unwrap_or("N/A".to_string()),
             "total_time_s" => format!("{:.3}", self.summary.total_time_s),
-            "success_status" => format!("{:?}", self.summary.success_status),
-
-            // Metadata
-            "zkvm_name" => self.metadata.zkvm_name.clone(),
-            "program_name" => self.metadata.program_name.clone(),
-
             _ => "N/A".to_string(),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_metrics_creation() {
-        let metrics = BenchmarkMetrics::new("fibonacci_10".to_string(), "SP1".to_string());
-
-        assert_eq!(metrics.metadata.program_name, "fibonacci_10");
-        assert_eq!(metrics.metadata.zkvm_name, "SP1");
     }
 }

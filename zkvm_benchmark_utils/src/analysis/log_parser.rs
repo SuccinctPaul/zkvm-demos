@@ -6,8 +6,9 @@ use crate::core::config::ParsedMetrics;
 use crate::core::error::{BenchmarkError, Result};
 use crate::core::metrics::*;
 use crate::system::hardware;
+use rayon::prelude::*;
 use regex::{Regex, RegexSet};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 /// Optimized Log Parser
 pub struct LogParser {
@@ -38,7 +39,7 @@ impl LogParser {
         // Create RegexSet for fast matching
         let pattern_set = if !pattern_strings.is_empty() {
             RegexSet::new(&pattern_strings)
-                .map_err(|e| BenchmarkError::Parse(format!("Failed to create RegexSet: {}", e)))?
+            .map_err(|e| BenchmarkError::Parse(format!("Failed to create RegexSet: {}", e)))?
         } else {
             // Empty RegexSet
             RegexSet::new(&[] as &[&str]).unwrap()
@@ -58,9 +59,28 @@ impl LogParser {
         zkvm_name: &str,
         program_name: &str,
         metric_mapping: Option<&HashMap<String, String>>,
-    ) -> Result<BenchmarkMetrics> {
+    ) -> Result<UnifiedMetrics> {
+        use log::debug;
+
+        debug!("  🔍 Parsing log for {zkvm_name} (program: {program_name})",);
+        debug!(
+            "  📏 Log size: {} lines, {} bytes",
+            log_content.lines().count(),
+            log_content.len()
+        );
+        debug!("  🎯 Pattern count: {}", self.patterns.len());
+
         // Single pass extraction
         let extracted = self.extract_all_values_single_pass(log_content);
+
+        debug!("  ✅ Extracted {} metrics", extracted.len());
+        if extracted.len() < self.patterns.len() {
+            debug!(
+                "  ⚠️  Some patterns did not match (expected {}, got {})",
+                self.patterns.len(),
+                extracted.len()
+            );
+        }
 
         // Build metrics
         self.build_metrics(extracted, zkvm_name, program_name, metric_mapping)
@@ -68,70 +88,103 @@ impl LogParser {
 
     /// Single pass extraction core logic
     fn extract_all_values_single_pass(&self, content: &str) -> HashMap<String, String> {
-        let mut extracted = HashMap::new();
-        let mut remaining_keys: HashSet<usize> = (0..self.key_order.len()).collect();
-
-        // Iterate through lines
-        for line in content.lines() {
-            if remaining_keys.is_empty() {
-                // Early exit if all patterns matched
-                break;
-            }
-
-            // Use RegexSet to check if line matches any pattern
-            let matches = self.pattern_set.matches(line);
-
-            if matches.matched_any() {
-                // Extract values for matched patterns
-                for idx in matches.iter() {
-                    if !remaining_keys.contains(&idx) {
-                        continue; // Already extracted
-                    }
-
-                    let key = &self.key_order[idx];
-                    if let Some(regex) = self.patterns.get(key) {
-                        if let Some(caps) = regex.captures(line) {
-                            if let Some(value) = caps.get(1) {
-                                extracted.insert(key.clone(), value.as_str().to_string());
-                                remaining_keys.remove(&idx);
+        // Parallel iteration over lines using rayon
+        // Collects matches from all lines in parallel, preserving order
+        let partial_results: Vec<HashMap<String, String>> = content
+            .par_lines()
+            .filter_map(|line| {
+                let matches = self.pattern_set.matches(line);
+                if matches.matched_any() {
+                    let mut local_extracted = HashMap::new();
+                    for idx in matches.iter() {
+                        let key = &self.key_order[idx];
+                        if let Some(regex) = self.patterns.get(key) {
+                            if let Some(caps) = regex.captures(line) {
+                                if let Some(value) = caps.get(1) {
+                                    local_extracted.insert(key.clone(), value.as_str().to_string());
+                                }
                             }
                         }
                     }
+                    if local_extracted.is_empty() {
+                        None
+                    } else {
+                        Some(local_extracted)
+                    }
+                } else {
+                    None
                 }
+            })
+            .collect();
+
+        // Merge results, keeping the first occurrence for each key
+        let mut extracted = HashMap::new();
+        for local_map in partial_results {
+            for (k, v) in local_map {
+                extracted.entry(k).or_insert(v);
             }
         }
 
         extracted
     }
 
-    /// Build BenchmarkMetrics from extracted map
+    /// Build UnifiedMetrics from extracted map
     fn build_metrics(
         &self,
         extracted: HashMap<String, String>,
         zkvm_name: &str,
         program_name: &str,
         metric_mapping: Option<&HashMap<String, String>>,
-    ) -> Result<BenchmarkMetrics> {
-        let mut metrics = BenchmarkMetrics::new(program_name.to_string(), zkvm_name.to_string());
+    ) -> Result<UnifiedMetrics> {
+        use log::debug;
+
+        let program_name_enum = program_name
+            .parse::<ProgramName>()
+            .unwrap_or_else(|_| ProgramName::Custom(program_name.to_string()));
+
+        let zkvm_name_enum = zkvm_name
+            .parse::<ZkVmName>()
+            .unwrap_or_else(|_| {
+                // This fallback is important because parser might be used with non-standard names
+                // However, in most cases, it should match the enum variants.
+                // Since we removed ZkVmName::Custom, we need to map unknown strings to a known variant or panic.
+                // Given the parser context, it's safer to panic if we expect strict compliance,
+                // but for flexibility, we might need to revisit the removal of Custom.
+                // FOR NOW: Let's assume the string MUST be valid, otherwise we panic with a clear message.
+                // This aligns with the strict typing approach.
+                panic!("Unknown zkVM name encountered in parser: {}", zkvm_name)
+            });
+
+        let mut metrics = UnifiedMetrics::new(program_name_enum, zkvm_name_enum);
 
         // Apply metric mapping (Standardization Layer)
         let mut normalized_metrics = extracted.clone();
         if let Some(mapping) = metric_mapping {
+            debug!("  🔄 Applying {} metric mappings", mapping.len());
+            let mut mapped_count = 0;
             for (std_key, raw_key) in mapping {
                 if let Some(val) = extracted.get(raw_key) {
                     normalized_metrics.insert(std_key.clone(), val.clone());
+                    mapped_count += 1;
                 }
             }
+            debug!("  ✅ Mapped {} metrics", mapped_count);
+        } else {
+            debug!("  ℹ️  No metric mapping provided");
         }
 
         // Store all extracted metrics in custom_metrics
         metrics.custom_metrics = normalized_metrics;
 
+        debug!("  💻 Collecting hardware info...");
         // Collect hardware info
         metrics.metadata.hardware = Some(hardware::collect_hardware_info());
 
-        // Calculate derived metrics (Derivation Layer)
-        metrics.calculate_derived_metrics();
+        debug!("  🧮 Calculating derived metrics...");
+        // Calculate derived metrics and populate fields
+        metrics.update_derived_metrics();
+
+        debug!("  ✅ Metrics build completed");
 
         Ok(metrics)
     }
@@ -218,7 +271,7 @@ mod tests {
     }
 
     #[test]
-    fn test_early_exit_optimization() {
+    fn test_parallel_extraction_correctness() {
         let patterns = ParsedMetrics {
             patterns: {
                 let mut p = HashMap::new();
@@ -239,7 +292,7 @@ mod tests {
         let log_content = r#"
             total_cycles=12543
             prove_time=45.8
-            (many more lines that won't be processed...)
+            (many more lines that are processed in parallel...)
             line 1000
             line 2000
             ...

@@ -1,10 +1,11 @@
-use crate::core::metrics::BenchmarkMetrics;
+use crate::core::metrics::{ProgramName, ProofMode, UnifiedMetrics, ZkVmName};
 use crate::execution::resource_monitor::ResourceStats;
 
 #[derive(Debug, Clone)]
 pub struct TestRun {
-    pub zkvm_name: String,
-    pub mode: String,
+    pub zkvm_name: ZkVmName,
+    pub program_name: ProgramName,
+    pub mode: ProofMode,
     pub scale: u32,
     pub repeat: u32,
 }
@@ -12,7 +13,7 @@ pub struct TestRun {
 #[derive(Debug)]
 pub struct ExecutionResult {
     pub test_run: TestRun,
-    pub metrics: Option<BenchmarkMetrics>,
+    pub metrics: Option<UnifiedMetrics>,
     pub log_content: String,
     pub success: bool,
     pub error: Option<String>,

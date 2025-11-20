@@ -123,9 +123,9 @@ fn main() {
                     .expect("Core proof generation failed");
 
                 let stage1_time = stage1_start.elapsed();
-
-                // Measure core proof size
-                let core_proof_size = match &proof.proof {
+                
+                // Measure core proof size and chunk count
+                let (core_proof_size, chunk_count) = match &proof.proof {
                     SP1Proof::Core(core_proofs) => {
                         let mut total = 0;
                         for cp in core_proofs {
@@ -133,13 +133,14 @@ fn main() {
                                 total += bytes.len();
                             }
                         }
-                        total
+                        (total, core_proofs.len())
                     }
-                    _ => 0,
+                    _ => (0, 0),
                 };
 
                 println!("BENCHMARK: stage1_vm_prove_time_s={:.6}", stage1_time.as_secs_f64());
-                println!("BENCHMARK: vm_core_proof_size_kb={:.2}", core_proof_size as f64 / 1024.0);
+                println!("BENCHMARK: vm_circuit_chunk_count={}", chunk_count);
+                println!("BENCHMARK: vm_core_proof_size_bytes={}", core_proof_size);
                 println!("BENCHMARK: final_proof_size_bytes={}", core_proof_size);
 
                 let total_prove_time = total_prove_start.elapsed();
@@ -181,7 +182,7 @@ fn main() {
                 };
 
                 println!("BENCHMARK: stage2_recursive_time_s={:.6}", stage2_time.as_secs_f64());
-                println!("BENCHMARK: compressed_proof_size_kb={:.2}", compressed_size as f64 / 1024.0);
+                println!("BENCHMARK: compressed_proof_size_bytes={}", compressed_size);
                 println!("BENCHMARK: final_proof_size_bytes={}", compressed_size);
 
                 let total_prove_time = total_prove_start.elapsed();
@@ -241,6 +242,7 @@ fn main() {
                 let plonk_size = proof.bytes().len();
 
                 println!("BENCHMARK: total_prove_time_s={:.6}", total_prove_time.as_secs_f64());
+                println!("BENCHMARK: plonk_proof_size_bytes={}", plonk_size);
                 println!("BENCHMARK: final_proof_size_bytes={}", plonk_size);
 
                 // Verify

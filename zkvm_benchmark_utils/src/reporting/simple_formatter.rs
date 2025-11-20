@@ -1,13 +1,13 @@
-//! Simple key-value formatter for BenchmarkMetrics
+//! Simple key-value formatter for UnifiedMetrics
 //!
 //! Provides basic formatting for single-run metrics, useful for quick analysis.
 
-use crate::core::metrics::BenchmarkMetrics;
+use crate::core::metrics::UnifiedMetrics;
 use anyhow::Result;
 use serde_json;
 
-/// Format BenchmarkMetrics in a simple key-value format
-pub fn format_benchmark_metrics_simple(metrics: &BenchmarkMetrics, format: &str) -> Result<String> {
+/// Format UnifiedMetrics in a simple key-value format
+pub fn format_benchmark_metrics_simple(metrics: &UnifiedMetrics, format: &str) -> Result<String> {
     match format {
         "json" => serde_json::to_string_pretty(metrics)
             .map_err(|e| anyhow::anyhow!("JSON serialization failed: {}", e)),
@@ -17,7 +17,7 @@ pub fn format_benchmark_metrics_simple(metrics: &BenchmarkMetrics, format: &str)
     }
 }
 
-fn format_benchmark_metrics_csv(metrics: &BenchmarkMetrics) -> Result<String> {
+fn format_benchmark_metrics_csv(metrics: &UnifiedMetrics) -> Result<String> {
     let mut output = String::from("metric,value\n");
 
     // Metadata
@@ -33,15 +33,12 @@ fn format_benchmark_metrics_csv(metrics: &BenchmarkMetrics) -> Result<String> {
     }
 
     // Summary
-    output.push_str(&format!(
-        "success_status,{:?}\n",
-        metrics.summary.success_status
-    ));
+    output.push_str(&format!("success,{}\n", metrics.summary.success));
 
     Ok(output)
 }
 
-fn format_benchmark_metrics_text(metrics: &BenchmarkMetrics) -> Result<String> {
+fn format_benchmark_metrics_text(metrics: &UnifiedMetrics) -> Result<String> {
     let mut output = String::from("=== Extracted Metrics ===\n\n");
 
     // Metadata
@@ -68,10 +65,7 @@ fn format_benchmark_metrics_text(metrics: &BenchmarkMetrics) -> Result<String> {
     }
 
     output.push_str("\n");
-    output.push_str(&format!(
-        "  success_status: {:?}\n",
-        metrics.summary.success_status
-    ));
+    output.push_str(&format!("  success: {}\n", metrics.summary.success));
     output.push_str("\n");
 
     Ok(output)

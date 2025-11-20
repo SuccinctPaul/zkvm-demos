@@ -172,8 +172,8 @@ pub async fn monitor_process_async(
             _ = tokio::time::sleep(monitor.interval) => {
                 monitor.record();
             }
-            _ = stop_rx.changed() => {
-                if *stop_rx.borrow() {
+            result = stop_rx.changed() => {
+                if result.is_err() || *stop_rx.borrow() {
                     break;
                 }
             }

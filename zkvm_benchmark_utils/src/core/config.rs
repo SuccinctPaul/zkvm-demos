@@ -1,6 +1,7 @@
 //! Configuration management for the benchmark framework
 
 use crate::core::error::{BenchmarkError, Result};
+use crate::core::metrics::{ProofMode, ZkVmName};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -14,17 +15,18 @@ pub struct BenchmarkConfig {
     pub zkvms: HashMap<String, ZkVmConfig>,
     pub output_dir: String,
     pub timeout_seconds: Option<u64>,
+    // TOOD: remove
     pub repeat_count: Option<u32>,
 }
 
 /// Configuration for a single zkVM
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZkVmConfig {
-    pub name: Option<String>,
+    pub name: Option<ZkVmName>,
     pub version: Option<String>,
     pub enabled: bool,
-    pub default_mode: String,
-    pub test_modes: Vec<String>,
+    pub default_mode: ProofMode,
+    pub prove_modes: Vec<ProofMode>,
     pub test_scales: Option<Vec<u32>>,
     pub working_dir: String,
     pub build_command: Option<String>,
@@ -36,8 +38,6 @@ pub struct ZkVmConfig {
     pub parsed_metrics: ParsedMetrics,
     #[serde(rename = "metric_mapping", default)]
     pub metric_mapping: HashMap<String, String>,
-    #[serde(rename = "reporting")]
-    pub reporting: ReportingConfig,
     pub stage_merge: Option<StageMerge>,
     pub proof_size_config: Option<ProofSizeConfig>,
 }
@@ -69,9 +69,9 @@ impl ZkVmConfig {
             ));
         }
 
-        if self.test_modes.is_empty() {
+        if self.prove_modes.is_empty() {
             return Err(BenchmarkError::Config(
-                "test_modes cannot be empty".to_string(),
+                "prove_modes cannot be empty".to_string(),
             ));
         }
 
@@ -95,13 +95,6 @@ impl ZkVmConfig {
 pub struct ParsedMetrics {
     #[serde(flatten)]
     pub patterns: HashMap<String, String>,
-}
-
-/// Reporting configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct ReportingConfig {
-    pub metrics: Vec<String>,
-    pub output_formats: Option<Vec<String>>, // csv, json, etc.
 }
 
 /// Stage merge configuration for multi-mode runs
@@ -154,9 +147,9 @@ impl BenchmarkConfig {
                     )));
                 }
 
-                if config.test_modes.is_empty() {
+                if config.prove_modes.is_empty() {
                     return Err(BenchmarkError::Config(format!(
-                        "zkVM '{}': test_modes cannot be empty",
+                        "zkVM '{}': prove_modes cannot be empty",
                         name
                     )));
                 }
@@ -177,7 +170,7 @@ impl BenchmarkConfig {
     /// Get default configuration
     pub fn default() -> Self {
         Self {
-            test_scales: vec![10, 100, 1000, 10000],
+            test_scales: vec![10, 20],
             zkvms: HashMap::new(),
             output_dir: "benchmark-results".to_string(),
             timeout_seconds: Some(3600), // 1 hour default
@@ -193,16 +186,12 @@ impl BenchmarkConfig {
         zkvms.insert(
             "sp1".to_string(),
             ZkVmConfig {
-                name: Some("sp1".to_string()),
+                name: Some(ZkVmName::Sp1),
                 version: Some("v4.0.0".to_string()),
                 enabled: true,
-                default_mode: "groth16".to_string(),
-                test_modes: vec![
-                    "core".to_string(),
-                    "compressed".to_string(),
-                    "groth16".to_string(),
-                ],
-                test_scales: Some(vec![10, 100, 1000]),
+                default_mode: ProofMode::Groth16,
+                prove_modes: vec![ProofMode::Core, ProofMode::Compressed, ProofMode::Groth16],
+                test_scales: Some(vec![10, 20]),
                 working_dir: "sp1-zkvm/sp1-host".to_string(),
                 build_command: Some("cargo build --release".to_string()),
                 run_command: "cargo run --release -- --prove".to_string(),
@@ -229,20 +218,6 @@ impl BenchmarkConfig {
                     },
                 },
                 metric_mapping: HashMap::new(), // Default empty mapping
-                reporting: ReportingConfig {
-                    metrics: vec![
-                        "total_cycles".to_string(),
-                        "total_prove_time_s".to_string(),
-                        "vm_core_proof_size_kb".to_string(),
-                        "compressed_proof_size_kb".to_string(),
-                        "groth16_proof_size_bytes".to_string(),
-                    ],
-                    output_formats: Some(vec![
-                        "csv".to_string(),
-                        "json".to_string(),
-                        "console".to_string(),
-                    ]),
-                },
                 stage_merge: Some(StageMerge {
                     stage_1_time: "core.total_time".to_string(),
                     stage_2_time: "compressed.total_time - core.total_time".to_string(),
@@ -257,7 +232,7 @@ impl BenchmarkConfig {
         );
 
         Self {
-            test_scales: vec![10, 100, 1000],
+            test_scales: vec![10, 20],
             zkvms,
             output_dir: "benchmark-results".to_string(),
             timeout_seconds: Some(3600),
@@ -289,7 +264,7 @@ mod tests {
 
         let sp1_config = config.zkvms.get("sp1").unwrap();
         assert!(sp1_config.enabled);
-        assert_eq!(sp1_config.test_modes.len(), 3);
+        assert_eq!(sp1_config.prove_modes.len(), 3);
     }
 
     #[test]

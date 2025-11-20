@@ -8,10 +8,9 @@ enabled = true
 default_mode = "groth16"
 
 # 测试规模（Fibonacci N 值）
-test_scales = [10, 100, 1000]
-
+test_scales = [10, 20]
 # 证明模式
-test_modes = ["core", "compressed", "groth16"]
+prove_modes = ["core", "compressed", "groth16"]
 
 # SP1 项目路径
 working_dir = "../sp1-zkvm/sp1-host"
@@ -38,21 +37,23 @@ RUST_LOG = "debug"
 [parsed_metrics]
 # Raw 提取 (Extract)
 # 这里我们使用 raw_ 前缀来区分原始数据和标准数据
-raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
-raw_total_instruction_count = 'BENCHMARK: total_instruction_count=(\d+)'
+raw_total_cycles = '(?:BENCHMARK: |execution report \(totals\): )total_cycles=(\d+)'
+raw_total_instruction_count = '(?:BENCHMARK: |execution report \(totals\): )total_instruction_count=(\d+)'
 raw_total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
 raw_final_proof_size_bytes = 'BENCHMARK: .*_proof_size_bytes=(\d+)'
-raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_s = '(?:BENCHMARK: verification_time_s=|Verification Phase.*\n.*verification_time_s=)([\d.]+)'
 raw_on_chain_gas_estimate = 'BENCHMARK: on_chain_gas_estimate=(\d+)'
-raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_success_status = '(?:BENCHMARK: success_status=|success_status=)(\w+)'
 raw_execution_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
+raw_snark_type = 'prover done.*backend=(\w+)'
 
 # 其他指标保持原样提取，稍后在 metric_mapping 中决定是否标准化
 gas = 'gas: (\d+)'
 total_syscall_cycles = 'total_syscall_cycles=(\d+)'
 touched_memory_addresses = 'touched_memory_addresses=(\d+)'
-vm_core_proof_size_kb = 'BENCHMARK: vm_core_proof_size_kb=([\d.]+)'
-compressed_proof_size_kb = 'BENCHMARK: compressed_proof_size_kb=([\d.]+)'
+vm_core_proof_size_bytes = 'BENCHMARK: vm_core_proof_size_bytes=(\d+)'
+vm_circuit_chunk_count = 'BENCHMARK: vm_circuit_chunk_count=(\d+)'
+compressed_proof_size_bytes = 'BENCHMARK: compressed_proof_size_bytes=(\d+)'
 groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
 
 # ================================================================
@@ -60,7 +61,8 @@ groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
 # ================================================================
 
 # Core Proof 阶段
-core_proof_total_time_s = 'prove_core:.*close time\.busy=([\d.]+)s'
+# 兼容多种日志格式
+core_proof_total_time_s = 'prove_core:phase 2 prover: close time\.busy=([\d.]+)s'
 phase2_trace_generation_time_ms = 'phase 2 trace generation:.*close time\.busy=([\d.]+)ms'
 main_traces_generation_time_ms = 'generate main traces:.*close time\.busy=([\d.]+)ms'
 recursion_program_build_time_ms = 'build recursion program:.*close time\.busy=([\d.]+)ms'
@@ -71,7 +73,7 @@ core_quotient_compute_time_ms = 'phase 2 prover:batch:opening:compute quotient v
 core_multi_batch_opening_time_s = 'phase 2 prover:batch:opening:open multi batches:.*close time\.busy=([\d.]+)s'
 
 # Compress 阶段
-compress_total_time_s = 'compress:.*close time\.busy=([\d.]+)s time\.idle=[\d.]+ns$'
+compress_total_time_s = 'compress: close time\.busy=([\d.]+)s'
 compress_generate_records_time_ms = 'compress:generate records and traces:.*close time\.busy=([\d.]+)ms'
 compress_setup_time_ms = 'compress:prove:batch:Setup compress program:setup machine:.*close time\.busy=([\d.]+)ms'
 compress_commit_time_ms = 'compress:prove:batch:commit:.*close time\.busy=([\d.]+)ms'
@@ -81,7 +83,7 @@ compress_opening_time_s = 'compress:prove:batch:open:.*close time\.busy=([\d.]+)
 compress_merkle_tree_build_time_ms = 'compress:prove:batch:commit:build merkle tree:.*close time\.busy=([\d.]+)ms'
 
 # Shrink 阶段
-shrink_total_time_s = 'shrink:.*close time\.busy=([\d.]+)s time\.idle=[\d.]+ns$'
+shrink_total_time_s = 'shrink:prove_shards: close time\.busy=([\d.]+)s'
 shrink_program_build_time_ms = 'shrink:build shrink program:.*close time\.busy=([\d.]+)ms'
 shrink_program_compile_time_ms = 'shrink:compile shrink program:.*close time\.busy=([\d.]+)ms'
 shrink_setup_time_ms = 'shrink:setup shrink:setup machine:.*close time\.busy=([\d.]+)ms'
@@ -102,7 +104,8 @@ shrink_select_events = 'shrink:   select_events: (\d+)'
 shrink_exp_reverse_bits_len_events = 'shrink:   exp_reverse_bits_len_events: (\d+)'
 
 # Wrap BN254 阶段
-wrap_total_time_s = 'wrap_bn254:.*close time\.busy=([\d.]+)s time\.idle=[\d.]+ns$'
+# 匹配示例:
+wrap_total_time_s = 'wrap_bn254: wrap proving time: ([\d.]+)s'
 wrap_program_build_time_ms = 'wrap_bn254:build compress program:.*close time\.busy=([\d.]+)ms'
 wrap_program_compile_time_ms = 'wrap_bn254:compile compress program:.*close time\.busy=([\d.]+)ms'
 wrap_setup_time_s = 'wrap_bn254:setup wrap:setup machine:.*close time\.busy=([\d.]+)s'
@@ -123,7 +126,7 @@ wrap_select_events = 'wrap_bn254:   select_events: (\d+)'
 # ================================================================
 # P1 Groth16 阶段指标 (Groth16 Phase Metrics)
 # ================================================================
-groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
+# removed duplicate groth16_proof_size_bytes here
 groth16_r1cs_reading_time_s = 'Reading R1CS took ([\d.]+)s'
 groth16_proving_key_reading_time_s = 'Reading proving key took ([\d.]+)s'
 groth16_witness_reading_time_ms = 'Reading witness file took ([\d.]+)ms'
@@ -143,9 +146,8 @@ on_chain_gas_estimate = 'BENCHMARK: on_chain_gas_estimate=(\d+)'
 # ================================================================
 # P2 性能效率指标 (Performance Metrics)
 # ================================================================
-khz = 'khz=([\d.]+)'
-e2e_time_s = 'e2e=([\d.]+)s'
-cycles_per_second = 'summary: cycles=(\d+).*khz=([\d.]+)'
+# vm circuit(core proof) khz
+vm_prove_khz = 'khz=([\d.]+)'
 
 # ================================================================
 # P2 初始化指标 (Initialization Metrics)
@@ -268,154 +270,42 @@ rows_reduction_hint_count = '(fixed log2 rows can be potentially reduced.*)'
 # ----------------------------------------------------------------
 [metric_mapping]
 # 映射规则: Standard Key = Raw Key (Transform)
-# 这些标准 Key 将会被框架识别并用于衍生计算 (Derivation)
+# 这些标准 Key 将会被框架识别并用于衍生计算 (Derivation) 和 统一报告 (Unified Reporting)
 
-# 核心指标
-total_cycles = "raw_total_cycles"
-total_instruction_count = "raw_total_instruction_count"
-total_prove_time_s = "raw_total_prove_time_s"
-execution_time_s = "raw_execution_time_s"
-verification_time_s = "raw_verification_time_s"
-final_proof_size_bytes = "raw_final_proof_size_bytes"
-success_status = "raw_success_status"
+# ====================
+# 1. Execution Phase
+# ====================
+"total_cycles" = "raw_total_cycles"
+"instruction_count" = "raw_total_instruction_count"
+"execution_time_s" = "raw_execution_time_s"
 
-# 自定义标准指标 (横向对比用)
-on_chain_gas_estimate = "raw_on_chain_gas_estimate"
-trace_size_mb = "vm_core_proof_size_kb" # 临时映射，仅作示例
+# ====================
+# 2. VM Circuit Phase
+# ====================
+"vm_prove_time_s" = "core_proof_total_time_s"
+"vm_chunk_count" = "vm_circuit_chunk_count"
+"vm_prove_proof_size_bytes" = "vm_core_proof_size_bytes"
+"vm_prove_khz" = "vm_prove_khz"
 
-# ----------------------------------------------------------------
-# 报告配置 (Reporting)
-# ----------------------------------------------------------------
-[reporting]
-# 核心汇总指标（用于报告输出）
-metrics = [
-    # 衍生指标 (Derived Metrics - 框架自动计算)
-    "khz",
-    "cycles_per_second",
-    "execution_throughput",
-    "total_time_s",
-    
-    # 核心指标 (Mapped Standard Metrics)
-    "total_cycles",
-    "total_instruction_count",
-    "total_prove_time_s",
-    "execution_time_s",
-    "final_proof_size_bytes",
-    "verification_time_s",
-    
-    # 其他直接提取的指标
-    "vm_core_proof_size_kb",
-    "compressed_proof_size_kb",
-    "groth16_proof_size_bytes",
-    "success_status"
-]
-output_formats = ["csv", "json", "console"]
+# ====================
+# 3. Aggresive Phase
+# ====================
+"aggressive_prove_time_s" = "compress_total_time_s"
+"aggressive_proof_size_bytes" = "compressed_proof_size_bytes"
 
-# 分组报告（可选：用于更详细的报告）
-[reporting.groups]
-# 执行阶段组
-execution = [
-    "total_cycles",
-    "total_instruction_count",
-    "execution_time_s",
-    "gas",
-    "total_syscall_cycles",
-    "touched_memory_addresses"
-]
+# ====================
+# 4. SNARK Phase (Groth16)
+# ====================
+"snark_proof_time_s" = "groth16_generation_time_s"
+"snark_proof_size_bytes" = "groth16_proof_size_bytes"
+"snark_setup_time_s" = "groth16_r1cs_reading_time_s" # 近似映射
+"snark_constraint_count" = "groth16_constraint_count"
+"snark_type" = "raw_snark_type"
 
-# 证明阶段组
-proving = [
-    "total_prove_time_s",
-    "core_proof_total_time_s",
-    "compress_total_time_s",
-    "shrink_total_time_s",
-    "wrap_total_time_s",
-    "groth16_total_time_s"
-]
+# ====================
+# 5. Verification Phase
+# ====================
+"verification_time_s" = "raw_verification_time_s"
+"on_chain_gas_estimate" = "raw_on_chain_gas_estimate"
+"success_status" = "raw_success_status"
 
-# Core 阶段详细指标
-core_details = [
-    "core_proof_total_time_s",
-    "phase2_trace_generation_time_ms",
-    "main_traces_generation_time_ms",
-    "recursion_program_build_time_ms",
-    "core_merkle_tree_build_time_ms",
-    "core_permutation_generation_time_ms",
-    "core_quotient_compute_time_ms"
-]
-
-# Compress 阶段详细指标
-compress_details = [
-    "compress_total_time_s",
-    "compress_setup_time_ms",
-    "compress_commit_time_ms",
-    "compress_permutation_time_ms",
-    "compress_quotient_compute_time_ms",
-    "compress_opening_time_s"
-]
-
-# Shrink 阶段详细指标
-shrink_details = [
-    "shrink_total_time_s",
-    "shrink_program_build_time_ms",
-    "shrink_setup_time_ms",
-    "shrink_prove_time_s",
-    "shrink_total_events",
-    "shrink_base_alu_events",
-    "shrink_ext_alu_events"
-]
-
-# Wrap 阶段详细指标
-wrap_details = [
-    "wrap_total_time_s",
-    "wrap_setup_time_s",
-    "wrap_prove_time_s",
-    "wrap_verify_time_ms",
-    "wrap_total_events"
-]
-
-# Groth16 阶段详细指标
-groth16_details = [
-    "groth16_total_time_s",
-    "groth16_r1cs_reading_time_s",
-    "groth16_proving_key_reading_time_s",
-    "groth16_witness_generation_time_ms",
-    "groth16_constraint_count",
-    "groth16_solver_time_s",
-    "groth16_prover_time_s",
-    "groth16_proof_size_bytes"
-]
-
-# 指令统计组
-instruction_stats = [
-    "opcode_add",
-    "opcode_sub",
-    "opcode_mul",
-    "opcode_lw",
-    "opcode_sw",
-    "opcode_beq",
-    "opcode_bne",
-    "opcode_jal",
-    "opcode_jalr"
-]
-
-# 系统调用统计组
-syscall_stats = [
-    "syscall_commit",
-    "syscall_halt",
-    "syscall_write",
-    "syscall_sha_compress",
-    "syscall_keccak_permute"
-]
-
-# 芯片资源统计组
-chip_resources = [
-    "chip_cpu_rows",
-    "chip_cpu_cells",
-    "chip_program_rows",
-    "chip_program_cells",
-    "chip_global_rows",
-    "chip_global_cells",
-    "chip_byte_rows",
-    "chip_byte_cells"
-]

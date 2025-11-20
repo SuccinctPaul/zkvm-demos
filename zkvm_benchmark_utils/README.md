@@ -63,10 +63,10 @@ enabled = true
 default_mode = "groth16"
 
 # 测试规模
-test_scales = [10, 100, 1000]
+test_scales = [10, 20]
 
 # 证明模式
-test_modes = ["core", "compressed", "groth16"]
+prove_modes = ["core", "compressed", "groth16"]
 
 # 项目路径
 working_dir = "../sp1-zkvm/sp1-host"

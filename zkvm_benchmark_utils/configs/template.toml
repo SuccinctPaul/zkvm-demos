@@ -1,29 +1,25 @@
 # ================================================================
-# zkVM Benchmark Configuration Template
+# Template zkVM Benchmark Configuration
 # ================================================================
-# 复制这个模板创建新 zkVM 的配置文件
-# 文件名：configs/{zkvm_name}.toml
 
-name = "{zkvm_name}"       # zkVM 名称（小写）
-version = "v1.0.0"         # zkVM 版本
-enabled = false            # 设为 true 启用
-default_mode = "default"   # 默认证明模式
+# zkVM 唯一标识符 (Lowercase)
+name = "template"
+version = "v1.0.0"
+enabled = false
+default_mode = "core"
 
 # 测试规模（Fibonacci N 值）
-test_scales = [10, 100, 1000]
+test_scales = [10, 20]
 
-# 证明模式列表
-# 常见模式: ["default"], ["stark", "groth16"], ["core", "compressed", "groth16"]
-test_modes = ["default"]
+# 证明模式 (core, compressed, groth16, plonk)
+prove_modes = ["core"]
 
-# zkVM 项目路径（相对于 zkvm_benchmark_utils/）
-working_dir = "../{zkvm_name}-zkvm/host"
+# 项目路径 (Relative to workspace root)
+working_dir = "../template-zkvm/template-host"
 
 # 构建和运行命令
 build_command = "cargo build --release"
 run_command = "cargo run --release"
-# 注意：不要在 run_command 中设置环境变量（如 RUST_LOG=debug），
-# 应该在下面的 [env_vars] 段落中设置
 
 # 超时设置（秒）
 timeout_seconds = 3600
@@ -32,75 +28,31 @@ timeout_seconds = 3600
 repeat_count = 1
 
 # ----------------------------------------------------------------
-# 环境变量（推荐设置）
+# 环境变量
 # ----------------------------------------------------------------
 [env_vars]
-# 设置为 debug 以获取详细的 benchmark 日志
-RUST_LOG = "debug"
-# 添加其他环境变量...
-# 例如：YOUR_ZKVM_OPTION = "value"
+RUST_LOG = "info"
 
 # ----------------------------------------------------------------
-# 日志解析正则表达式（必需）
+# 解析规则 (Parsed Metrics)
 # ----------------------------------------------------------------
-[log_patterns]
-# P0 核心指标（必需）
-total_cycles = 'BENCHMARK: total_cycles=(\d+)'
-total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
-final_proof_size_bytes = 'BENCHMARK: final_proof_size_bytes=(\d+)'
-verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+# Define regexes to extract metrics from stdout/stderr.
+# Capturing groups () are required for the value.
+[parsed_metrics]
+# Execution Phase
+# raw_total_cycles = 'cycles:\s+(\d+)'
+# raw_instruction_count = 'instructions:\s+(\d+)'
 
-# P1 高优先级指标（推荐）
-# execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
-# peak_memory_mb = 'BENCHMARK: peak_memory_mb=([\d.]+)'
+# VM Circuit Phase
+# raw_proof_time = 'prove_time:\s+([\d.]+)s'
+# raw_proof_size = 'proof_size:\s+(\d+)'
 
-[reporting]
-metrics = [
-    "total_cycles",
-    "total_prove_time_s",
-    "vm_core_proof_size_kb",
-    "compressed_proof_size_kb",
-    "groth16_proof_size_bytes",
-    "verification_time_s",
-    "khz",
-    "peak_memory_mb"
-]
-output_formats = ["csv", "json", "console"]
-
-# P2 额外指标（可选）
-# segments = 'BENCHMARK: segments=(\d+)'
-# syscall_count = 'BENCHMARK: syscall_count=(\d+)'
-
-# ================================================================
-# 使用步骤
-# ================================================================
-# 1. 复制此文件为 configs/{zkvm_name}.toml
-# 2. 替换 {zkvm_name} 为实际名称（如 sp1, risc0）
-# 3. 调整 working_dir 路径
-# 4. 根据 zkVM 的日志格式调整 log_patterns
-# 5. 设置 enabled = true
-# 6. 运行: cargo run --bin zkvm-benchmark -- run --zkvms {zkvm_name}
-
-# ================================================================
-# zkVM Host 输出要求
-# ================================================================
-# 你的 zkVM host 代码需要输出以下格式：
-#
-# println!("BENCHMARK: total_cycles={}", cycles);
-# println!("BENCHMARK: total_prove_time_s={:.6}", time.as_secs_f64());
-# println!("BENCHMARK: final_proof_size_bytes={}", proof.len());
-# println!("BENCHMARK: verification_time_s={:.6}", verify_time.as_secs_f64());
-
-# ================================================================
-# 正则表达式说明
-# ================================================================
-# - (\d+)      匹配整数，如: 12345
-# - ([\d.]+)   匹配小数，如: 123.456
-# - (\w+)      匹配单词，如: success, failed
-# - .*         匹配任意字符（灵活匹配）
-#
-# 示例：
-# 'BENCHMARK: cycles=(\d+)'              → 提取 "BENCHMARK: cycles=12345" 中的 12345
-# 'time=([\d.]+)s'                       → 提取 "time=123.45s" 中的 123.45
-# 'BENCHMARK: .*_proof_size_bytes=(\d+)' → 匹配 groth16_proof_size_bytes=260
-
+# ----------------------------------------------------------------
+# 指标映射 (Metric Mapping)
+# ----------------------------------------------------------------
+# Map raw extracted keys to standard keys defined in std_keys.
+# This ensures uniformity in reports.
+[metric_mapping]
+# "total_cycles" = "raw_total_cycles"
+# "vm_prove_time_s" = "raw_proof_time"
+# "vm_prove_proof_size_bytes" = "raw_proof_size"

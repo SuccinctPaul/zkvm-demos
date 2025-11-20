@@ -4,5 +4,5 @@ name = "sp1-guest"
 edition = "2021"
 
 [dependencies]
-sp1-zkvm = "5.2.2"
-common = { path = "../../common", default-features = false, features = ["crypto"] }
+sp1-zkvm = "5.2.3"
+fib = { path = "../../fib" }
