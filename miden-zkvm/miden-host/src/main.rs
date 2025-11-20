@@ -4,52 +4,56 @@ use miden_vm::{
     AdviceInputs, DefaultHost, MemAdviceProvider, ProgramInfo, ProvingOptions, StackInputs,
 };
 use std::time::Instant;
+use common::{load_program_input, execute_program};
 
 fn main() -> Result<()> {
     println!("====================================");
-    println!("   Miden zkVM Fibonacci Demo");
+    println!("   Miden zkVM Multi-Program Demo");
     println!("====================================\n");
 
-    // Load Fibonacci input
-    let fib_n = common::load_fib_n();
-    println!("Computing Fibonacci number for n = {}\n", fib_n);
+    // Load input
+    let input = load_program_input();
+    println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("Input N: {}\n", input.n);
 
     // Step 1: Load and compile Miden Assembly program
     println!("1. Loading Miden Assembly program...");
     let source_file = std::env::current_dir()?
         .parent()
         .unwrap()
-        .join("programs/fib_working.masm");
+        .join("programs/main.masm");
     
     let source = std::fs::read_to_string(&source_file)
         .map_err(|e| anyhow::anyhow!("Failed to read assembly file: {}. File: {:?}", e, source_file))?;
     
-    println!("   Source file: {:?}", source_file);
-    
     // Compile the program
     println!("\n2. Compiling Miden Assembly...");
-    let compile_start = Instant::now();
     let assembler = Assembler::default();
     
     let program = assembler
         .assemble_program(&source)
         .map_err(|e| anyhow::anyhow!("Failed to compile program: {}", e))?;
     
-    let compile_duration = compile_start.elapsed();
     println!("   ✓ Compilation successful");
-    println!("   Compile time: {:.3}s", compile_duration.as_secs_f64());
-    println!("   Program hash: {}", program.hash());
 
     // Step 3: Prepare inputs
     println!("\n3. Preparing inputs...");
     
-    // Empty stack inputs - Miden requires exactly 16 elements or less
+    // Empty stack inputs
     let stack_inputs = StackInputs::default();
     
-    // Empty advice provider for now
-    let advice_provider = MemAdviceProvider::default();
+    // Advice provider with inputs: [program_id, n]
+    // Note: Miden advice stack works as a stack (push to top), 
+    // but `adv_push` reads sequentially? 
+    // If we want to read `program_id` first, then `n`...
+    // Let's assume we provide them in order.
+    let advice_inputs = AdviceInputs::default()
+        .with_stack_values(vec![input.program.id() as u64, input.n as u64])
+        .map_err(|e| anyhow::anyhow!("Failed to create advice inputs: {}", e))?;
+        
+    let advice_provider = MemAdviceProvider::from(advice_inputs);
     
-    println!("   ✓ Inputs prepared for n = {}", fib_n);
+    println!("   ✓ Inputs prepared");
 
     // Step 4: Execute and prove
     println!("\n4. Executing program and generating proof...");
@@ -67,20 +71,16 @@ fn main() -> Result<()> {
     
     let prove_duration = prove_start.elapsed();
     
-    // Get result from stack (get the top element, index 0)
+    // Get result from stack
     let stack = stack_outputs.stack_mut();
     let result_felt = stack[0];
     let result = result_felt.as_int();
     
     println!("   ✓ Proof generated successfully");
-    println!("   Execution time: {:.3}s", prove_duration.as_secs_f64());
-    println!("   Result: fib({}) = {}", fib_n, result);
-    println!("   Proof size: {} bytes", proof.to_bytes().len());
-
+    println!("   Result: {}", result);
+    
     // Step 5: Verify the proof
     println!("\n5. Verifying proof...");
-    let verify_start = Instant::now();
-    
     let program_info = ProgramInfo::from(program);
     
     miden_vm::verify(
@@ -90,42 +90,19 @@ fn main() -> Result<()> {
         proof,
     ).map_err(|e| anyhow::anyhow!("Failed to verify proof: {}", e))?;
     
-    let verify_duration = verify_start.elapsed();
-    
     println!("   ✓ Proof verified successfully");
-    println!("   Verification time: {:.3}s", verify_duration.as_secs_f64());
 
     // Verify correctness
     println!("\n6. Verifying correctness...");
-    let expected = compute_fibonacci(fib_n);
-    println!("   Expected: fib({}) = {}", fib_n, expected);
-    println!("   Computed: fib({}) = {}", fib_n, result);
+    let expected = execute_program(input.program.id(), input.n);
+    println!("   Expected: {}", expected);
+    println!("   Computed: {}", result);
     
-    if result == expected {
+    if result as u32 == expected {
         println!("   ✓ Result matches expected value!");
     } else {
         println!("   ✗ Result does NOT match expected value!");
     }
 
-    println!("\n====================================");
-    println!("   Demo completed successfully!");
-    println!("====================================\n");
-
     Ok(())
-}
-
-/// Compute Fibonacci number for verification
-fn compute_fibonacci(n: u32) -> u64 {
-    if n < 2 {
-        1
-    } else {
-        let mut prev = 1u64;
-        let mut curr = 1u64;
-        for _ in 1..n {
-            let next = prev + curr;
-            prev = curr;
-            curr = next;
-        }
-        curr
-    }
 }
