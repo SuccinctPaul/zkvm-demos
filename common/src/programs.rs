@@ -25,6 +25,35 @@ pub enum Program {
 }
 
 impl Program {
+    /// Get the unique numerical ID for the program
+    /// 
+    /// This ID is used to communicate between Host and Guest.
+    pub fn id(&self) -> u32 {
+        match self {
+            Program::Fibonacci => 0,
+            Program::Sum => 1,
+            Program::Factorial => 2,
+            Program::IsPrime => 3,
+            Program::PopCount => 4,
+            Program::Hash => 5,
+            Program::Signature => 6,
+        }
+    }
+
+    /// Get program from numerical ID
+    pub fn from_id(id: u32) -> Option<Self> {
+        match id {
+            0 => Some(Program::Fibonacci),
+            1 => Some(Program::Sum),
+            2 => Some(Program::Factorial),
+            3 => Some(Program::IsPrime),
+            4 => Some(Program::PopCount),
+            5 => Some(Program::Hash),
+            6 => Some(Program::Signature),
+            _ => None,
+        }
+    }
+
     /// Parse program name from string
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
@@ -103,6 +132,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_program_id() {
+        assert_eq!(Program::Fibonacci.id(), 0);
+        assert_eq!(Program::Sum.id(), 1);
+        assert_eq!(Program::Hash.id(), 5);
+        
+        assert_eq!(Program::from_id(0), Some(Program::Fibonacci));
+        assert_eq!(Program::from_id(1), Some(Program::Sum));
+        assert_eq!(Program::from_id(5), Some(Program::Hash));
+        assert_eq!(Program::from_id(99), None);
+    }
+
+    #[test]
     fn test_program_from_str() {
         assert_eq!(Program::from_str("fibonacci"), Some(Program::Fibonacci));
         assert_eq!(Program::from_str("fib"), Some(Program::Fibonacci));
@@ -122,4 +163,3 @@ mod tests {
         assert_eq!(Program::Signature.to_string(), "signature");
     }
 }
-

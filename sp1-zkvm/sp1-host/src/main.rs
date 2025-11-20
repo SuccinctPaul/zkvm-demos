@@ -14,7 +14,7 @@ mod cli;
 use clap::Parser;
 use cli::Args;
 use sp1_sdk::{include_elf, ProverClient, SP1Proof, SP1ProofMode, SP1Stdin};
-use common::{load_program_input, Program};
+use common::load_program_input;
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const GUEST_ELF: &[u8] = include_elf!("sp1-guest");
@@ -45,16 +45,9 @@ fn main() {
     // Setup the prover client.
     let client = ProverClient::from_env();
 
-    // Convert program to ID (0-6)
-    let program_id: u32 = match input.program {
-        Program::Fibonacci => 0,
-        Program::Sum => 1,
-        Program::Factorial => 2,
-        Program::IsPrime => 3,
-        Program::PopCount => 4,
-        Program::Hash => 5,
-        Program::Signature => 6,
-    };
+    // Get program ID directly from the common library
+    // This ensures consistency between Host and Guest
+    let program_id = input.program.id();
 
     // Setup the inputs for the guest program
     let mut stdin = SP1Stdin::new();
