@@ -248,7 +248,7 @@ dependencies = [
 name = "powdr-guest"
 version = "0.1.0"
 dependencies = [
- "fib",
+ "common",
 ]
 
 [[package]]
