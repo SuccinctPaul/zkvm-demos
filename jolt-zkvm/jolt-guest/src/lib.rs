@@ -1,10 +1,11 @@
 #![cfg_attr(feature = "guest", no_std)]
 #![cfg_attr(feature = "guest", no_main)]
 
-/// Compute the nth Fibonacci number
+use common::execute_program as common_execute;
+
+/// Execute a selected program by ID
 /// This function will be proven by Jolt zkVM
 #[jolt::provable]
-fn fibonacci(n: u32) -> u32 {
-    fib::fibonacci(n)
+fn execute_program(id: u32, n: u32) -> u32 {
+    common_execute(id, n)
 }
-

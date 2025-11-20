@@ -1,12 +1,12 @@
-//! Powdr zkVM Guest Program - Fibonacci Computation
+//! Powdr zkVM Guest Program - Multi-Program Support
 //! 
 //! This is the guest program that runs inside the Powdr zkVM.
-//! It computes the nth Fibonacci number using the shared fib library.
 
 #![no_main]
 #![no_std]
 
 use core::panic::PanicInfo;
+use common::execute_program;
 
 // Panic handler for no_std environment
 #[panic_handler]
@@ -23,15 +23,15 @@ extern "C" {
 // Entry point for the guest program
 #[no_mangle]
 pub extern "C" fn main() {
-    // Read input from the host
+    // Read inputs from the host
+    let program_id = unsafe { powdr_read_u32() };
     let n = unsafe { powdr_read_u32() };
     
-    // Compute Fibonacci number using the shared library
-    let result = fib::fibonacci(n);
+    // Execute selected program
+    let result = execute_program(program_id, n);
     
     // Write result back to the host
     unsafe {
         powdr_write_u32(result);
     }
 }
-
