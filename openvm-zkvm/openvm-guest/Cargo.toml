@@ -4,13 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-fib.workspace = true
+common.workspace = true
 openvm = { git = "https://github.com/openvm-org/openvm", tag = "v1.4.0" }
 
 [profile.release]
 opt-level = 3
-
-
-
-
-

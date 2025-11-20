@@ -1,5 +1,6 @@
 use openvm_sdk::{config::ProverConfig, Prover, StdIn};
 use std::time::Instant;
+use common::load_program_input;
 
 // Include the guest program ELF binary
 openvm_sdk::include_guest!();
@@ -9,9 +10,14 @@ fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
     env_logger::init();
 
-    // Load fibonacci input from environment
-    let fib_n = common::load_fib_n();
-    println!("fib_n = {}", fib_n);
+    // Load program input from environment
+    let input = load_program_input();
+    println!("╔════════════════════════════════════════╗");
+    println!("║       OpenVM Multi-Program Demo       ║");
+    println!("╚════════════════════════════════════════╝");
+    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("ℹ️  Description: {}", input.program.description());
+    println!("📊 Input N: {}", input.n);
 
     println!("\n1. Initializing OpenVM prover...");
     let init_start = Instant::now();
@@ -35,7 +41,8 @@ fn main() -> anyhow::Result<()> {
     
     // Create input for the guest program
     let mut stdin = StdIn::default();
-    stdin.write(&fib_n);
+    stdin.write(&input.program.id());
+    stdin.write(&input.n);
     
     // Execute the program
     let prover = Prover::new(&config)?;
@@ -46,14 +53,15 @@ fn main() -> anyhow::Result<()> {
     
     // Read the result from output
     let result: u32 = output.read();
-    println!("   Fibonacci({}) = {}", fib_n, result);
+    println!("   Result: {}", result);
 
     println!("\n4. Generating zero-knowledge proof...");
     let prove_start = Instant::now();
     
-    // Create stdin again for proving
+    // Create stdin again for proving (clone wasn't sufficient for StdIn reuse in some versions, safe to recreate)
     let mut stdin_prove = StdIn::default();
-    stdin_prove.write(&fib_n);
+    stdin_prove.write(&input.program.id());
+    stdin_prove.write(&input.n);
     
     // Generate proof
     let proof = prover.prove(elf, stdin_prove)?;
@@ -75,8 +83,9 @@ fn main() -> anyhow::Result<()> {
     println!("   ✓ Proof verified successfully!");
 
     println!("\n============ Summary ============");
-    println!("Input: n = {}", fib_n);
-    println!("Output: fibonacci({}) = {}", fib_n, result);
+    println!("Program: {}", input.program.as_str());
+    println!("Input N: {}", input.n);
+    println!("Output: {}", result);
     println!("Total cycles: {}", execution_report.total_cycles());
     println!("Proof size: {} bytes", proof_bytes.len());
     println!("Prove time: {:.2}s", prove_duration.as_secs_f64());
@@ -84,9 +93,3 @@ fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-
-
-
-
-
-

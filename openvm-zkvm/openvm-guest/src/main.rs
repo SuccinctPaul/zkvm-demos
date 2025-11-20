@@ -1,24 +1,17 @@
 #![no_main]
 #![no_std]
 
+use common::execute_program;
 openvm::entry!(main);
 
 pub fn main() {
-    // Read input from the host
+    // Read program ID and input N from the host
+    let program_id: u32 = openvm::io::read();
     let n: u32 = openvm::io::read();
 
-    // Compute fibonacci using the shared fib library
-    let result = fib::fibonacci(n);
-
-    // Log the result for debugging
-    openvm::println!("Computing fibonacci({}) = {}", n, result);
+    // Execute common logic
+    let result = execute_program(program_id, n);
 
     // Commit the result as public output
     openvm::io::commit(&result);
 }
-
-
-
-
-
-

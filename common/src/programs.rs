@@ -55,6 +55,7 @@ impl Program {
     }
 
     /// Parse program name from string
+    #[cfg(feature = "std")]
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "fibonacci" | "fib" => Some(Program::Fibonacci),
