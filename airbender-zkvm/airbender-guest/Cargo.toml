@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-fib.workspace = true
+common = { workspace = true, default-features = false }
 
 # Airbender guest runtime dependencies
 # Note: This is a placeholder structure based on the ere project
@@ -19,4 +19,3 @@ path = "src/main.rs"
 
 [lints]
 workspace = true
-

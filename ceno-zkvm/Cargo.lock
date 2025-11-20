@@ -280,7 +280,7 @@ dependencies = [
 name = "ceno-guest"
 version = "0.1.0"
 dependencies = [
- "fib",
+ "common",
  "nexus-rt",
 ]
 

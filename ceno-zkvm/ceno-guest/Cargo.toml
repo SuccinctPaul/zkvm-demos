@@ -9,12 +9,10 @@ path = "src/main.rs"
 
 [dependencies]
 # Using Nexus zkVM as a proof-of-concept implementation
-# until CENO SDK is officially released
 nexus-rt = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
 
-# Fibonacci computation library
-fib = { path = "../../fib" }
+# Common library for benchmarks
+common = { path = "../../common", default-features = false }
 
 [features]
 cycles = [] # Enable cycle counting for run command
-

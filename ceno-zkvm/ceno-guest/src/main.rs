@@ -1,40 +1,32 @@
-// CENO zkVM Guest Program - Real Proof Generation
-// 
-// Note: This implementation uses Nexus zkVM as a proof-of-concept
-// demonstrating real zero-knowledge proof generation capabilities.
-// It will be replaced with actual CENO SDK once officially released.
-//
-// References:
-// - CENO Paper: https://eprint.iacr.org/2024/387
-// - Nexus zkVM: https://github.com/nexus-xyz/nexus-zkvm
+// CENO zkVM Guest Program - Multi-Program Support
 
 #![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 #[cfg(target_arch = "riscv32")]
 use nexus_rt::println;
 
+use common::execute_program;
+
 #[nexus_rt::main]
-fn main() {
+#[nexus_rt::public_input(input_packed)]
+fn main(input_packed: u64) {
     #[cfg(target_arch = "riscv32")]
     {
-        // Read public input when running in zkVM
-        let n: u32 = nexus_rt::read_public_input().expect("Failed to read public input");
+        // Unpack inputs
+        let program_id = (input_packed >> 32) as u32;
+        let n = (input_packed & 0xFFFFFFFF) as u32;
         
-        println!("=== CENO zkVM Guest Program ===");
-        println!("Computing Fibonacci for n = {}", n);
+        // Execute selected program
+        let result = execute_program(program_id, n);
         
-        // Compute fibonacci using the shared fib library
-        let result = fib::fibonacci(n);
-        
-        println!("Result: fib({}) = {}", n, result);
-        println!("=== Computation Complete ===");
+        println!("Result: {}", result);
     }
     
     #[cfg(not(target_arch = "riscv32"))]
     {
         // For native builds (testing)
         println!("=== CENO zkVM Guest Program (Native Test) ===");
-        println!("Note: Run via host program for actual proof generation");
+        // Mock execution
+        execute_program(0, 10);
     }
 }
-

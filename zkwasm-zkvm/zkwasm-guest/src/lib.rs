@@ -1,9 +1,10 @@
-// zkWasm guest program - Fibonacci computation
+// zkWasm guest program - Multi-Program Support
 // The entry point must be named 'zkmain' as required by zkWasm
 
 #![no_std]
 
 use core::panic::PanicInfo;
+use common::execute_program;
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
@@ -17,34 +18,17 @@ extern "C" {
     fn wasm_output(value: i64);
 }
 
-/// Compute the nth Fibonacci number
-fn fibonacci(n: u64) -> u64 {
-    if n <= 1 {
-        return n;
-    }
-    
-    let mut a = 0u64;
-    let mut b = 1u64;
-    
-    for _ in 2..=n {
-        let temp = a.wrapping_add(b);
-        a = b;
-        b = temp;
-    }
-    
-    b
-}
-
 /// Main entry point for zkWasm
 /// This function will be proved in zero-knowledge
 #[no_mangle]
 pub extern "C" fn zkmain() -> i64 {
     unsafe {
-        // Read input (1 = public input)
-        let n = wasm_input(1) as u64;
+        // Read inputs (1 = public input)
+        let program_id = wasm_input(1) as u32;
+        let n = wasm_input(1) as u32;
         
-        // Compute Fibonacci
-        let result = fibonacci(n);
+        // Execute selected program
+        let result = execute_program(program_id, n);
         
         // Output result
         wasm_output(result as i64);
@@ -52,4 +36,3 @@ pub extern "C" fn zkmain() -> i64 {
         result as i64
     }
 }
-

@@ -9,11 +9,11 @@ OBJCOPY = mips-linux-gnu-objcopy
 CFLAGS = -O2 -static -nostdlib -fno-builtin -march=mips32
 
 # Source files
-SRC = fibonacci.c
+SRC = main.c
 
 # Output files
-ELF = fibonacci.elf
-BIN = fibonacci.bin
+ELF = guest.elf
+BIN = guest.bin
 
 .PHONY: all clean
 
@@ -35,9 +35,3 @@ help:
 	@echo "  all    - Build MIPS ELF and binary files"
 	@echo "  clean  - Remove generated files"
 	@echo "  help   - Show this help message"
-	@echo ""
-	@echo "Requirements:"
-	@echo "  - mips-linux-gnu-gcc (MIPS cross-compiler)"
-	@echo "  - Install on Ubuntu: sudo apt-get install gcc-mips-linux-gnu"
-	@echo "  - Install on macOS: Not readily available, consider Docker"
-

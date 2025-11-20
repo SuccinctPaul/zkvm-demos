@@ -3,10 +3,11 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::process::Command;
 use std::fs;
+use common::load_program_input;
 
 #[derive(Parser)]
 #[command(name = "zkwasm-host")]
-#[command(about = "zkWasm host program for proving Fibonacci computation")]
+#[command(about = "zkWasm host program for Multi-Program Demo")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -26,10 +27,6 @@ enum Commands {
     
     /// Generate a proof
     Prove {
-        /// Input value for Fibonacci (n)
-        #[arg(short, long, default_value = "10")]
-        n: u64,
-        
         /// Enable mock test before proving
         #[arg(short, long)]
         mock: bool,
@@ -40,10 +37,6 @@ enum Commands {
     
     /// Run all steps: build, setup, prove, and verify
     Run {
-        /// Input value for Fibonacci (n)
-        #[arg(short, long, default_value = "10")]
-        n: u64,
-        
         /// Size of the circuit (k parameter)
         #[arg(short, long, default_value = "18")]
         k: u32,
@@ -53,16 +46,22 @@ enum Commands {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     
+    // Load input from environment variables (standard way)
+    let input = load_program_input();
+    
     match cli.command {
         Commands::Build => build_wasm()?,
         Commands::Setup { k } => setup_circuit(k)?,
-        Commands::Prove { n, mock } => prove(n, mock)?,
+        Commands::Prove { mock } => prove(input.program.id(), input.n, mock)?,
         Commands::Verify => verify()?,
-        Commands::Run { n, k } => {
+        Commands::Run { k } => {
             println!("Running complete zkWasm demo...\n");
+            println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
+            println!("Input N: {}", input.n);
+            
             build_wasm()?;
             setup_circuit(k)?;
-            prove(n, false)?;
+            prove(input.program.id(), input.n, false)?;
             verify()?;
             println!("\n✅ Complete! Proof generated and verified successfully.");
         }
@@ -110,7 +109,7 @@ fn setup_circuit(k: u32) -> Result<()> {
     let status = Command::new(&zkwasm_cli)
         .args([
             "--params", params_dir,
-            "fib-demo",
+            "output",
             "setup",
             "-k", &k.to_string(),
             "--wasm", "output/guest.wasm",
@@ -125,20 +124,24 @@ fn setup_circuit(k: u32) -> Result<()> {
     Ok(())
 }
 
-fn prove(n: u64, mock: bool) -> Result<()> {
-    println!("🔐 Generating proof for Fibonacci({})...", n);
+fn prove(program_id: u32, n: u32, mock: bool) -> Result<()> {
+    println!("🔐 Generating proof for ProgramID={} Input={}...", program_id, n);
     
     let zkwasm_cli = find_zkwasm_cli()?;
     
+    // Pass inputs as separate --public arguments or space separated?
+    // zkWasm CLI usually takes --public for each input
     let mut args = vec![
         "--params".to_string(),
         "params".to_string(),
-        "fib-demo".to_string(),
+        "output".to_string(),
         "prove".to_string(),
         "--wasm".to_string(),
         "output/guest.wasm".to_string(),
         "--output".to_string(),
         "output".to_string(),
+        "--public".to_string(),
+        format!("{}:i64", program_id),
         "--public".to_string(),
         format!("{}:i64", n),
     ];
@@ -167,7 +170,7 @@ fn verify() -> Result<()> {
     let status = Command::new(&zkwasm_cli)
         .args([
             "--params", "params",
-            "fib-demo",
+            "output",
             "verify",
             "--output", "output",
         ])
@@ -213,4 +216,3 @@ fn find_zkwasm_cli() -> Result<PathBuf> {
          Then add target/release/delphinus-cli to your PATH or copy it to this directory."
     )
 }
-

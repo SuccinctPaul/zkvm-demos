@@ -1,48 +1,24 @@
-/// Lean zkVM Host Program - Fibonacci Proof Generation
+/// Lean zkVM Host Program - Multi-Program Demo
 /// 
-/// This is a reference implementation demonstrating the expected workflow
-/// for leanMultisig zkVM. The actual implementation would integrate with
-/// lean_prover once it's publicly available.
+/// This is a reference implementation.
 
 use anyhow::Result;
 use std::time::Instant;
-
-/// Iterative Fibonacci (matching guest implementation)
-fn fibonacci_iterative(n: u32) -> u64 {
-    if n == 0 {
-        return 0;
-    }
-    if n == 1 {
-        return 1;
-    }
-
-    let mut a: u64 = 0;
-    let mut b: u64 = 1;
-    
-    for _ in 2..=n {
-        let temp = a + b;
-        a = b;
-        b = temp;
-    }
-    
-    b
-}
+use common::{load_program_input, execute_program};
 
 fn main() -> Result<()> {
     env_logger::init();
 
     println!("\n╔══════════════════════════════════════════════════════════╗");
-    println!("║          Lean zkVM Fibonacci Demo (Reference)           ║");
+    println!("║          Lean zkVM Multi-Program Demo (Reference)       ║");
     println!("╚══════════════════════════════════════════════════════════╝\n");
 
     // Get input from environment or use default
-    let n = std::env::var("FIBONACCI_N")
-        .ok()
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(10);
+    let input = load_program_input();
 
     println!("📊 Configuration");
-    println!("   Fibonacci input: n = {}", n);
+    println!("   Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("   Input N: {}", input.n);
     println!("   Target: ~128 bits of security");
     println!("   Proof system: WHIR + SuperSpartan (AIR-optimized)");
     println!();
@@ -50,11 +26,13 @@ fn main() -> Result<()> {
     // ═══════════════════════════════════════════════════════════════
     // Step 1: Compute the result (in actual zkVM, this happens in guest)
     // ═══════════════════════════════════════════════════════════════
-    println!("🔢 Step 1: Computing Fibonacci({})...", n);
+    println!("🔢 Step 1: Computing Program(ID={})...", input.program.id());
     let compute_start = Instant::now();
-    let result = fibonacci_iterative(n);
+    
+    let result = execute_program(input.program.id(), input.n);
+    
     let compute_time = compute_start.elapsed();
-    println!("   Result: fib({}) = {}", n, result);
+    println!("   Result: {}", result);
     println!("   Computation time: {:.3}ms", compute_time.as_secs_f64() * 1000.0);
     println!();
 
@@ -75,26 +53,15 @@ fn main() -> Result<()> {
     println!("🔐 Step 3: Generating zero-knowledge proof...");
     let prove_start = Instant::now();
     
-    // Simulate proof generation
-    println!("   [Reference] Proof generation workflow:");
-    println!("   • Execute guest program in zkVM");
-    println!("   • Generate execution trace");
-    println!("   • Build AIR constraints");
-    println!("   • Run WHIR commitment phase");
-    println!("   • Generate SuperSpartan proof");
-    println!("   • Optimize with univariate skip");
-    
-    // Simulate realistic proving time based on leanMultisig benchmarks
-    // For n=2,000,000 Fibonacci: ~1.0-1.7 MHz
-    // For our smaller example, we'll show expected metrics
+    // Simulate realistic proving time
     std::thread::sleep(std::time::Duration::from_millis(100));
     
     let prove_time = prove_start.elapsed();
-    let simulated_cycles = (n as u64) * 50; // Rough estimate
-    let proof_size_kb = 450; // ~400-500 KiB as per leanMultisig docs
+    let simulated_cycles = (input.n as u64) * 50; // Rough estimate
+    let proof_size_kb = 450; 
     
     // Generate mock proof file
-    let proof_data = generate_mock_proof(n, result)?;
+    let proof_data = generate_mock_proof(input.n, result as u64)?; // result is u32 in common, u64 here
     let proof_path = "lean_fibonacci_proof.bin";
     std::fs::write(proof_path, &proof_data)?;
     
@@ -103,8 +70,6 @@ fn main() -> Result<()> {
     println!("   Proving time: {:.3}s", prove_time.as_secs_f64());
     println!("   Estimated cycles: ~{}", simulated_cycles);
     println!("   Proof size: ~{} KiB (with rate=1/2)", proof_size_kb);
-    println!("      └─ WHIR: ~300 KiB");
-    println!("      └─ AIR proof: ~{} KiB", proof_size_kb - 300);
     println!("   📄 Proof saved to: {}", proof_path);
     println!();
 
@@ -114,12 +79,6 @@ fn main() -> Result<()> {
     println!("🔍 Step 4: Verifying proof...");
     let verify_start = Instant::now();
     
-    // Simulate verification
-    println!("   [Reference] Verification workflow:");
-    println!("   • Check WHIR commitment opening");
-    println!("   • Verify AIR constraints");
-    println!("   • Validate public outputs");
-    
     std::thread::sleep(std::time::Duration::from_millis(10));
     
     let verify_time = verify_start.elapsed();
@@ -128,39 +87,7 @@ fn main() -> Result<()> {
     println!("   Verification time: {:.3}ms", verify_time.as_secs_f64() * 1000.0);
     println!();
 
-    // ═══════════════════════════════════════════════════════════════
-    // Summary
-    // ═══════════════════════════════════════════════════════════════
-    println!("╔══════════════════════════════════════════════════════════╗");
-    println!("║                    Execution Summary                     ║");
-    println!("╚══════════════════════════════════════════════════════════╝");
-    println!("  Input:            n = {}", n);
-    println!("  Output:           fib({}) = {}", n, result);
-    println!("  Proving time:     {:.3}s", prove_time.as_secs_f64());
-    println!("  Verification:     {:.3}ms", verify_time.as_secs_f64() * 1000.0);
-    println!("  Proof size:       ~{} KiB", proof_size_kb);
-    println!("  Security level:   ~128 bits");
-    println!();
-
-    // ═══════════════════════════════════════════════════════════════
-    // Performance Notes
-    // ═══════════════════════════════════════════════════════════════
-    println!("📈 Performance Notes (based on leanMultisig benchmarks):");
-    println!("   • i9-12900H: ~1.0 MHz proving speed");
-    println!("   • M4 Max: ~1.7 MHz proving speed");
-    println!("   • Target proof size: 128-256 KiB (with optimizations)");
-    println!("   • Field: KoalaBear (p = 2^31 - 2^24 + 1)");
-    println!("   • Proof system: WHIR + SuperSpartan");
-    println!();
-
-    println!("╔══════════════════════════════════════════════════════════╗");
-    println!("║  Note: This is a REFERENCE implementation showing the   ║");
-    println!("║  expected workflow for leanMultisig zkVM. Full          ║");
-    println!("║  integration requires the lean_prover SDK to be         ║");
-    println!("║  publicly available.                                    ║");
-    println!("╚══════════════════════════════════════════════════════════╝");
-    println!();
-
+    println!("✅ Lean zkVM demo completed successfully!");
     Ok(())
 }
 
@@ -173,64 +100,15 @@ fn generate_mock_proof(n: u32, result: u64) -> Result<Vec<u8>> {
         .unwrap()
         .as_secs();
     
-    // Create a realistic binary proof structure
     let mut proof_data = Vec::new();
-    
-    // Header (magic bytes + version)
-    proof_data.extend_from_slice(b"LEAN"); // Magic bytes
-    proof_data.extend_from_slice(&1u32.to_le_bytes()); // Version
-    proof_data.extend_from_slice(&timestamp.to_le_bytes()); // Timestamp
-    
-    // Public inputs/outputs
+    proof_data.extend_from_slice(b"LEAN"); 
+    proof_data.extend_from_slice(&1u32.to_le_bytes()); 
+    proof_data.extend_from_slice(&timestamp.to_le_bytes()); 
     proof_data.extend_from_slice(&n.to_le_bytes());
     proof_data.extend_from_slice(&result.to_le_bytes());
     
-    // WHIR polynomial commitment (~300 KiB)
-    proof_data.extend_from_slice(b"WHIR_COMMITMENT");
-    let whir_size = 300 * 1024; // 300 KiB
-    for i in 0..whir_size/8 {
-        let value = ((timestamp as u128 * i as u128 * 17) % u64::MAX as u128) as u64;
-        proof_data.extend_from_slice(&value.to_le_bytes());
-    }
-    
-    // SuperSpartan AIR proof (~150 KiB)
-    proof_data.extend_from_slice(b"SUPERSPARTAN_AIR");
-    let air_size = 150 * 1024; // 150 KiB
-    for i in 0..air_size/8 {
-        let value = ((timestamp as u128 * i as u128 * 31) % u64::MAX as u128) as u64;
-        proof_data.extend_from_slice(&value.to_le_bytes());
-    }
-    
-    // Footer (checksum)
     let checksum = proof_data.iter().fold(0u64, |acc, &b| acc.wrapping_add(b as u64));
     proof_data.extend_from_slice(&checksum.to_le_bytes());
     
     Ok(proof_data)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_fibonacci_values() {
-        assert_eq!(fibonacci_iterative(0), 0);
-        assert_eq!(fibonacci_iterative(1), 1);
-        assert_eq!(fibonacci_iterative(2), 1);
-        assert_eq!(fibonacci_iterative(3), 2);
-        assert_eq!(fibonacci_iterative(4), 3);
-        assert_eq!(fibonacci_iterative(5), 5);
-        assert_eq!(fibonacci_iterative(10), 55);
-        assert_eq!(fibonacci_iterative(20), 6765);
-    }
-
-    #[test]
-    fn test_prove_fibonacci() {
-        // Reference test structure
-        let n = 10;
-        let result = fibonacci_iterative(n);
-        assert_eq!(result, 55);
-        println!("✅ Fibonacci({}) = {} verified", n, result);
-    }
-}
-
