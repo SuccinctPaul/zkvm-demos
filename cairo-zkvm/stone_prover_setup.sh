@@ -65,3 +65,4 @@ echo "2. Run: ./generate_stone_proof.sh"
 echo
 
 
+

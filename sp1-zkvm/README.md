@@ -56,6 +56,14 @@ sp1-zkvm/
    - Install the Succinct Rust toolchain
    - Setup the SP1 proving infrastructure
 
+## Quick Start
+
+For a quick demonstration of all available programs, run:
+
+```bash
+./run_demo.sh
+```
+
 ## Available Programs
 
 | Program | Environment Variable | Description | Recommended Test Value |
