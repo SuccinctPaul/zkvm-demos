@@ -1,14 +1,20 @@
 use pico_sdk::{client::DefaultProverClient, init_logger};
 use std::time::Instant;
+use common::load_program_input;
 
 fn main() -> anyhow::Result<()> {
     // Setup environment
     dotenv::dotenv().ok();
     init_logger();
 
-    // Load fibonacci input from environment
-    let fib_n = common::load_fib_n();
-    println!("fib_n = {}", fib_n);
+    // Load program input from environment
+    let input = load_program_input();
+    println!("╔════════════════════════════════════════╗");
+    println!("║        Pico Multi-Program Demo        ║");
+    println!("╚════════════════════════════════════════╝");
+    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("ℹ️  Description: {}", input.program.description());
+    println!("📊 Input N: {}", input.n);
 
     println!("\n1. Initializing Pico zkVM prover...");
     let init_start = Instant::now();
@@ -19,6 +25,7 @@ fn main() -> anyhow::Result<()> {
         "../pico-guest/elf/riscv32im-pico-zkvm-elf",
         "../pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest",
         "pico-guest/elf/riscv32im-pico-zkvm-elf",
+        "pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest",
     ];
 
     let mut elf = None;
@@ -48,7 +55,8 @@ fn main() -> anyhow::Result<()> {
 
     // Create input for the guest program
     let mut stdin_builder = client.new_stdin_builder();
-    stdin_builder.write(&fib_n);
+    stdin_builder.write(&input.program.id());
+    stdin_builder.write(&input.n);
 
     println!(
         "Execution setup completed in {:.2}s",
@@ -71,11 +79,11 @@ fn main() -> anyhow::Result<()> {
     if let Some(public_buffer) = &proof.pv_stream {
         let result: u32 =
             bincode::deserialize(public_buffer).expect("Failed to deserialize public values");
-        println!("Fibonacci({}) = {}", fib_n, result);
+        println!("Result: {}", result);
 
         println!("\n============ Summary ============");
-        println!("Input: n = {}", fib_n);
-        println!("Output: fibonacci({}) = {}", fib_n, result);
+        println!("Program: {}", input.program.as_str());
+        println!("Output: {}", result);
         println!("Proof size: {} bytes", public_buffer.len());
         println!("Prove time: {:.2}s", prove_duration.as_secs_f64());
         println!("=================================\n");

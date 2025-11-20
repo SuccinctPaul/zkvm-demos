@@ -5,18 +5,24 @@ use nexus_sdk::{
     ByGuestCompilation, Local, Prover, Verifiable, Viewable,
 };
 use std::time::Instant;
+use common::load_program_input;
 
 const GUEST_PACKAGE: &str = "nexus-guest";
 
 // Build with `cargo build --release` to build in release mode.
-//
-// When run this will generate the `.pb` file, can be opened with `go tool pprof -http=127.0.0.1:8000 [function_name].pb`
-//
-// reference: https://github.com/nexus-xyz/nexus-zkvm/blob/releases/0.3.4/sdk/macros/README.md
 #[profile]
 fn main() {
-    let fib_n = common::load_fib_n();
-    println!("fib_n = {}", fib_n);
+    // Load program input from environment
+    let input = load_program_input();
+    println!("╔════════════════════════════════════════╗");
+    println!("║       Nexus Multi-Program Demo        ║");
+    println!("╚════════════════════════════════════════╝");
+    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("ℹ️  Description: {}", input.program.description());
+    println!("📊 Input N: {}", input.n);
+
+    // Pack inputs into a single u64
+    let input_packed = (input.program.id() as u64) << 32 | (input.n as u64);
 
     print!("1. Compiling guest program...");
     let compile_start = Instant::now();
@@ -30,9 +36,12 @@ fn main() {
 
     println!("Proving execution of vm...");
     let now = std::time::Instant::now();
+    
+    // Prove with packed input
     let (view, proof) = prover
-        .prove_with_input::<(), u32>(&(), &fib_n)
+        .prove_with_input::<(), u64>(&(), &input_packed)
         .expect("failed to prove program");
+        
     println!(
         "Prove cost: {:?} s, proof size: {:?} Bytes",
         std::time::Instant::now().duration_since(now).as_secs_f64(),
@@ -41,42 +50,26 @@ fn main() {
 
     println!("\n3. Execution Logs:");
     println!("-------------------");
-    println!(
-        "View: view_tracked_ram_size: {:?}, view_associated_data: {:?}, view_debug_logs: {:?}",
-        view.view_tracked_ram_size(),
-        view.view_associated_data(),
-        view.view_debug_logs()
-    );
     match view.logs() {
-        Ok(logs) => println!("{}", logs.join("")),
+        Ok(logs) => {
+            for log in logs {
+                println!("{}", log);
+                // Try to parse result from logs since we printed it
+                if log.contains("Result:") {
+                    println!("Found Result in logs: {}", log.trim());
+                }
+            }
+        },
         Err(e) => eprintln!("Error: Failed to retrieve debug logs - {}", e),
     }
     println!("-------------------");
-
-    match view.exit_code() {
-        Ok(code) => {
-            if code == nexus_sdk::KnownExitCodes::ExitSuccess as u32 {
-                println!(
-                    "\n4. Execution completed successfully (Exit code: {})",
-                    code
-                );
-            } else {
-                eprintln!("\n4. Execution failed (Exit code: {})", code);
-                return;
-            }
-        }
-        Err(e) => {
-            eprintln!("\nError: Failed to retrieve exit code - {}", e);
-            return;
-        }
-    }
 
     print!("Verifying execution...");
 
     #[rustfmt::skip]
     proof
-        .verify_expected::<u32, ()>(
-            &fib_n,  // public input
+        .verify_expected::<u64, ()>(
+            &input_packed,  // public input
             nexus_sdk::KnownExitCodes::ExitSuccess as u32,
             &(),  // no public output
             &elf, // expected elf (program binary)
@@ -85,4 +78,10 @@ fn main() {
         .expect("failed to verify proof");
 
     println!("  Succeeded!");
+    
+    println!("\n============ Summary ============");
+    println!("Program: {}", input.program.as_str());
+    println!("Input: n = {}", input.n);
+    println!("Proof size: {} bytes", proof.size_estimate());
+    println!("=================================\n");
 }

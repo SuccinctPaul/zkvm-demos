@@ -1,16 +1,17 @@
+#![no_main]
 use risc0_zkvm::guest::env;
+use common::execute_program;
+
+risc0_zkvm::guest::entry!(main);
 
 fn main() {
-    // read the input
-    let input: u32 = env::read();
+    // Read program ID and input N
+    let program_id: u32 = env::read();
+    let n: u32 = env::read();
 
-    let start = env::cycle_count();
-    let res = fib::fibonacci(input);
-    let end = env::cycle_count();
-    eprintln!("fibonacci (cycle tracker): {}", end - start);
+    // Execute common logic
+    let result = execute_program(program_id, n);
 
-    println!("fibonacci result: {res}");
-
-    // write public output to the journal
-    // env::commit(&input);
+    // Commit result
+    env::commit(&result);
 }
