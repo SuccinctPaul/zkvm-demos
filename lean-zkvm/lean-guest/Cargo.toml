@@ -6,6 +6,4 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-# Note: leanMultisig dependencies would go here
-# This is a reference implementation showing the expected structure
-
+common = { path = "../../common", default-features = false }

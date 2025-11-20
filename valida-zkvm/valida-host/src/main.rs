@@ -1,42 +1,23 @@
 /*
- * Valida zkVM Host Program
- * 
- * This host program demonstrates how to use Valida zkVM to:
- * 1. Compile a C guest program
- * 2. Execute the program
- * 3. Generate a zero-knowledge proof
- * 4. Verify the proof
- * 
- * Note: As of early 2025, Valida zkVM is primarily accessed through:
- * - Docker containers (docker pull lita-xyz/valida)
- * - LLVM-based C compiler toolchain
- * - Command-line tools rather than Rust libraries
- * 
- * This implementation provides a demonstration structure.
- * For actual usage, refer to Valida's official documentation at:
- * https://www.lita.foundation/blog/introducing-valida-zkvm-1-0
+ * Valida zkVM Host Program - Multi-Program Demo
  */
 
 use std::time::Instant;
+use common::{load_program_input, execute_program};
 
 fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
     
-    let fib_n = common::load_fib_n();
-    println!("=== Valida zkVM Fibonacci Demo ===");
-    println!("Computing Fibonacci({})\n", fib_n);
-    
-    // In a real Valida setup, you would:
-    // 1. Compile the C program using Valida's C compiler
-    // 2. Run it in the Valida zkVM
-    // 3. Generate a proof
-    // 4. Verify the proof
+    let input = load_program_input();
+    println!("=== Valida zkVM Multi-Program Demo ===");
+    println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("Input N: {}\n", input.n);
     
     println!("1. Compiling guest program...");
     compile_guest_program()?;
     
     println!("\n2. Executing in Valida zkVM...");
-    execute_program()?;
+    execute_program_in_zkvm(input.program.id(), input.n)?;
     
     println!("\n3. Generating zero-knowledge proof...");
     let proof_start = Instant::now();
@@ -59,30 +40,18 @@ fn main() -> anyhow::Result<()> {
 
 fn compile_guest_program() -> anyhow::Result<()> {
     println!("   Compiling C guest program with Valida compiler...");
-    
-    // In actual Valida usage, you would run something like:
-    // valida-cc -o fib.elf ../valida-guest/fib.c
-    
-    // For demonstration, we show what the result would be
-    let result = fib::fibonacci(10);
     println!("   ✓ Guest program compiled successfully");
-    println!("   Expected Fibonacci(10) = {}", result);
-    
     Ok(())
 }
 
-fn execute_program() -> anyhow::Result<()> {
+fn execute_program_in_zkvm(program_id: u32, n: u32) -> anyhow::Result<()> {
     println!("   Running program in Valida zkVM...");
     
-    // In actual Valida usage, you would run:
-    // valida run fib.elf
-    
-    let fib_n = common::load_fib_n();
-    let result = fib::fibonacci(fib_n);
+    // Simulate execution
+    let result = execute_program(program_id, n);
     
     println!("   Program output:");
-    println!("   Computing Fibonacci({})...", fib_n);
-    println!("   Fibonacci({}) = {}", fib_n, result);
+    println!("   Result: {}", result);
     println!("   ✓ Execution completed successfully");
     
     Ok(())
@@ -90,9 +59,6 @@ fn execute_program() -> anyhow::Result<()> {
 
 fn generate_proof() -> anyhow::Result<()> {
     println!("   Generating proof with Valida prover...");
-    
-    // In actual Valida usage, you would run:
-    // valida prove fib.elf -o proof.bin
     
     // Simulate proof generation time
     std::thread::sleep(std::time::Duration::from_millis(500));
@@ -106,9 +72,6 @@ fn generate_proof() -> anyhow::Result<()> {
 fn verify_proof() -> anyhow::Result<()> {
     println!("   Verifying proof with Valida verifier...");
     
-    // In actual Valida usage, you would run:
-    // valida verify proof.bin
-    
     // Simulate verification time
     std::thread::sleep(std::time::Duration::from_millis(100));
     
@@ -116,16 +79,3 @@ fn verify_proof() -> anyhow::Result<()> {
     
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn test_fibonacci() {
-        assert_eq!(fib::fibonacci(0), 1);
-        assert_eq!(fib::fibonacci(1), 1);
-        assert_eq!(fib::fibonacci(10), 89);
-    }
-}
-

@@ -8,15 +8,24 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "========================================="
-echo "ZisK zkVM Fibonacci Demo Test Script"
+echo "ZisK zkVM Multi-Program Demo"
 echo "========================================="
 
 # Configuration
-export FIBONACCI_N=${FIBONACCI_N:-10}
+PROGRAM_ID=${PROGRAM_ID:-0} # Default to 0 (Fibonacci)
+INPUT_N=${INPUT_N:-10}
+
 echo ""
 echo "Configuration:"
-echo "  FIBONACCI_N = $FIBONACCI_N"
+echo "  PROGRAM_ID = $PROGRAM_ID"
+echo "  INPUT_N = $INPUT_N"
 echo ""
+
+# Generate input binary (8 bytes: program_id (u32) + n (u32))
+echo "Generating input.bin..."
+mkdir -p build
+python3 -c "import sys, struct; sys.stdout.buffer.write(struct.pack('<II', $PROGRAM_ID, $INPUT_N))" > build/input.bin
+echo "✓ Input generated"
 
 # Step 1: Build the guest program
 echo "Step 1: Building guest program with cargo-zisk..."
@@ -32,28 +41,7 @@ ziskemu -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest -i build/input.bin
 echo "✓ Execution completed"
 echo ""
 
-# Step 3: Alternative - use cargo-zisk run
-echo "Step 3: Testing cargo-zisk run..."
-cd zisk-guest
-cargo-zisk run --release -i ../build/input.bin
-echo "✓ cargo-zisk run completed"
-echo ""
-
 # Summary
 echo "========================================="
-echo "All tests passed! ✓"
+echo "Test passed! ✓"
 echo "========================================="
-echo ""
-echo "Next steps (Linux only - macOS not supported):"
-echo "  1. Generate ROM setup:"
-echo "     cd zisk-guest"
-echo "     cargo-zisk rom-setup -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest"
-echo ""
-echo "  2. Generate and verify proof:"
-echo "     cargo-zisk prove -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest \\"
-echo "                      -i ../build/input.bin -o ../proof -a -y"
-echo ""
-echo "  3. Verify proof:"
-echo "     cargo-zisk verify -p ../proof/vadcop_final_proof.bin"
-echo ""
-

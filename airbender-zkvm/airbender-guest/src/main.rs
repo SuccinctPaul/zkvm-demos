@@ -1,32 +1,30 @@
-// Airbender zkVM Guest Program - Fibonacci Computation
+// Airbender zkVM Guest Program - Multi-Program Support
 //
 // Note: This is a reference implementation based on the RISC-V zkVM architecture.
-// Airbender is a high-performance RISC-V zkVM developed by zkSync that provides
-// efficient zero-knowledge proof generation for RISC-V bytecode execution.
-//
-// References:
-// - zkSync Airbender: https://docs.zksync.io/zk-stack/components/zksync-airbender
-// - ere project: https://github.com/eth-act/ere
-//
-// This implementation follows the standard RISC-V zkVM pattern and should be
-// updated once the official Airbender SDK is released.
 
 #![cfg_attr(target_arch = "riscv32", no_std, no_main)]
+
+use common::execute_program;
 
 // RISC-V zkVM entry point
 #[cfg(target_arch = "riscv32")]
 #[no_mangle]
 pub extern "C" fn main() {
     // In a real Airbender implementation, public inputs would be read
-    // through the Airbender runtime API. For now, we use a fixed value.
-    let n: u32 = 10;
+    // through the Airbender runtime API.
     
-    // Compute Fibonacci number
-    let result = fib::fibonacci(n);
+    // Placeholder: Read input (simulated)
+    // In real implementation: let program_id: u32 = airbender::read();
+    let program_id: u32 = 0; // Default to Fibonacci for compilation check
     
-    // In a real implementation, results would be committed through
-    // the Airbender zkVM's output mechanism
-    core::hint::black_box(result);
+    // In real implementation: let n: u32 = airbender::read();
+    let n: u32 = 10; 
+    
+    // Execute selected program
+    let result = execute_program(program_id, n);
+    
+    // In a real implementation, results would be committed
+    // core::hint::black_box(result);
 }
 
 #[cfg(target_arch = "riscv32")]
@@ -42,8 +40,10 @@ fn main() {
     println!("=== Airbender zkVM Guest Program (Native Test) ===");
     println!("This is a test build. Run via the host program for actual proof generation.");
     
+    // Simulate inputs
+    let program_id = 0;
     let n = 10;
-    let result = fib::fibonacci(n);
-    println!("fib({}) = {}", n, result);
+    
+    let result = execute_program(program_id, n);
+    println!("Program(id={}) input={} result={}", program_id, n, result);
 }
-

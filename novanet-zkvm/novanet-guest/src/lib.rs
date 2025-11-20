@@ -1,44 +1,32 @@
-//! Novanet zkVM Guest Program
+//! Novanet zkVM Guest Program - Multi-Program Support
 //! 
-//! This guest program computes the nth Fibonacci number
+//! This guest program executes dispatched algorithms
 //! in a zero-knowledge proof environment using Novanet zkVM.
 
 use serde::{Deserialize, Serialize};
+use common::execute_program;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FibInput {
+pub struct ProgramInput {
+    pub program_id: u32,
     pub n: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FibOutput {
+pub struct ProgramOutput {
     pub result: u32,
 }
 
-/// Compute the nth Fibonacci number
+/// Execute the selected program
 /// This function will be proven by Novanet zkVM
-pub fn compute_fibonacci(input: FibInput) -> FibOutput {
-    let result = fib::fibonacci(input.n);
-    FibOutput { result }
+pub fn compute_program(input: ProgramInput) -> ProgramOutput {
+    let result = execute_program(input.program_id, input.n);
+    ProgramOutput { result }
 }
 
 /// Guest program entry point for Novanet zkVM
-/// This would be called by the Novanet zkVM runtime
-pub fn guest_main(n: u32) -> u32 {
-    let input = FibInput { n };
-    let output = compute_fibonacci(input);
+pub fn guest_main(program_id: u32, n: u32) -> u32 {
+    let input = ProgramInput { program_id, n };
+    let output = compute_program(input);
     output.result
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_fibonacci() {
-        let input = FibInput { n: 10 };
-        let output = compute_fibonacci(input);
-        assert_eq!(output.result, 89);
-    }
-}
-

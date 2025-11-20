@@ -7,6 +7,4 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-# No dependencies needed for basic zkWasm guest programs
-# zkWasm provides host functions directly via extern "C"
-
+common = { path = "../../common", default-features = false }

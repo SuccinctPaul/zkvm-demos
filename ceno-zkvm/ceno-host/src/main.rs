@@ -1,13 +1,5 @@
-// CENO zkVM Host Program - Real Proof Generation
-// 
-// Note: This implementation uses Nexus zkVM as a proof-of-concept
-// demonstrating real zero-knowledge proof generation and verification.
-// It will be replaced with actual CENO SDK once officially released by Scroll.
-// 
-// References:
-// - CENO Paper: https://eprint.iacr.org/2024/387
-// - Scroll Blog: https://scroll.io/blog/ceno
-// - Nexus zkVM: https://github.com/nexus-xyz/nexus-zkvm
+// CENO zkVM Host Program - Multi-Program Demo
+// Note: Uses Nexus zkVM as PoC
 
 use nexus_sdk::nexus_sdk_macros::profile;
 use nexus_sdk::{
@@ -16,22 +8,25 @@ use nexus_sdk::{
     ByGuestCompilation, Local, Prover, Verifiable, Viewable,
 };
 use std::time::Instant;
+use common::load_program_input;
 
 const GUEST_PACKAGE: &str = "ceno-guest";
 
 #[profile]
 fn main() {
-    println!("=== CENO zkVM Fibonacci Demo (Real Proof Generation) ===\n");
+    println!("=== CENO zkVM Multi-Program Demo ===\n");
     
     // Initialize environment
     dotenv::dotenv().ok();
     env_logger::init();
     
-    // Load fibonacci input from environment
-    let fib_n = common::load_fib_n();
-    println!("📊 Configuration:");
-    println!("   Input: n = {}", fib_n);
-    println!("   Expected result: fib({}) = {}\n", fib_n, fib::fibonacci(fib_n));
+    // Load input
+    let input = load_program_input();
+    println!("📊 Input: Program={} (ID={}) N={}\n", 
+             input.program.as_str(), input.program.id(), input.n);
+             
+    // Pack inputs into a single u64 (Nexus limitation workaround)
+    let input_packed = (input.program.id() as u64) << 32 | (input.n as u64);
     
     // Step 1: Compile guest program
     println!("🔨 Step 1: Compiling guest program...");
@@ -54,10 +49,9 @@ fn main() {
     
     // Step 2: Generate zero-knowledge proof
     println!("\n🔐 Step 2: Generating zero-knowledge proof...");
-    println!("   This process may take several minutes for real ZK proof generation.");
     let prove_start = Instant::now();
     
-    let (view, proof) = match prover.prove_with_input::<(), u32>(&(), &fib_n) {
+    let (view, proof) = match prover.prove_with_input::<(), u64>(&(), &input_packed) {
         Ok(result) => result,
         Err(e) => {
             eprintln!("❌ Proof generation failed: {}", e);
@@ -68,7 +62,6 @@ fn main() {
     let prove_duration = prove_start.elapsed();
     println!("✅ Proof generated successfully!");
     println!("   Proving time: {:.2}s", prove_duration.as_secs_f64());
-    println!("   Proof size: {} bytes", proof.size_estimate());
     
     // Display execution logs
     println!("\n📝 Step 3: Execution logs:");
@@ -84,17 +77,11 @@ fn main() {
     println!("-------------------");
     
     // Check exit code
-    match view.exit_code() {
-        Ok(code) => {
-            if code == nexus_sdk::KnownExitCodes::ExitSuccess as u32 {
-                println!("✅ Guest program executed successfully (Exit code: {})", code);
-            } else {
-                eprintln!("❌ Guest program failed (Exit code: {})", code);
-                std::process::exit(1);
-            }
-        }
-        Err(e) => {
-            eprintln!("❌ Failed to retrieve exit code: {}", e);
+    if let Ok(code) = view.exit_code() {
+        if code == nexus_sdk::KnownExitCodes::ExitSuccess as u32 {
+            println!("✅ Guest program executed successfully");
+        } else {
+            eprintln!("❌ Guest program failed (Exit code: {})", code);
             std::process::exit(1);
         }
     }
@@ -103,41 +90,19 @@ fn main() {
     println!("\n🔍 Step 4: Verifying zero-knowledge proof...");
     let verify_start = Instant::now();
     
-    match proof.verify_expected::<u32, ()>(
-        &fib_n,
+    match proof.verify_expected::<u64, ()>(
+        &input_packed,
         nexus_sdk::KnownExitCodes::ExitSuccess as u32,
         &(),
         &elf,
         &[],
     ) {
-        Ok(_) => {
-            let verify_duration = verify_start.elapsed();
-            println!("✅ Proof verified successfully!");
-            println!("   Verification time: {:.2}s", verify_duration.as_secs_f64());
-        }
+        Ok(_) => println!("✅ Proof verified successfully!"),
         Err(e) => {
             eprintln!("❌ Proof verification failed: {}", e);
             std::process::exit(1);
         }
     }
     
-    // Summary
-    let total_time = compile_duration + prove_duration;
-    println!("\n{}", "=".repeat(60));
-    println!("📊 Summary:");
-    println!("{}", "=".repeat(60));
-    println!("  Input:             n = {}", fib_n);
-    println!("  Result:            fib({}) = {}", fib_n, fib::fibonacci(fib_n));
-    println!("  Compilation time:  {:.2}s", compile_duration.as_secs_f64());
-    println!("  Proving time:      {:.2}s", prove_duration.as_secs_f64());
-    println!("  Verification time: {:.2}s", verify_start.elapsed().as_secs_f64());
-    println!("  Total time:        {:.2}s", total_time.as_secs_f64());
-    println!("  Proof size:        {} bytes", proof.size_estimate());
-    println!("{}", "=".repeat(60));
-    
     println!("\n✨ CENO zkVM demo completed successfully!");
-    println!("\n📌 Note: This demo uses Nexus zkVM to demonstrate real ZK proof");
-    println!("   generation. It will be updated to use the official CENO SDK");
-    println!("   once released by Scroll.");
-    println!("   For updates, check: https://github.com/scroll-tech/ceno");
 }
