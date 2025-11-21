@@ -39,7 +39,7 @@ openvm-zkvm/
 2. Install OpenVM toolchain:
    ```bash
    cd scripts/sdk_installers
-   ./install_openvm_sdk.sh
+e
    ```
 
    This script will:
