@@ -39,7 +39,7 @@ impl LogParser {
         // Create RegexSet for fast matching
         let pattern_set = if !pattern_strings.is_empty() {
             RegexSet::new(&pattern_strings)
-            .map_err(|e| BenchmarkError::Parse(format!("Failed to create RegexSet: {}", e)))?
+                .map_err(|e| BenchmarkError::Parse(format!("Failed to create RegexSet: {}", e)))?
         } else {
             // Empty RegexSet
             RegexSet::new(&[] as &[&str]).unwrap()
@@ -142,18 +142,16 @@ impl LogParser {
             .parse::<ProgramName>()
             .unwrap_or_else(|_| ProgramName::Custom(program_name.to_string()));
 
-        let zkvm_name_enum = zkvm_name
-            .parse::<ZkVmName>()
-            .unwrap_or_else(|_| {
-                // This fallback is important because parser might be used with non-standard names
-                // However, in most cases, it should match the enum variants.
-                // Since we removed ZkVmName::Custom, we need to map unknown strings to a known variant or panic.
-                // Given the parser context, it's safer to panic if we expect strict compliance,
-                // but for flexibility, we might need to revisit the removal of Custom.
-                // FOR NOW: Let's assume the string MUST be valid, otherwise we panic with a clear message.
-                // This aligns with the strict typing approach.
-                panic!("Unknown zkVM name encountered in parser: {}", zkvm_name)
-            });
+        let zkvm_name_enum = zkvm_name.parse::<ZkVmName>().unwrap_or_else(|_| {
+            // This fallback is important because parser might be used with non-standard names
+            // However, in most cases, it should match the enum variants.
+            // Since we removed ZkVmName::Custom, we need to map unknown strings to a known variant or panic.
+            // Given the parser context, it's safer to panic if we expect strict compliance,
+            // but for flexibility, we might need to revisit the removal of Custom.
+            // FOR NOW: Let's assume the string MUST be valid, otherwise we panic with a clear message.
+            // This aligns with the strict typing approach.
+            panic!("Unknown zkVM name encountered in parser: {}", zkvm_name)
+        });
 
         let mut metrics = UnifiedMetrics::new(program_name_enum, zkvm_name_enum);
 

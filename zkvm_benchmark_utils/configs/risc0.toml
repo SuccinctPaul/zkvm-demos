@@ -32,25 +32,33 @@ repeat_count = 1
 [env_vars]
 RUST_LOG = "debug"
 RISC0_DEV_MODE = "0"
+# Note: RISC0_PROOF_MODE is injected by the runner
 
 # ----------------------------------------------------------------
 # 解析规则 (Parsed Metrics)
 # ----------------------------------------------------------------
 [parsed_metrics]
 # Execution Phase
-raw_total_cycles = 'INFO.*session:\s+(\d+) total cycles'
-raw_user_cycles = 'INFO.*session:\s+(\d+) user cycles'
+# Guest prints: "fibonacci (cycle tracker): 1688"
+raw_total_cycles = 'fibonacci \(cycle tracker\): (\d+)'
+raw_user_cycles = 'fibonacci \(cycle tracker\): (\d+)'
+# Host prints (new): "BENCHMARK: execution_time_s=..."
+raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+# Fallback for old logs
 raw_execution_time_ms = 'execution time: ([\d.]+)ms'
 
 # VM Circuit Phase (Core)
-# Use 'raw_proof_time' for all phases as Risc0 reports total time
-raw_proof_time = 'proof time.*cost\(s\):\s+([\d.]+)'
-raw_segment_count = 'number of segments:\s+(\d+)'
-# STARK proof size from debug logs (might be missing in INFO mode)
-raw_stark_proof_size = 'DEBUG.*Proof size\s*=\s*(\d+)'
+# Host prints (new): "BENCHMARK: proof_time_s=..."
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+# Fallback for old logs
+raw_proof_time_old = 'proof time total cost\(s\): ([\d.]+)'
+
+# Segments line: "prove_session: exit_code = Halted(0), journal = Some(""), segments: 1"
+raw_segment_count = 'segments: (\d+)'
+# STARK proof size from debug logs
+raw_stark_proof_size = 'Proof size = (\d+)'
 
 # SNARK Phase (Groth16)
-# From: "proof mode: {:?}, proof size: {:?} Bytes, proof time total cost(s): {:?}"
 raw_final_proof_size = 'proof size: (\d+) Bytes'
 raw_snark_type = 'proof mode: (\w+)'
 
@@ -60,11 +68,19 @@ raw_snark_type = 'proof mode: (\w+)'
 [metric_mapping]
 "total_cycles" = "raw_total_cycles"
 "instruction_count" = "raw_user_cycles"
+# metrics.rs handles unit conversion if _s is missing and _ms is present
+"execution_time_s" = "raw_execution_time_s"
+"execution_time_ms" = "raw_execution_time_ms"
+
 "vm_chunk_count" = "raw_segment_count"
-"vm_prove_time_s" = "raw_proof_time"
+"vm_prove_time_s" = "raw_proof_time_s"
 "vm_prove_proof_size_bytes" = "raw_stark_proof_size"
-"aggressive_prove_time_s" = "raw_proof_time"
+
+# Recursive / Aggressive
+"aggressive_prove_time_s" = "raw_proof_time_s"
 "aggressive_proof_size_bytes" = "raw_final_proof_size"
-"snark_proof_time_s" = "raw_proof_time"
+
+# SNARK
+"snark_proof_time_s" = "raw_proof_time_s"
 "snark_proof_size_bytes" = "raw_final_proof_size"
 "snark_type" = "raw_snark_type"

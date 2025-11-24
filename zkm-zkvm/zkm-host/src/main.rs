@@ -20,17 +20,38 @@ fn main() {
     println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
     println!("📊 Input N: {}", input.n);
     println!();
-    
+
     let mut stdin = ZKMStdin::new();
     stdin.write(&input.program.id());
     stdin.write(&input.n);
 
     // Execute the program
-    println!("⚙️  Executing program...");
-    let (_output, report) = client.execute(GUEST_ELF, stdin.clone()).run().unwrap();
-    
-    println!("✅ Execution completed");
-    println!("📊 Instructions: {}", report.total_instruction_count());
+    let start_execute = std::time::Instant::now();
+    let (_output, report) = client.execute(FIBONACCI_ELF, stdin.clone()).run().unwrap();
+    let duration_execute = start_execute.elapsed();
+
+    // Read the output.
+    // let expect = fib::fibonacci(fib_n);
+    // assert_eq!(a, expected_a);
+    // assert_eq!(b, expected_b);
+    // println!("Values are correct!");
+
+    // Record the number of cycles executed.
+    println!(
+        "BENCHMARK: total_instruction_count={}",
+        report.total_instruction_count()
+    );
+    println!(
+        "BENCHMARK: total_cycles={}",
+        report.total_instruction_count()
+    );
+    println!(
+        "BENCHMARK: execute_time_s={:.4}",
+        duration_execute.as_secs_f64()
+    );
+    // println!("Number of cycles: {}", report.total_syscall_count());
+    println!("execution report (totals): \n{}", report);
+    println!("Program executed successfully.");
 
     println!("\n");
     // Setup the program for proving.

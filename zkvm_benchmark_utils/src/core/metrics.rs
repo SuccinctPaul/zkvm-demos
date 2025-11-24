@@ -439,6 +439,12 @@ impl UnifiedMetrics {
                 .cloned()
         };
 
+        // Helper to handle unit conversion (ms -> s) automatically
+        // If key_s (e.g. "execution_time_s") is not found, tries key_ms (e.g. "execution_time_ms") and divides by 1000.
+        let get_time_s = |key_s: &str, key_ms: &str| -> Option<f64> {
+            get_f64(key_s).or_else(|| get_f64(key_ms).map(|v| v / 1000.0))
+        };
+
         // Execution
         if let Some(v) = get_u64(std_keys::TOTAL_CYCLES) {
             self.execution.total_cycles = Some(v);
@@ -446,7 +452,8 @@ impl UnifiedMetrics {
         if let Some(v) = get_u64(std_keys::INSTRUCTION_COUNT) {
             self.execution.instruction_count = Some(v);
         }
-        if let Some(v) = get_f64(std_keys::EXEC_TIME) {
+        // Support execution_time_ms as fallback
+        if let Some(v) = get_time_s(std_keys::EXEC_TIME, "execution_time_ms") {
             self.execution.duration_s = Some(v);
         }
         if let Some(v) = get_u64(std_keys::SYSCALL_CYCLES) {
