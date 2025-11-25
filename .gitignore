@@ -33,3 +33,4 @@ debug
 
 
 **/*.data
+**/*.bin
