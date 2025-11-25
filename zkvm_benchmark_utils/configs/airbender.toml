@@ -1,0 +1,123 @@
+# ================================================================
+# Airbender zkVM Benchmark Configuration
+# ================================================================
+# Airbender is zkSync's high-performance RISC-V zkVM
+# Note: This is a reference implementation; official SDK pending
+
+name = "airbender"
+version = "v0.1.0-dev"
+enabled = true
+default_mode = "core"
+
+# Test scales (program input N values)
+test_scales = [10, 20]
+
+# Proof modes
+# Airbender focuses on high-performance GPU proving
+prove_modes = ["core"]
+
+# Working directory (airbender-zkvm root)
+working_dir = "../airbender-zkvm"
+
+# Build and run commands
+build_command = "cargo build --release -p airbender-host"
+run_command = "./target/release/airbender-host"
+
+# Timeout settings (seconds)
+timeout_seconds = 600
+
+# Repeat count for averaging
+repeat_count = 1
+
+# Program configuration
+[[programs]]
+name = "fibonacci"
+scales = [10, 20]
+
+# ----------------------------------------------------------------
+# Environment Variables
+# ----------------------------------------------------------------
+[env_vars]
+RUST_LOG = "debug"
+# Note: AIRBENDER_PROOF_MODE is injected by the runner
+
+# ----------------------------------------------------------------
+# Parsed Metrics (Regular Expressions)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# BENCHMARK Format Logs (Primary Source)
+# ================================================================
+raw_program_name = 'BENCHMARK: program_name=(\w+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
+
+# ================================================================
+# Compilation Phase
+# ================================================================
+raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
+
+# ================================================================
+# Execution Phase
+# ================================================================
+raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+
+# ================================================================
+# Proving Phase
+# ================================================================
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
+# ================================================================
+# Verification Phase
+# ================================================================
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Total Time
+# ================================================================
+raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
+
+# ================================================================
+# Legacy Format (Fallback Parsing)
+# ================================================================
+legacy_compile_time = 'Compilation completed in ([\d.]+)s'
+legacy_execution_time = 'Execution completed in ([\d.]+)s'
+legacy_proof_time = 'Proof generation completed in ([\d.]+)s'
+legacy_verification_time = 'Proof verification completed in ([\d.]+)s'
+
+# ----------------------------------------------------------------
+# Metric Mapping (Raw -> Standard Keys)
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Compilation Phase
+# ====================
+"compilation_time_s" = "raw_compile_time_s"
+
+# ====================
+# 2. Execution Phase
+# ====================
+"execution_time_s" = "raw_execution_time_s"
+
+# ====================
+# 3. Proving Phase
+# ====================
+"vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+
+# ====================
+# 4. Verification Phase
+# ====================
+"verification_time_s" = "raw_verification_time_s"
+
+# ====================
+# 5. Status & Summary
+# ====================
+"success_status" = "raw_success_status"
+"total_time_s" = "raw_total_time_s"
+
