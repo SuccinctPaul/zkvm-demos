@@ -36,5 +36,15 @@ fn main() -> Result<()> {
     println!("   ✓ Execution completed in {:.2}s", exec_duration.as_secs_f64());
     println!("   ✓ Result verified against native execution");
 
+    // Output BENCHMARK metrics
+    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: zkvm_name=snarkvm");
+    println!("BENCHMARK: zkvm_version=v0.16.0");
+    println!("BENCHMARK: proof_mode=core");
+    println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
+    println!("BENCHMARK: output_result={}", result);
+    println!("BENCHMARK: success_status=success");
+    println!("BENCHMARK: total_time_s={:.6}", (compute_duration + exec_duration).as_secs_f64());
+
     Ok(())
 }

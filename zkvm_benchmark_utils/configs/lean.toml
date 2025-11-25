@@ -48,7 +48,8 @@ RUST_LOG = "info"
 # ================================================================
 # BENCHMARK Format Logs (Primary Source)
 # ================================================================
-raw_program_name = 'BENCHMARK: program_name=(\w+)'
+# Metadata
+raw_program_name = 'BENCHMARK: program_name=([a-zA-Z0-9_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
@@ -90,11 +91,11 @@ raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
 # ================================================================
 # Legacy Format (Fallback Parsing)
 # ================================================================
-legacy_computation_time = 'Computation time: ([\d.]+)ms'
-legacy_proving_time = 'Proving time: ([\d.]+)s'
-legacy_verification_time = 'Verification time: ([\d.]+)ms'
+legacy_computation_time_ms = 'Computation time: ([\d.]+)ms'
+legacy_proving_time_s = 'Proving time: ([\d.]+)s'
+legacy_verification_time_ms = 'Verification time: ([\d.]+)ms'
 legacy_cycles = 'Estimated cycles: ~(\d+)'
-legacy_proof_size = 'Proof size: ~(\d+) KiB'
+legacy_proof_size_kib = 'Proof size: ~(\d+) KiB'
 
 # ----------------------------------------------------------------
 # Metric Mapping (Raw -> Standard Keys)
@@ -103,7 +104,7 @@ legacy_proof_size = 'Proof size: ~(\d+) KiB'
 # ====================
 # 1. Setup Phase
 # ====================
-"prover_initialization_time_s" = "raw_setup_time_s"
+"setup_time_s" = "raw_setup_time_s"
 
 # ====================
 # 2. Execution Phase
@@ -131,4 +132,3 @@ legacy_proof_size = 'Proof size: ~(\d+) KiB'
 # ====================
 "success_status" = "raw_success_status"
 "total_time_s" = "raw_total_time_s"
-

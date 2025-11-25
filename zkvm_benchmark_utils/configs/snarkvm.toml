@@ -1,19 +1,20 @@
 # ================================================================
-# Jolt zkVM Benchmark Configuration
+# snarkVM Benchmark Configuration
 # ================================================================
+# snarkVM is the Aleo network's zkVM using Marlin proving system
 
-name = "jolt"
-version = "v1.0.0"
+name = "snark_vm"
+version = "v0.16.0"
 enabled = true
 default_mode = "core"
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../jolt-zkvm/jolt-host"
+working_dir = "../snarkvm-zkvm/snarkvm-host"
 build_command = "cargo build --release"
 run_command = "cargo run --release"
 
-timeout_seconds = 3600
+timeout_seconds = 600
 repeat_count = 1
 
 [[programs]]
@@ -24,30 +25,22 @@ scales = [10, 20]
 RUST_LOG = "info"
 
 [parsed_metrics]
-# BENCHMARK format logs (primary)
+# BENCHMARK format logs
 raw_program_name = 'BENCHMARK: program_name=(\w+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
-raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
-raw_preprocess_time_s = 'BENCHMARK: preprocess_time_s=([\d.]+)'
-raw_build_time_s = 'BENCHMARK: build_time_s=([\d.]+)'
-raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
 raw_output_result = 'BENCHMARK: output_result=(\d+)'
-raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
 raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
 
 # Legacy format fallback
-legacy_compile_time = 'Compile time:\s+([\d.]+)s'
-legacy_preprocess_time = 'Preprocess time:\s+([\d.]+)s'
-legacy_build_time = 'Build time:\s+([\d.]+)s'
-legacy_prove_time = 'Prove time:\s+([\d.]+)s'
-legacy_verify_time = 'Verify time:\s+([\d.]+)s'
+legacy_result = 'Result: (\d+)'
+legacy_exec_time = 'Execution completed in ([\d.]+)s'
 
 [metric_mapping]
-"compilation_time_s" = "raw_compile_time_s"
-"vm_prove_time_s" = "raw_proof_time_s"
-"verification_time_s" = "raw_verification_time_s"
+"execution_time_s" = "raw_execution_time_s"
 "success_status" = "raw_success_status"
 "total_time_s" = "raw_total_time_s"
+

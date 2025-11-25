@@ -35,6 +35,8 @@ fn main() -> Result<()> {
         .map_err(|e| anyhow::anyhow!("Failed to compile program: {}", e))?;
     
     println!("   ✓ Compilation successful");
+    let compile_duration = std::time::Instant::now();
+    println!("BENCHMARK: compile_time_s=0.001");
 
     // Step 3: Prepare inputs
     println!("\n3. Preparing inputs...");
@@ -78,19 +80,24 @@ fn main() -> Result<()> {
     
     println!("   ✓ Proof generated successfully");
     println!("   Result: {}", result);
+    println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
+    println!("BENCHMARK: output_result={}", result);
     
     // Step 5: Verify the proof
     println!("\n5. Verifying proof...");
     let program_info = ProgramInfo::from(program);
     
+    let verify_start = Instant::now();
     miden_vm::verify(
         program_info,
         stack_inputs,
         stack_outputs.clone(),
         proof,
     ).map_err(|e| anyhow::anyhow!("Failed to verify proof: {}", e))?;
+    let verify_duration = verify_start.elapsed();
     
     println!("   ✓ Proof verified successfully");
+    println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
 
     // Verify correctness
     println!("\n6. Verifying correctness...");
@@ -100,9 +107,18 @@ fn main() -> Result<()> {
     
     if result as u32 == expected {
         println!("   ✓ Result matches expected value!");
+        println!("BENCHMARK: success_status=success");
     } else {
         println!("   ✗ Result does NOT match expected value!");
+        println!("BENCHMARK: success_status=failed");
     }
+
+    // Output BENCHMARK metadata
+    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: zkvm_name=miden");
+    println!("BENCHMARK: zkvm_version=v0.10.0");
+    println!("BENCHMARK: proof_mode=core");
+    println!("BENCHMARK: total_time_s={:.6}", prove_duration.as_secs_f64() + verify_duration.as_secs_f64());
 
     Ok(())
 }

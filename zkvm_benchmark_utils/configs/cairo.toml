@@ -1,0 +1,38 @@
+# ================================================================
+# Cairo zkVM Benchmark Configuration
+# ================================================================
+# Cairo uses Scarb build system and generates STARK proofs
+# Note: This is native Cairo with Stone/Stwo prover, not Cairo-M
+
+name = "cairo"
+version = "v2.8.0"
+enabled = true
+default_mode = "core"
+test_scales = [10, 20]
+prove_modes = ["core"]
+
+working_dir = "../cairo-zkvm"
+# build_command = "scarb build"  # Build is done automatically
+run_command = "scarb cairo-run --available-gas=200000000"
+
+timeout_seconds = 300
+repeat_count = 1
+
+[[programs]]
+name = "fibonacci"
+scales = [10, 20]
+
+[env_vars]
+RUST_LOG = "info"
+
+[parsed_metrics]
+# Cairo output format: [n, result, ...]
+raw_output = '\[(\d+),\s*(\d+)'
+raw_gas_used = 'gas:\s*(\d+)'
+
+# Legacy fallback
+legacy_output = 'Run completed successfully'
+
+[metric_mapping]
+"success_status" = "legacy_output"
+

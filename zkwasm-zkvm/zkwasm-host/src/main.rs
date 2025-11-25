@@ -59,10 +59,20 @@ fn main() -> Result<()> {
             println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
             println!("Input N: {}", input.n);
             
+            let total_start = std::time::Instant::now();
             build_wasm()?;
             setup_circuit(k)?;
             prove(input.program.id(), input.n, false)?;
             verify()?;
+            let total_duration = total_start.elapsed();
+            
+            // Output BENCHMARK metrics
+            println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+            println!("BENCHMARK: zkvm_name=zkwasm");
+            println!("BENCHMARK: zkvm_version=v0.1.0");
+            println!("BENCHMARK: proof_mode=core");
+            println!("BENCHMARK: success_status=success");
+            println!("BENCHMARK: total_time_s={:.6}", total_duration.as_secs_f64());
             println!("\n✅ Complete! Proof generated and verified successfully.");
         }
     }

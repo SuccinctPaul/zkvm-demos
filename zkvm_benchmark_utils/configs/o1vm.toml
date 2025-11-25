@@ -1,0 +1,41 @@
+# ================================================================
+# o1vm zkVM Benchmark Configuration
+# ================================================================
+# o1vm is a MIPS-based zkVM using Kimchi proof system from o1Labs
+
+name = "o1vm"
+version = "v0.1.0-dev"
+enabled = true
+default_mode = "core"
+test_scales = [10, 20]
+prove_modes = ["core"]
+
+working_dir = "../o1vm-zkvm/o1vm-host"
+build_command = "cargo build --release"
+run_command = "cargo run --release"
+
+timeout_seconds = 600
+repeat_count = 1
+
+[[programs]]
+name = "fibonacci"
+scales = [10, 20]
+
+[env_vars]
+RUST_LOG = "info"
+
+[parsed_metrics]
+# BENCHMARK format logs
+raw_program_name = 'BENCHMARK: program_name=(\w+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# Legacy format fallback
+legacy_result = 'Result: (\d+)'
+
+[metric_mapping]
+"success_status" = "raw_success_status"
+

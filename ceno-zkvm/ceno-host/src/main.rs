@@ -43,9 +43,11 @@ fn main() {
     
     let compile_duration = compile_start.elapsed();
     println!("✅ Compilation completed in {:.2}s", compile_duration.as_secs_f64());
+    println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
     
     let elf = prover.elf.clone();
     println!("   ELF instructions: {}", elf.instructions.len());
+    println!("BENCHMARK: instruction_count={}", elf.instructions.len());
     
     // Step 2: Generate zero-knowledge proof
     println!("\n🔐 Step 2: Generating zero-knowledge proof...");
@@ -62,6 +64,7 @@ fn main() {
     let prove_duration = prove_start.elapsed();
     println!("✅ Proof generated successfully!");
     println!("   Proving time: {:.2}s", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
     
     // Display execution logs
     println!("\n📝 Step 3: Execution logs:");
@@ -104,5 +107,13 @@ fn main() {
         }
     }
     
+    let verify_duration = verify_start.elapsed();
+    println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: zkvm_name=ceno");
+    println!("BENCHMARK: zkvm_version=v3.0.0-nexus");
+    println!("BENCHMARK: proof_mode=core");
+    println!("BENCHMARK: success_status=success");
+    println!("BENCHMARK: total_time_s={:.6}", (compile_duration + prove_duration + verify_duration).as_secs_f64());
     println!("\n✨ CENO zkVM demo completed successfully!");
 }

@@ -77,6 +77,7 @@ fn main() -> Result<()> {
     let prover = NovanetProver::compile_guest()?;
     let compile_duration = compile_start.elapsed();
     println!("   ✓ Compilation completed in {:.2}s\n", compile_duration.as_secs_f64());
+    println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
 
     // Step 2: Setup
     println!("2️⃣  Setting up proving system...");
@@ -98,6 +99,9 @@ fn main() -> Result<()> {
     println!("   ✓ Proof generated in {:.2}s", prove_duration.as_secs_f64());
     println!("   ✓ Result: {}", proof.output.result);
     println!("   ✓ Proof size: {} bytes\n", proof.proof_data.len());
+    println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_size_bytes={}", proof.proof_data.len());
+    println!("BENCHMARK: output_result={}", proof.output.result);
 
     // Step 4: Verify proof
     println!("4️⃣  Verifying proof...");
@@ -109,8 +113,16 @@ fn main() -> Result<()> {
 
     if is_valid {
         println!("   ✓ Proof verified successfully in {:.2}s\n", verify_duration.as_secs_f64());
+        println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+        println!("BENCHMARK: program_name={}_{}", input_data.program.as_str(), input_data.n);
+        println!("BENCHMARK: zkvm_name=novanet");
+        println!("BENCHMARK: zkvm_version=v0.1.0-dev");
+        println!("BENCHMARK: proof_mode=core");
+        println!("BENCHMARK: success_status=success");
+        println!("BENCHMARK: total_time_s={:.6}", (compile_duration + setup_duration + prove_duration + verify_duration).as_secs_f64());
         println!("✅ Novanet zkVM Demo completed successfully!");
     } else {
+        println!("BENCHMARK: success_status=failed");
         eprintln!("❌ Proof verification failed!");
         std::process::exit(1);
     }

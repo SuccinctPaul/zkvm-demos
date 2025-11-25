@@ -91,8 +91,24 @@ pub fn main() {
         println!("Prove time:       {:.2}s", prove_duration.as_secs_f64());
         println!("Verify time:      {:.2}s", verify_duration.as_secs_f64());
         println!("========================================");
+        
+        // Output BENCHMARK metrics
+        println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+        println!("BENCHMARK: zkvm_name=jolt");
+        println!("BENCHMARK: zkvm_version=v1.0.0");
+        println!("BENCHMARK: proof_mode=core");
+        println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
+        println!("BENCHMARK: preprocess_time_s={:.6}", preprocess_duration.as_secs_f64());
+        println!("BENCHMARK: build_time_s={:.6}", build_duration.as_secs_f64());
+        println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
+        println!("BENCHMARK: output_result={}", output);
+        println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+        println!("BENCHMARK: success_status=success");
+        println!("BENCHMARK: total_time_s={:.6}", (compile_duration + preprocess_duration + build_duration + prove_duration + verify_duration).as_secs_f64());
+        
         println!("✅ Jolt zkVM Demo completed successfully!");
     } else {
+        println!("BENCHMARK: success_status=failed");
         eprintln!("❌ Proof verification failed!");
         eprintln!("This should not happen with a correctly generated proof.");
         std::process::exit(1);
