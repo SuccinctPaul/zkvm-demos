@@ -1,17 +1,17 @@
-# Airbender zkVM - 验证报告
+# Airbender zkVM - Verification Report
 
-## 验证日期
+## Verification Date
 
-**日期**: 2025年11月16日  
-**状态**: ✅ 所有测试通过
+**Date**: November 16, 2025  
+**Status**: ✅ All tests passed
 
-## 测试环境
+## Test Environment
 
-- **操作系统**: macOS (darwin 24.6.0)
-- **Rust 版本**: 1.85+
-- **Cargo 版本**: 最新稳定版
+- **OS**: macOS (darwin 24.6.0)
+- **Rust Version**: 1.85+
+- **Cargo Version**: Latest stable
 
-## 编译测试
+## Compilation Tests
 
 ### 1. cargo check ✅
 
@@ -22,7 +22,7 @@ $ cargo check
     Finished `dev` profile [optimized + debuginfo] target(s)
 ```
 
-**结果**: ✅ 通过 - 无警告，无错误
+**Result**: ✅ Passed - No warnings, no errors
 
 ### 2. cargo clippy ✅
 
@@ -31,7 +31,7 @@ $ cargo clippy --all-targets
     Finished `dev` profile [optimized + debuginfo] target(s)
 ```
 
-**结果**: ✅ 通过 - 无警告，无错误
+**Result**: ✅ Passed - No warnings, no errors
 
 ### 3. cargo build ✅
 
@@ -42,7 +42,7 @@ $ cargo build --release
     Finished `release` profile [optimized] target(s)
 ```
 
-**结果**: ✅ 通过 - 构建成功
+**Result**: ✅ Passed - Build successful
 
 ### 4. cargo test ✅
 
@@ -52,11 +52,11 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored
 ```
 
-**结果**: ✅ 通过 - 测试框架正常
+**Result**: ✅ Passed - Test framework normal
 
-## 功能测试
+## Functionality Tests
 
-### 1. 默认运行 ✅
+### 1. Default Run ✅
 
 ```bash
 $ ./run_demo.sh
@@ -65,9 +65,9 @@ $ ./run_demo.sh
 Output: fib(10) = 89
 ```
 
-**结果**: ✅ 通过 - 使用默认值 10
+**Result**: ✅ Passed - Uses default value 10
 
-### 2. 命令行参数 ✅
+### 2. Command Line Arguments ✅
 
 ```bash
 $ ./run_demo.sh --fib 25
@@ -76,9 +76,9 @@ $ ./run_demo.sh --fib 25
 Output: fib(25) = 121393
 ```
 
-**结果**: ✅ 通过 - 参数正确解析
+**Result**: ✅ Passed - Arguments parsed correctly
 
-### 3. FIBONACCI_N 环境变量 ✅
+### 3. FIBONACCI_N Environment Variable ✅
 
 ```bash
 $ FIBONACCI_N=30 ./run_demo.sh
@@ -87,9 +87,9 @@ $ FIBONACCI_N=30 ./run_demo.sh
 Output: fib(30) = 1346269
 ```
 
-**结果**: ✅ 通过 - 环境变量生效
+**Result**: ✅ Passed - Environment variable effective
 
-### 4. FIB_N 环境变量 ✅
+### 4. FIB_N Environment Variable ✅
 
 ```bash
 $ FIB_N=12 ./run_demo.sh
@@ -98,18 +98,18 @@ $ FIB_N=12 ./run_demo.sh
 Output: fib(12) = 233
 ```
 
-**结果**: ✅ 通过 - 备用环境变量生效
+**Result**: ✅ Passed - Alternative environment variable effective
 
-### 5. 直接使用 cargo run ✅
+### 5. Direct cargo run ✅
 
 ```bash
 $ FIBONACCI_N=20 cargo run --release --bin airbender-host
 Output: fib(20) = 10946
 ```
 
-**结果**: ✅ 通过 - 直接运行正常
+**Result**: ✅ Passed - Direct run normal
 
-### 6. 帮助信息 ✅
+### 6. Help Information ✅
 
 ```bash
 $ ./run_demo.sh --help
@@ -131,169 +131,168 @@ Examples:
   FIBONACCI_N=20 ./run_demo.sh
 ```
 
-**结果**: ✅ 通过 - 帮助信息完整
+**Result**: ✅ Passed - Help info complete
 
-## 已修复的问题
+## Fixed Issues
 
-### 问题 1: 重复的构建目标 ✅
+### Issue 1: Duplicate Build Targets ✅
 
-**问题描述**: 
+**Description**: 
 ```
 warning: file found to be present in multiple build targets:
   * `lib` target `airbender_guest`
   * `bin` target `airbender-guest`
 ```
 
-**解决方案**: 从 `airbender-guest/Cargo.toml` 中移除了 `[lib]` 配置，只保留 `[[bin]]` 配置。
+**Solution**: Removed `[lib]` configuration from `airbender-guest/Cargo.toml`, kept only `[[bin]]` configuration.
 
-**验证**: ✅ 警告已消除
+**Verification**: ✅ Warning eliminated
 
-### 问题 2: 环境变量名不匹配 ✅
+### Issue 2: Environment Variable Name Mismatch ✅
 
-**问题描述**: 运行脚本使用 `FIB_N`，但 `common` 库期望 `FIBONACCI_N`。
+**Description**: Run script used `FIB_N`, but `common` library expected `FIBONACCI_N`.
 
-**解决方案**: 
-- 运行脚本支持两种环境变量名：`FIBONACCI_N` 和 `FIB_N`
-- 使用 `${FIBONACCI_N:-${FIB_N:-10}}` 语法提供回退
-- 脚本内部统一导出 `FIBONACCI_N`
+**Solution**: 
+- Run script supports both variable names: `FIBONACCI_N` and `FIB_N`
+- Used `${FIBONACCI_N:-${FIB_N:-10}}` syntax for fallback
+- Script internally exports `FIBONACCI_N`
 
-**验证**: ✅ 两种变量名都能正常工作
+**Verification**: ✅ Both variable names work correctly
 
-### 问题 3: 配置显示时序错误 ✅
+### Issue 3: Configuration Display Timing Error ✅
 
-**问题描述**: 配置在解析命令行参数之前显示，导致显示值与实际值不一致。
+**Description**: Configuration displayed before parsing command line arguments, causing display value mismatch with actual value.
 
-**解决方案**: 重组脚本逻辑顺序：
-1. 获取环境变量初始值
-2. 解析命令行参数
-3. 导出最终值
-4. 显示配置
-5. 执行构建和运行
+**Solution**: Reorganized script logic order:
+1. Get environment variable initial value
+2. Parse command line arguments
+3. Export final value
+4. Display configuration
+5. Execute build and run
 
-**验证**: ✅ 配置显示与实际运行值一致
+**Verification**: ✅ Configuration display consistent with actual run value
 
-### 问题 4: clippy 警告 ✅
+### Issue 4: clippy Warning ✅
 
-**问题描述**: `ProofConfig` 的 `Default` 实现可以使用 derive 宏。
+**Description**: `ProofConfig`'s `Default` implementation can use derive macro.
 
-**解决方案**: 将手动实现改为 `#[derive(Default)]`。
+**Solution**: Changed manual implementation to `#[derive(Default)]`.
 
-**验证**: ✅ 警告已消除
+**Verification**: ✅ Warning eliminated
 
-## 性能验证
+## Performance Verification
 
-### 编译性能
+### Compilation Performance
 
-- **首次编译**: ~4-6 秒（下载依赖）
-- **增量编译**: ~0.1-0.5 秒
-- **清理重编译**: ~5-8 秒
+- **First Compile**: ~4-6 seconds (downloading dependencies)
+- **Incremental Compile**: ~0.1-0.5 seconds
+- **Clean Recompile**: ~5-8 seconds
 
-### 运行性能
+### Runtime Performance
 
-- **启动时间**: < 0.1 秒
-- **执行时间**: < 0.01 秒（占位符实现）
-- **总时间**: < 0.5 秒
+- **Startup Time**: < 0.1 seconds
+- **Execution Time**: < 0.01 seconds (placeholder implementation)
+- **Total Time**: < 0.5 seconds
 
-## 用户体验验证
+## User Experience Verification
 
-### 输出质量 ✅
+### Output Quality ✅
 
-- ✅ 使用 Unicode 框线美化输出
-- ✅ 清晰的步骤划分
-- ✅ Emoji 图标增强可读性
-- ✅ 进度指示清晰
-- ✅ 错误消息友好
+- ✅ Used Unicode box drawing for output beautification
+- ✅ Clear step division
+- ✅ Emoji icons enhance readability
+- ✅ Clear progress indication
+- ✅ Friendly error messages
 
-### 文档质量 ✅
+### Documentation Quality ✅
 
-- ✅ README.md - 完整的用户指南
-- ✅ PROJECT_OVERVIEW.md - 技术细节
-- ✅ IMPLEMENTATION_SUMMARY.md - 实现总结
-- ✅ COMPLETION_REPORT.md - 完成报告
-- ✅ VERIFICATION.md - 本文档
+- ✅ README.md - Complete user guide
+- ✅ PROJECT_OVERVIEW.md - Technical details
+- ✅ IMPLEMENTATION_SUMMARY.md - Implementation summary
+- ✅ COMPLETION_REPORT.md - Completion report
+- ✅ VERIFICATION.md - This document
 
-### 易用性 ✅
+### Usability ✅
 
-- ✅ 一键运行脚本 (`./run_demo.sh`)
-- ✅ 清晰的帮助信息
-- ✅ 多种配置方式（环境变量、参数）
-- ✅ 合理的默认值
-- ✅ 详细的文档
+- ✅ One-click run script (`./run_demo.sh`)
+- ✅ Clear help information
+- ✅ Multiple configuration methods (env vars, args)
+- ✅ Reasonable defaults
+- ✅ Detailed documentation
 
-## 兼容性验证
+## Compatibility Verification
 
-### 构建目标 ✅
+### Build Targets ✅
 
-- ✅ Native 构建（host 程序）
-- ✅ RISC-V 目标配置（guest 程序）
-- ✅ Debug 模式
-- ✅ Release 模式
+- ✅ Native build (host program)
+- ✅ RISC-V target configuration (guest program)
+- ✅ Debug mode
+- ✅ Release mode
 
-### 平台兼容性
+### Platform Compatibility
 
-- ✅ macOS (已测试)
-- ⏳ Linux (预期兼容)
-- ⏳ Windows/WSL (预期兼容)
+- ✅ macOS (Tested)
+- ⏳ Linux (Expected compatible)
+- ⏳ Windows/WSL (Expected compatible)
 
-## 集成验证
+## Integration Verification
 
-### 项目集成 ✅
+### Project Integration ✅
 
-- ✅ 与 `common` 库集成
-- ✅ 与 `fib` 库集成
-- ✅ 主 README.md 已更新
-- ✅ 遵循项目结构规范
+- ✅ Integrated with `common` library
+- ✅ Integrated with `fib` library
+- ✅ Main README.md updated
+- ✅ Follows project structure specifications
 
-### SDK 安装脚本 ✅
+### SDK Install Script ✅
 
-- ✅ 脚本存在并可执行
-- ✅ 系统检查功能完整
-- ✅ 环境配置正确
-- ✅ 文档清晰
+- ✅ Script exists and is executable
+- ✅ System check function complete
+- ✅ Environment configuration correct
+- ✅ Documentation clear
 
-## 结论
+## Conclusion
 
-✅ **所有测试通过！**
+✅ **All Tests Passed!**
 
-Airbender zkVM Fibonacci Demo 已完全实现并验证通过。实现包括：
+Airbender zkVM Fibonacci Demo has been fully implemented and verified. Implementation includes:
 
-1. ✅ 完整的项目结构
-2. ✅ 正确的 RISC-V 配置
-3. ✅ 功能完整的运行脚本
-4. ✅ 详细的文档
-5. ✅ 无编译警告或错误
-6. ✅ 良好的用户体验
+1. ✅ Complete project structure
+2. ✅ Correct RISC-V configuration
+3. ✅ Fully functional run script
+4. ✅ Detailed documentation
+5. ✅ No compilation warnings or errors
+6. ✅ Good user experience
 
-项目已准备就绪，可以立即使用！
+The project is ready for immediate use!
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 进入项目目录
+# Enter project directory
 cd airbender-zkvm
 
-# 运行 demo（使用默认值）
+# Run demo (use default)
 ./run_demo.sh
 
-# 使用自定义输入
+# Use custom input
 ./run_demo.sh --fib 20
 
-# 或使用环境变量
+# Or use environment variable
 FIBONACCI_N=25 ./run_demo.sh
 ```
 
-## 后续工作
+## Future Work
 
-一旦 Airbender SDK 正式发布：
+Once Airbender SDK is officially released:
 
-1. ⏳ 更新依赖项到官方版本
-2. ⏳ 实现实际的证明生成
-3. ⏳ 实现密码学验证
-4. ⏳ 添加更多示例
+1. ⏳ Update dependencies to official versions
+2. ⏳ Implement actual proof generation
+3. ⏳ Implement cryptographic verification
+4. ⏳ Add more examples
 
 ---
 
-**验证完成**: 2025年11月16日  
-**状态**: ✅ 生产就绪（参考实现）  
-**版本**: 0.1.0
-
+**Verification Completed**: November 16, 2025  
+**Status**: ✅ Production Ready (Reference Implementation)  
+**Version**: 0.1.0

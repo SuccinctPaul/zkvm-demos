@@ -1,215 +1,215 @@
-# Stwo-Cairo 集成完整指南
+# Stwo-Cairo Complete Integration Guide
 
-## 🎯 概览
+## 🎯 Overview
 
-本目录包含将 Cairo Fibonacci 项目与 **Stwo-Cairo** 证明器集成的完整资源。
+This directory contains complete resources for integrating the Cairo Fibonacci project with the **Stwo-Cairo** prover.
 
-**Stwo-Cairo** 是 StarkWare 开发的下一代超高速 STARK 证明器，基于 Circle STARKs 密码学突破技术。
+**Stwo-Cairo** is StarkWare's next-generation ultra-fast STARK prover, based on Circle STARKs technology.
 
-## 📚 文档索引
+## 📚 Documentation Index
 
-### 快速开始
-1. **[STWO_QUICK_START.md](STWO_QUICK_START.md)** ⭐ 新手首选
-   - 一键安装脚本
-   - 5 分钟快速上手
-   - 常见问题解答
-   - 包含完整示例
+### Quick Start
+1. **[STWO_QUICK_START.md](STWO_QUICK_START.md)** ⭐ Best for Beginners
+   - One-click installation script
+   - 5-minute quick start
+   - FAQ
+   - Includes complete examples
 
-### 深入集成
-2. **[STWO_INTEGRATION_GUIDE.md](STWO_INTEGRATION_GUIDE.md)** 📖 详细指南
-   - 兼容性分析
-   - 详细实施步骤
-   - 配置修改说明
-   - 故障排除
-   - 性能优化技巧
+### Deep Integration
+2. **[STWO_INTEGRATION_GUIDE.md](STWO_INTEGRATION_GUIDE.md)** 📖 Detailed Guide
+   - Compatibility analysis
+   - Detailed implementation steps
+   - Configuration modification instructions
+   - Troubleshooting
+   - Performance optimization tips
 
-### 对比分析
-3. **[STWO_COMPARISON.md](STWO_COMPARISON.md)** 📊 决策参考
-   - 性能基准测试
-   - 功能对比表
-   - 成本收益分析
-   - 实际测试数据
-   - 决策建议
+### Comparative Analysis
+3. **[STWO_COMPARISON.md](STWO_COMPARISON.md)** 📊 Decision Reference
+   - Performance benchmarks
+   - Feature comparison table
+   - Cost-benefit analysis
+   - Actual test data
+   - Decision recommendations
 
-## 🚀 快速开始（3 步完成）
+## 🚀 Quick Start (3 Steps)
 
 ```bash
-# 步骤 1: 安装 Stwo-Cairo 工具链
+# Step 1: Install Stwo-Cairo toolchain
 ./install_stwo.sh
 
-# 步骤 2: 运行演示
+# Step 2: Run demo
 ./run_stwo_demo.sh
 
-# 步骤 3: 查看结果
+# Step 3: View results
 ls -lh stwo_proof_fib_*.json
 ```
 
-就这么简单！🎉
+It's that simple! 🎉
 
-## 📁 文件说明
+## 📁 File Descriptions
 
-### 脚本文件
-- **`install_stwo.sh`** - 自动安装 Stwo-Cairo 工具链
-- **`run_stwo_demo.sh`** - 自动化演示脚本，生成并验证多个证明
+### Script Files
+- **`install_stwo.sh`** - Automatically install Stwo-Cairo toolchain
+- **`run_stwo_demo.sh`** - Automated demo script, generates and verifies multiple proofs
 
-### 配置文件
-- **`Scarb.stwo.toml`** - Stwo-Cairo 兼容的 Scarb 配置
-  - 禁用 Gas tracking
-  - 更新依赖版本
+### Configuration Files
+- **`Scarb.stwo.toml`** - Stwo-Cairo compatible Scarb configuration
+  - Disable Gas tracking
+  - Update dependency versions
 
-### 源代码
-- **`src/lib.stwo.cairo`** - Stwo-Cairo 优化的 Cairo 代码
-  - 参数化的 main 函数
-  - 使用 u32 类型优化性能
-  - 纯迭代算法
+### Source Code
+- **`src/lib.stwo.cairo`** - Stwo-Cairo optimized Cairo code
+  - Parameterized main function
+  - Use u32 type for performance optimization
+  - Pure iterative algorithm
 
-## 🎓 使用场景
+## 🎓 Use Cases
 
-### ✅ Stwo-Cairo 适合：
-- ✅ 纯数学计算（Fibonacci、质数等）
-- ✅ 算法验证和性能测试
-- ✅ 学习 Circle STARKs 技术
-- ✅ 原型开发和概念验证
+### ✅ Stwo-Cairo is suitable for:
+- ✅ Pure mathematical computations (Fibonacci, primes, etc.)
+- ✅ Algorithm verification and performance testing
+- ✅ Learning Circle STARKs technology
+- ✅ Prototyping and Proof of Concept
 
-### ❌ Stwo-Cairo 不适合：
-- ❌ 需要 Syscalls 的应用
-- ❌ 需要 Gas tracking 的智能合约
-- ❌ 生产环境（当前处于 Beta）
-- ❌ 使用 SHA256/Keccak 等密码学哈希
+### ❌ Stwo-Cairo is NOT suitable for:
+- ❌ Applications requiring Syscalls
+- ❌ Smart contracts requiring Gas tracking
+- ❌ Production environments (currently in Beta)
+- ❌ Using cryptographic hashes like SHA256/Keccak
 
-## 📊 性能概览
+## 📊 Performance Overview
 
-| 指标 | 当前 (Stone) | 使用 Stwo | 提升 |
+| Metric | Current (Stone) | Using Stwo | Improvement |
 |------|-------------|----------|------|
-| **证明时间** | ~40s | ~15s | 🚀 62% |
-| **证明体积** | ~200KB | ~150KB | 📉 25% |
-| **验证时间** | ~2s | ~1s | ⚡ 50% |
-| **内存占用** | ~4GB | ~2GB | 💾 50% |
+| **Proving Time** | ~40s | ~15s | 🚀 62% |
+| **Proof Size** | ~200KB | ~150KB | 📉 25% |
+| **Verification Time** | ~2s | ~1s | ⚡ 50% |
+| **Memory Usage** | ~4GB | ~2GB | 💾 50% |
 
-## 🔧 系统要求
+## 🔧 System Requirements
 
-### 必需
-- **Scarb**: ≥ 2.10.0 (推荐 latest nightly)
-- **Rust**: 见 cairo-prove 的 rust-toolchain.toml
-- **操作系统**: macOS, Linux, WSL2
+### Required
+- **Scarb**: ≥ 2.10.0 (recommended latest nightly)
+- **Rust**: See cairo-prove's rust-toolchain.toml
+- **OS**: macOS, Linux, WSL2
 
-### 当前环境
-- Scarb: 2.8.5 (需要升级)
+### Current Environment
+- Scarb: 2.8.5 (needs upgrade)
 - Cairo: 2.8.5
 - Edition: 2024_07
 
-## 📖 详细工作流程
+## 📖 Detailed Workflow
 
-### 标准工作流
+### Standard Workflow
 
 ```bash
-# 1. 准备环境
+# 1. Prepare environment
 cp Scarb.stwo.toml Scarb.toml
 cp src/lib.stwo.cairo src/lib.cairo
 
-# 2. 构建项目
+# 2. Build project
 scarb build
 
-# 3. 生成证明
+# 3. Generate proof
 cairo-prove prove \
   target/dev/cairo_fibonacci.executable.json \
   ./proof.json \
   --arguments 10
 
-# 4. 验证证明
+# 4. Verify proof
 cairo-prove verify ./proof.json
 
-# 5. 恢复原始文件
+# 5. Restore original files
 git checkout Scarb.toml src/lib.cairo
 ```
 
-### 自动化工作流（推荐）
+### Automated Workflow (Recommended)
 
 ```bash
-# 一键完成所有步骤
+# Complete all steps with one click
 ./run_stwo_demo.sh
 ```
 
-## 🔍 核心技术差异
+## 🔍 Core Technical Differences
 
-### 传统 STARK (Stone Prover)
+### Traditional STARK (Stone Prover)
 ```
 Cairo → Sierra → CASM → Trace → FRI-STARK → Proof
                                     ↓
-                              使用 FFT (慢)
-                              大内存需求
+                              Uses FFT (Slow)
+                              High memory requirement
 ```
 
 ### Circle STARK (Stwo-Cairo)
 ```
 Cairo → Sierra → Executable → Trace → Circle-STARK → Proof
                                          ↓
-                                   无需 FFT (快)
-                                   更少内存
+                                   No FFT (Fast)
+                                   Less memory
 ```
 
-## 📝 代码修改示例
+## 📝 Code Modification Examples
 
-### 原始代码
+### Original Code
 ```cairo
 fn main() -> (felt252, felt252, felt252, felt252, felt252) {
     let n: felt252 = 10;
-    // ... 固定值计算
+    // ... Fixed value calculation
     (n, result1, result2, result3, result4)
 }
 ```
 
-**问题**：
-- ❌ 不接受参数
-- ❌ 返回类型复杂
+**Issues**:
+- ❌ Does not accept arguments
+- ❌ Complex return type
 
-### Stwo 优化版本
+### Stwo Optimized Version
 ```cairo
 fn main(n: u32) -> u32 {
     fib_iterative(n)
 }
 ```
 
-**改进**：
-- ✅ 接受参数（Stwo 要求）
-- ✅ 简单返回类型
-- ✅ 使用 u32（更快）
+**Improvements**:
+- ✅ Accepts arguments (Stwo requirement)
+- ✅ Simple return type
+- ✅ Uses u32 (faster)
 
-## 🎯 关键配置差异
+## 🎯 Key Configuration Differences
 
-### 必需修改：禁用 Gas
+### Required Modification: Disable Gas
 
 ```toml
-# 在 Scarb.toml 中添加
+# Add to Scarb.toml
 [cairo]
-enable-gas = false  # ← 这是关键！
+enable-gas = false  # ← Key!
 ```
 
-### 为什么？
-- Stwo-Cairo 不支持 Gas tracking
-- Gas tracking 在非 StarkNet 环境中不必要
-- 禁用后可以获得更好的性能
+### Why?
+- Stwo-Cairo does not support Gas tracking
+- Gas tracking is unnecessary in non-StarkNet environments
+- Disabling yields better performance
 
-## 🚨 常见陷阱
+## 🚨 Common Pitfalls
 
-### 1. Scarb 版本过旧
+### 1. Scarb Version Too Old
 ```bash
-# ❌ 错误
+# ❌ Wrong
 scarb --version  # 2.8.5
 
-# ✅ 正确
+# ✅ Correct
 asdf install scarb latest:nightly
 asdf local scarb latest:nightly
 scarb --version  # ≥ 2.10.0
 ```
 
-### 2. 忘记禁用 Gas
+### 2. Forgot to Disable Gas
 ```toml
-# ❌ 错误 - 没有禁用 gas
+# ❌ Wrong - Gas not disabled
 [package]
 name = "cairo_fibonacci"
 
-# ✅ 正确 - 添加 cairo 配置
+# ✅ Correct - Add cairo config
 [package]
 name = "cairo_fibonacci"
 
@@ -217,187 +217,186 @@ name = "cairo_fibonacci"
 enable-gas = false
 ```
 
-### 3. Main 函数不接受参数
+### 3. Main Function Not Accepting Arguments
 ```cairo
-// ❌ 错误
+// ❌ Wrong
 fn main() -> u32 { ... }
 
-// ✅ 正确
+// ✅ Correct
 fn main(n: u32) -> u32 { ... }
 ```
 
-## 📈 实际测试结果
+## 📈 Actual Test Results
 
-### 测试配置
-- **硬件**: Apple M1 Pro
-- **测试用例**: Fibonacci(10)
-- **测试次数**: 10 次取平均
+### Test Configuration
+- **Hardware**: Apple M1 Pro
+- **Test Case**: Fibonacci(10)
+- **Test Count**: Average of 10 runs
 
-### 结果对比
+### Results Comparison
 
-| 系统 | 证明时间 | 证明大小 | 验证时间 |
+| System | Proving Time | Proof Size | Verification Time |
 |------|---------|---------|---------|
 | Stone Prover | 42.3s ± 2.1s | 198KB | 2.1s |
 | **Stwo-Cairo** | **14.8s ± 0.7s** | **152KB** | **0.9s** |
 | StarkNet Katana | 9.5s ± 0.5s | 105KB | 0.8s |
 
-**结论**: Stwo-Cairo 是 Stone Prover 的显著改进！
+**Conclusion**: Stwo-Cairo is a significant improvement over Stone Prover!
 
-## 🎓 学习路径
+## 🎓 Learning Path
 
-### 初学者（0-2 小时）
-1. 阅读 `STWO_QUICK_START.md`
-2. 运行 `./install_stwo.sh`
-3. 运行 `./run_stwo_demo.sh`
-4. 查看生成的证明文件
+### Beginner (0-2 hours)
+1. Read `STWO_QUICK_START.md`
+2. Run `./install_stwo.sh`
+3. Run `./run_stwo_demo.sh`
+4. View generated proof files
 
-### 中级（2-4 小时）
-1. 阅读 `STWO_INTEGRATION_GUIDE.md`
-2. 手动修改代码和配置
-3. 自定义 main 函数
-4. 性能测试和对比
+### Intermediate (2-4 hours)
+1. Read `STWO_INTEGRATION_GUIDE.md`
+2. Manually modify code and config
+3. Customize main function
+4. Performance testing and comparison
 
-### 高级（4+ 小时）
-1. 阅读 `STWO_COMPARISON.md`
-2. 深入理解 Circle STARKs 原理
-3. 优化算法实现
-4. 集成到自己的项目
+### Advanced (4+ hours)
+1. Read `STWO_COMPARISON.md`
+2. Deeply understand Circle STARKs principles
+3. Optimize algorithm implementation
+4. Integrate into your own project
 
-## 🔗 相关资源
+## 🔗 Related Resources
 
-### 官方资源
+### Official Resources
 - [Stwo-Cairo GitHub](https://github.com/starkware-libs/stwo-cairo)
 - [Cairo Book](https://book.cairo-lang.org/)
-- [Circle STARKs 论文](https://eprint.iacr.org/2024/278)
+- [Circle STARKs Paper](https://eprint.iacr.org/2024/278)
 
-### 本项目资源
-- [STARK_PROOF_GUIDE.md](STARK_PROOF_GUIDE.md) - 其他证明系统对比
-- [PROJECT_INFO.md](PROJECT_INFO.md) - 项目背景
-- [README.md](README.md) - 主项目文档
+### Project Resources
+- [STARK_PROOF_GUIDE.md](STARK_PROOF_GUIDE.md) - Other proof systems comparison
+- [PROJECT_INFO.md](PROJECT_INFO.md) - Project background
+- [README.md](README.md) - Main project documentation
 
-## 🤝 贡献指南
+## 🤝 Contribution Guide
 
-发现问题或有改进建议？
+Found an issue or have a suggestion?
 
-1. 查看现有的 Issues
-2. 提交详细的 Bug 报告
-3. 提出改进建议
-4. 提交 Pull Request
+1. Check existing Issues
+2. Submit detailed Bug report
+3. Propose improvements
+4. Submit Pull Request
 
-## 📊 项目状态
+## 📊 Project Status
 
-| 组件 | 状态 | 说明 |
+| Component | Status | Description |
 |------|------|------|
-| **安装脚本** | ✅ 完成 | install_stwo.sh |
-| **演示脚本** | ✅ 完成 | run_stwo_demo.sh |
-| **文档** | ✅ 完成 | 3 个详细文档 |
-| **示例代码** | ✅ 完成 | lib.stwo.cairo |
-| **配置文件** | ✅ 完成 | Scarb.stwo.toml |
-| **测试** | 🟡 待执行 | 等待用户测试 |
+| **Install Script** | ✅ Completed | install_stwo.sh |
+| **Demo Script** | ✅ Completed | run_stwo_demo.sh |
+| **Docs** | ✅ Completed | 3 detailed docs |
+| **Example Code** | ✅ Completed | lib.stwo.cairo |
+| **Config File** | ✅ Completed | Scarb.stwo.toml |
+| **Tests** | 🟡 Pending | Awaiting user testing |
 
-## 🎯 下一步行动
+## 🎯 Next Steps
 
-### 推荐顺序
+### Recommended Order
 
-1. **5 分钟**: 阅读本文档（STWO_README.md）✅ 您在这里
-2. **10 分钟**: 阅读快速开始指南（STWO_QUICK_START.md）
-3. **15 分钟**: 运行安装脚本（./install_stwo.sh）
-4. **5 分钟**: 运行演示（./run_stwo_demo.sh）
-5. **30 分钟**: 深入阅读集成指南（STWO_INTEGRATION_GUIDE.md）
-6. **30 分钟**: 研究对比分析（STWO_COMPARISON.md）
+1. **5 mins**: Read this doc (STWO_README.md) ✅ You are here
+2. **10 mins**: Read Quick Start Guide (STWO_QUICK_START.md)
+3. **15 mins**: Run install script (./install_stwo.sh)
+4. **5 mins**: Run demo (./run_stwo_demo.sh)
+5. **30 mins**: Deep dive into Integration Guide (STWO_INTEGRATION_GUIDE.md)
+6. **30 mins**: Study Comparative Analysis (STWO_COMPARISON.md)
 
-**总时间投入**: ~1.5 小时
-**预期收获**: 完全掌握 Stwo-Cairo 集成
+**Total Time Investment**: ~1.5 hours
+**Expected Outcome**: Full mastery of Stwo-Cairo integration
 
-## 💡 快速决策
+## 💡 Quick Decision
 
-### 我应该使用 Stwo-Cairo 吗？
+### Should I use Stwo-Cairo?
 
-回答以下问题：
+Answer these questions:
 
-1. **您的项目是纯计算吗？**
-   - ✅ 是 → 继续
-   - ❌ 否 → 考虑其他方案
+1. **Is your project pure computation?**
+   - ✅ Yes → Continue
+   - ❌ No → Consider other options
 
-2. **您需要 Gas tracking 吗？**
-   - ❌ 不需要 → 继续
-   - ✅ 需要 → 使用 Katana
+2. **Do you need Gas tracking?**
+   - ❌ No → Continue
+   - ✅ Yes → Use Katana
 
-3. **您在生产环境使用吗？**
-   - ❌ 不是 → 继续
-   - ✅ 是 → 等待正式版或使用 Stone
+3. **Are you using it in production?**
+   - ❌ No → Continue
+   - ✅ Yes → Wait for stable release or use Stone
 
-4. **您想学习最新技术吗？**
-   - ✅ 是 → **强烈推荐使用 Stwo-Cairo！**
-   - ❌ 否 → 使用稳定方案
+4. **Do you want to learn the latest technology?**
+   - ✅ Yes → **Highly recommend Stwo-Cairo!**
+   - ❌ No → Use stable solution
 
-## 🆘 获取帮助
+## 🆘 Get Help
 
-### 遇到问题？
+### Encountering issues?
 
-1. **查看故障排除**
-   - `STWO_INTEGRATION_GUIDE.md` 的故障排除部分
-   - `STWO_QUICK_START.md` 的常见问题
+1. **Check Troubleshooting**
+   - Troubleshooting section in `STWO_INTEGRATION_GUIDE.md`
+   - FAQ in `STWO_QUICK_START.md`
 
-2. **检查日志**
+2. **Check Logs**
    ```bash
-   # 查看详细构建日志
+   # View detailed build logs
    scarb build --verbose
    
-   # 查看 cairo-prove 日志
+   # View cairo-prove logs
    cairo-prove prove ... 2>&1 | tee prove.log
    ```
 
-3. **验证环境**
+3. **Verify Environment**
    ```bash
-   # 检查版本
+   # Check versions
    scarb --version
    cairo-prove --version
    rustc --version
    
-   # 测试基础功能
+   # Test basic functionality
    cairo-prove --help
    ```
 
-4. **寻求社区帮助**
+4. **Seek Community Help**
    - [Stwo-Cairo Issues](https://github.com/starkware-libs/stwo-cairo/issues)
-   - [Cairo 社区](https://community.cairo-lang.org/)
+   - [Cairo Community](https://community.cairo-lang.org/)
 
-## 📅 更新日志
+## 📅 Changelog
 
 ### v1.0 (2025-11-16)
-- ✅ 初始版本发布
-- ✅ 完整文档套件
-- ✅ 自动化脚本
-- ✅ 示例代码和配置
+- ✅ Initial release
+- ✅ Complete documentation suite
+- ✅ Automated scripts
+- ✅ Example code and configuration
 
-### 计划更新
-- 🔜 添加更多示例（质数检测、矩阵运算）
-- 🔜 性能基准测试套件
-- 🔜 CI/CD 集成示例
-- 🔜 Docker 容器化
+### Planned Updates
+- 🔜 Add more examples (primality test, matrix operations)
+- 🔜 Performance benchmark suite
+- 🔜 CI/CD integration examples
+- 🔜 Docker containerization
 
-## 📄 许可
+## 📄 License
 
-本项目采用 MIT 许可证。详见 LICENSE 文件。
+This project is licensed under the MIT License. See LICENSE file for details.
 
-## 🙏 致谢
+## 🙏 Acknowledgments
 
-- **StarkWare** - 开发 Stwo-Cairo
-- **Cairo 社区** - 持续支持和反馈
-- **所有贡献者** - 改进本项目
+- **StarkWare** - Developing Stwo-Cairo
+- **Cairo Community** - Continuous support and feedback
+- **All Contributors** - Improving this project
 
 ---
 
-**准备好开始了吗？** 🚀
+**Ready to start?** 🚀
 
 ```bash
-# 让我们开始吧！
+# Let's get started!
 ./install_stwo.sh
 ./run_stwo_demo.sh
 ```
 
-**祝您使用愉快！** 🎉
+**Happy coding!** 🎉
 
-如有问题或建议，欢迎提 Issue 或 PR！
-
+Issues or suggestions? Feel free to open an Issue or PR!

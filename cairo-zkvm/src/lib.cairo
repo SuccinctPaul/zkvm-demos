@@ -1,8 +1,8 @@
 // Cairo 2.x Multi-Program Dispatcher
 // This library provides various benchmark functions and a dispatcher
 
-use traits::TryInto;
-use option::OptionTrait;
+use core::traits::TryInto;
+use core::option::OptionTrait;
 
 /// Compute the nth Fibonacci number iteratively
 pub fn fib_iterative(n: felt252) -> felt252 {
