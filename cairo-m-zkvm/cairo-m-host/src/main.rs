@@ -1,12 +1,11 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::fs;
-use std::process::Command;
 use std::time::Instant;
 use common::{load_program_input, execute_program};
 
 const PROGRAM_SOURCE: &str = "../programs/fibonacci.cm";
 const COMPILED_OUTPUT: &str = "../compiled/fibonacci.json";
-const ENTRYPOINT: &str = "fibonacci";
+const CAIRO_M_VERSION: &str = "v0.1.0-dev";
 
 fn main() -> Result<()> {
     // Initialize logger
@@ -18,6 +17,15 @@ fn main() -> Result<()> {
 
     // Load configuration
     let input = load_program_input();
+    
+    // Output BENCHMARK format logs for parsing
+    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: zkvm_name=cairo_m");
+    println!("BENCHMARK: zkvm_version={}", CAIRO_M_VERSION);
+    
+    // Get proof mode from environment (default: core)
+    let proof_mode = std::env::var("CAIRO_M_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
 
     println!("📊 Configuration:");
     println!("   Program: {} (ID={})", input.program.as_str(), input.program.id());
@@ -27,6 +35,7 @@ fn main() -> Result<()> {
     // Calculate expected result for verification
     let expected = execute_program(input.program.id(), input.n);
     println!("   Expected result: {}", expected);
+    println!("BENCHMARK: output_result={}", expected);
     println!();
 
     // Step 1: Compile Cairo-M program
@@ -35,6 +44,7 @@ fn main() -> Result<()> {
     compile_program()?;
     let compile_duration = compile_start.elapsed();
     println!("   ✅ Compilation completed in {:.2}s", compile_duration.as_secs_f64());
+    println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
     println!("   Output: {}", COMPILED_OUTPUT);
     println!();
 
@@ -44,12 +54,15 @@ fn main() -> Result<()> {
     let (result, cycles) = execute_program_in_zkvm(input.program.id(), input.n)?;
     let exec_duration = exec_start.elapsed();
     println!("   ✅ Execution completed in {:.2}s", exec_duration.as_secs_f64());
+    println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
+    println!("BENCHMARK: total_cycles={}", cycles);
     println!("   Result: {}", result);
     println!("   Cycles: {}", cycles);
     println!();
 
     // Verify result matches expected
     if result != expected {
+        println!("BENCHMARK: success_status=failed");
         anyhow::bail!(
             "Result mismatch! Expected: {}, Got: {}",
             expected,
@@ -62,7 +75,18 @@ fn main() -> Result<()> {
     let prove_start = Instant::now();
     let proof_size = generate_proof(input.n)?;
     let prove_duration = prove_start.elapsed();
+    
+    // Calculate proving speed
+    let proving_khz = if prove_duration.as_secs_f64() > 0.0 {
+        (cycles as f64 / prove_duration.as_secs_f64()) / 1000.0
+    } else {
+        0.0
+    };
+    
     println!("   ✅ Proof generated in {:.2}s", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_size_bytes={}", proof_size);
+    println!("BENCHMARK: vm_prove_khz={:.3}", proving_khz);
     println!("   Proof size: {:.1} KB", proof_size as f64 / 1024.0);
     println!("   Prover backend: Stwo");
     println!("   Field: M31 (Mersenne 31)");
@@ -74,8 +98,15 @@ fn main() -> Result<()> {
     verify_proof()?;
     let verify_duration = verify_start.elapsed();
     println!("   ✅ Proof verified successfully in {:.2}s", verify_duration.as_secs_f64());
+    println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+    println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
+    println!("BENCHMARK: success_status=success");
     println!();
 
+    // Calculate total time
+    let total_time = compile_duration + exec_duration + prove_duration + verify_duration;
+    println!("BENCHMARK: total_time_s={:.6}", total_time.as_secs_f64());
+    
     println!("✅ Cairo-M zkVM Demo completed successfully!");
 
     Ok(())

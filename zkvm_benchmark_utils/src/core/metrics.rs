@@ -146,7 +146,7 @@ impl std::str::FromStr for ZkVmName {
         match s.to_lowercase().as_str() {
             "airbender" => Ok(ZkVmName::Airbender),
             "cairo" => Ok(ZkVmName::Cairo),
-            "cairo-m" | "cairom" => Ok(ZkVmName::CairoM),
+            "cairo-m" | "cairom" | "cairo_m" => Ok(ZkVmName::CairoM),
             "ceno" => Ok(ZkVmName::Ceno),
             "jolt" => Ok(ZkVmName::Jolt),
             "lean" => Ok(ZkVmName::Lean),

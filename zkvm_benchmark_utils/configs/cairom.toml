@@ -1,0 +1,129 @@
+# ================================================================
+# Cairo-M zkVM Benchmark Configuration
+# ================================================================
+# Cairo-M is a Cairo implementation optimized for M31 field with Stwo prover
+# Note: This is a reference implementation
+
+name = "cairo_m"
+version = "v0.1.0-dev"
+enabled = true
+default_mode = "core"
+
+# Test scales (program input N values)
+test_scales = [10, 20]
+
+# Proof modes
+# Cairo-M uses STARK proofs with Stwo backend
+prove_modes = ["core"]
+
+# Working directory (cairo-m-zkvm root)
+working_dir = "../cairo-m-zkvm"
+
+# Build and run commands
+build_command = "cargo build --release -p cairo-m-host"
+run_command = "./target/release/cairo-m-host"
+
+# Timeout settings (seconds)
+timeout_seconds = 600
+
+# Repeat count for averaging
+repeat_count = 1
+
+# Program configuration
+[[programs]]
+name = "fibonacci"
+scales = [10, 20]
+
+# ----------------------------------------------------------------
+# Environment Variables
+# ----------------------------------------------------------------
+[env_vars]
+RUST_LOG = "info"
+# Note: CAIRO_M_PROOF_MODE is injected by the runner
+
+# ----------------------------------------------------------------
+# Parsed Metrics (Regular Expressions)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# BENCHMARK Format Logs (Primary Source)
+# ================================================================
+raw_program_name = 'BENCHMARK: program_name=(\w+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=([\w\-]+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
+
+# ================================================================
+# Compilation Phase
+# ================================================================
+raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
+
+# ================================================================
+# Execution Phase
+# ================================================================
+raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
+
+# ================================================================
+# Proving Phase
+# ================================================================
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+raw_vm_prove_khz = 'BENCHMARK: vm_prove_khz=([\d.]+)'
+
+# ================================================================
+# Verification Phase
+# ================================================================
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Total Time
+# ================================================================
+raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
+
+# ================================================================
+# Legacy Format (Fallback Parsing)
+# ================================================================
+legacy_compile_time = 'Compilation completed in ([\d.]+)s'
+legacy_execution_time = 'Execution completed in ([\d.]+)s'
+legacy_proof_time = 'Proof generated in ([\d.]+)s'
+legacy_verification_time = 'verified successfully in ([\d.]+)s'
+legacy_cycles = 'Cycles: (\d+)'
+legacy_proof_size = 'Proof size: ([\d.]+) KB'
+
+# ----------------------------------------------------------------
+# Metric Mapping (Raw -> Standard Keys)
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Compilation Phase
+# ====================
+"compilation_time_s" = "raw_compile_time_s"
+
+# ====================
+# 2. Execution Phase
+# ====================
+"execution_time_s" = "raw_execution_time_s"
+"total_cycles" = "raw_total_cycles"
+
+# ====================
+# 3. Proving Phase
+# ====================
+"vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+"vm_prove_khz" = "raw_vm_prove_khz"
+
+# ====================
+# 4. Verification Phase
+# ====================
+"verification_time_s" = "raw_verification_time_s"
+
+# ====================
+# 5. Status & Summary
+# ====================
+"success_status" = "raw_success_status"
+"total_time_s" = "raw_total_time_s"
+
