@@ -16,7 +16,6 @@ resolver = "2"
 [workspace.lints]
 
 [workspace.dependencies]
-fib = { path = "../fib" }
 common = { path = "../common" }
 
 #misc

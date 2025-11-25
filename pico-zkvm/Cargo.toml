@@ -3,7 +3,6 @@ members = ["pico-guest", "pico-host"]
 resolver = "2"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
 common = { path = "../common" }
 
 [profile.dev]

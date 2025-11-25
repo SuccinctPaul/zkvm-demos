@@ -11,7 +11,6 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
 common = { path = "../common" }
 
 # Cairo-M dependencies (these would be from the cairo-m repository)

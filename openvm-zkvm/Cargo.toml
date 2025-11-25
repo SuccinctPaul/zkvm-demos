@@ -3,7 +3,6 @@ members = ["openvm-guest", "openvm-host"]
 resolver = "2"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
 common = { path = "../common" }
 
 

@@ -8,8 +8,6 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
-
 # ZisK dependencies
 ziskos = { git = "https://github.com/0xPolygonHermez/zisk.git", tag = "v0.10.0" }
 

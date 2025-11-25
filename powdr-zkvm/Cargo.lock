@@ -156,10 +156,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fib"
-version = "0.1.0"
-
-[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -259,7 +255,6 @@ dependencies = [
  "common",
  "dotenv",
  "env_logger",
- "fib",
  "log",
  "serde",
  "serde_json",
