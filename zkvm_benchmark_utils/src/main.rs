@@ -124,7 +124,7 @@ async fn run_benchmarks(
                     .find(|p| p.name == *prog_name);
                 
                 if let Some(mut prog_config) = existing_prog {
-                    // Apply scale filter if specified
+        // Apply scale filter if specified
                     if let Some(ref scales) = scale_values {
                         prog_config.scales = scales.clone();
                     }

@@ -241,24 +241,30 @@ impl BenchmarkReporter {
             "program_name".to_string(),
             "zkvm_Version".to_string(),
             // Execution Phase
-            "executtotal total cycles".to_string(),
-            "program total_instruction_count".to_string(),
-            "total syscall cycles".to_string(),
-            "touched memory addresses".to_string(),
+            "execution_time_s".to_string(),
+            "total_cycles".to_string(),
+            "instruction_count".to_string(),
+            "total_syscall_cycles".to_string(),
+            "touched_memory_addresses".to_string(),
             // VM Prove Phase
-            "vm_circuit_chunk_count".to_string(),
-            "vm_circuit prove time(s)".to_string(),
-            "vm_circuit khz".to_string(),
-            "vm_circuit proof size(Bytes)".to_string(),
+            "vm_chunk_count".to_string(),
+            "vm_chunk_size_rows".to_string(),
+            "vm_prove_time_s".to_string(),
+            "vm_prove_khz".to_string(),
+            "vm_proof_size_bytes".to_string(),
             // Recursive Prove Phase
-            "recursive_number".to_string(),
+            "recursion_layers".to_string(),
             // Aggressive Prove Phase
-            "aggresive_prove time(s)".to_string(),
-            "aggresive_prove proof size(Bytes)".to_string(),
-            // Groth16 Phase
-            "groth16 constraints".to_string(),
-            "groth16 prove time(s)".to_string(),
-            "groth16 proof size(Bytes)".to_string(),
+            "aggressive_prove_time_s".to_string(),
+            "aggressive_proof_size_bytes".to_string(),
+            // Groth16/SNARK Phase
+            "snark_constraints".to_string(),
+            "snark_prove_time_s".to_string(),
+            "snark_proof_size_bytes".to_string(),
+            // Verification Phase
+            "verification_time_s".to_string(),
+            // Summary
+            "total_time_s".to_string(),
             // Resources & Status
             "peak_memory_MB".to_string(),
             "avg_cpu_percent".to_string(),
@@ -275,7 +281,7 @@ impl BenchmarkReporter {
                 .mode
                 .as_ref()
                 .map(|m| m.to_string())
-                .unwrap_or_else(|| ProofMode::Core.to_string()),  // Default to Core, not Groth16
+                .unwrap_or_else(|| ProofMode::Core.to_string()),
             metrics
                 .metadata
                 .scale
@@ -288,6 +294,11 @@ impl BenchmarkReporter {
                 .clone()
                 .unwrap_or_else(|| "N/A".to_string()),
             // Execution Phase
+            metrics
+                .execution
+                .duration_s
+                .map(|v| format!("{:.6}", v))
+                .unwrap_or_else(|| "N/A".to_string()),
             metrics
                 .execution
                 .total_cycles
@@ -312,6 +323,11 @@ impl BenchmarkReporter {
             metrics
                 .vm_circuit
                 .chunk_count
+                .map(|v| v.to_string())
+                .unwrap_or_else(|| "N/A".to_string()),
+            metrics
+                .vm_circuit
+                .chunk_size_rows
                 .map(|v| v.to_string())
                 .unwrap_or_else(|| "N/A".to_string()),
             metrics
@@ -346,7 +362,7 @@ impl BenchmarkReporter {
                 .proof_size_bytes
                 .map(|b| b.to_string())
                 .unwrap_or_else(|| "N/A".to_string()),
-            // Groth16 Phase
+            // SNARK/Groth16 Phase
             metrics
                 .snark
                 .constraint_count
@@ -362,6 +378,14 @@ impl BenchmarkReporter {
                 .proof_size_bytes
                 .map(|v| v.to_string())
                 .unwrap_or_else(|| "N/A".to_string()),
+            // Verification Phase
+            metrics
+                .verification
+                .duration_s
+                .map(|v| format!("{:.6}", v))
+                .unwrap_or_else(|| "N/A".to_string()),
+            // Summary
+            format!("{:.3}", metrics.summary.total_time_s),
             // Resources & Status
             metrics
                 .resources

@@ -53,7 +53,7 @@ fn main() {
     let (view, proof) = prover
         .prove_with_input::<(), u64>(&(), &input_packed)
         .expect("failed to prove program");
-    
+        
     let prove_duration = prove_start.elapsed();
     let proof_size = proof.size_estimate();
     println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
