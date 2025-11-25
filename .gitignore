@@ -28,3 +28,5 @@ debug
 .data
 **/*.rule
 **/*.pb
+
+**/zisk-provingkey-0.10.0.tar.gz
