@@ -35,17 +35,16 @@ pub mod host {
     }
 
     /// Load input value from environment variable
+    /// Checks: INPUT_N, PROGRAM_N, FIBONACCI_N (in order of priority)
     pub fn load_input_n() -> u32 {
         dotenv().ok();
         
         env::var("INPUT_N")
-            .or_else(|_| env::var("FIBONACCI_N")) // Backward compatibility
+            .or_else(|_| env::var("PROGRAM_N"))      // Benchmark utils compatibility
+            .or_else(|_| env::var("FIBONACCI_N"))    // Backward compatibility
             .ok()
             .and_then(|s| s.parse::<u32>().ok())
-            .unwrap_or_else(|| {
-                eprintln!("ℹ️  INPUT_N not set, using default value: {}", DEFAULT_INPUT);
-                DEFAULT_INPUT
-            })
+            .unwrap_or(DEFAULT_INPUT)
     }
 
     /// Load program input (program + n value)

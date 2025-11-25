@@ -10,6 +10,8 @@ use std::time::Instant;
 use anyhow::Result;
 use common::{load_program_input, execute_program};
 
+const POWDR_VERSION: &str = "v0.1.0-dev";
+
 fn main() -> Result<()> {
     // Initialize environment
     dotenv::dotenv().ok();
@@ -21,6 +23,16 @@ fn main() -> Result<()> {
     
     // Load program input from environment
     let input = load_program_input();
+    
+    // Output BENCHMARK format logs for parsing
+    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: zkvm_name=powdr");
+    println!("BENCHMARK: zkvm_version={}", POWDR_VERSION);
+    
+    // Get proof mode from environment (default: core)
+    let proof_mode = std::env::var("POWDR_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
+    
     println!("📊 Configuration:");
     println!("   Program: {} (ID={})", input.program.as_str(), input.program.id());
     println!("   Input: n = {}", input.n);
@@ -41,6 +53,7 @@ fn main() -> Result<()> {
     
     let compile_duration = compile_start.elapsed();
     println!("   ✅ Compilation completed in {:.2}s", compile_duration.as_secs_f64());
+    println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
     println!("   Circuit generated\n");
     
     // Step 2: Setup proving system (simulated)
@@ -51,6 +64,7 @@ fn main() -> Result<()> {
     
     let setup_duration = setup_start.elapsed();
     println!("   ✅ Setup completed in {:.2}s", setup_duration.as_secs_f64());
+    println!("BENCHMARK: setup_time_s={:.6}", setup_duration.as_secs_f64());
     println!("   Proving keys generated\n");
     
     // Step 3: Execute program
@@ -62,6 +76,8 @@ fn main() -> Result<()> {
     
     let exec_duration = exec_start.elapsed();
     println!("   ✅ Execution completed in {:.2}s", exec_duration.as_secs_f64());
+    println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
+    println!("BENCHMARK: output_result={}", result);
     println!("   Result: {}\n", result);
     
     // Step 4: Generate proof (simulated)
@@ -72,6 +88,10 @@ fn main() -> Result<()> {
     
     let prove_duration = prove_start.elapsed();
     println!("   ✅ Proof generated in {:.2}s", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_size_bytes={}", proof_data.size);
+    println!("BENCHMARK: backend={}", proof_data.backend);
+    println!("BENCHMARK: security_bits={}", proof_data.security_bits);
     println!("   📦 Proof size: {} bytes", proof_data.size);
     println!("   🎯 Backend: {}", proof_data.backend);
     println!("   🔐 Security level: {} bits\n", proof_data.security_bits);
@@ -87,14 +107,19 @@ fn main() -> Result<()> {
     if verification_result {
         println!("   ✅ Proof verified successfully!");
         println!("   ⚡ Verification time: {:.3}s", verify_duration.as_secs_f64());
+        println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+        println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
+        println!("BENCHMARK: success_status=success");
         println!("   ✓ Public inputs match");
         println!("   ✓ Proof is valid\n");
     } else {
         println!("   ❌ Proof verification failed!\n");
+        println!("BENCHMARK: success_status=failed");
         return Err(anyhow::anyhow!("Proof verification failed"));
     }
     
     // Print summary
+    let total_time = compile_duration + setup_duration + exec_duration + prove_duration + verify_duration;
     println!("========================================");
     println!("  📈 Performance Summary");
     println!("========================================");
@@ -103,8 +128,8 @@ fn main() -> Result<()> {
     println!("Execution time:   {:.2}s", exec_duration.as_secs_f64());
     println!("Prove time:       {:.2}s", prove_duration.as_secs_f64());
     println!("Verify time:      {:.2}s", verify_duration.as_secs_f64());
-    println!("Total time:       {:.2}s", 
-        (compile_duration + setup_duration + exec_duration + prove_duration + verify_duration).as_secs_f64());
+    println!("Total time:       {:.2}s", total_time.as_secs_f64());
+    println!("BENCHMARK: total_time_s={:.6}", total_time.as_secs_f64());
     println!("========================================");
     
     println!("\n✅ Powdr zkVM Demo completed successfully!");
