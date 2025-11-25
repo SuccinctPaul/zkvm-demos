@@ -43,50 +43,50 @@ scarb cairo-run --available-gas=200000000 --print-full-memory > trace.txt
 **Expected Output**: `[10, 55, 55, 55, 89]` ✓  
 **Sierra JSON**: `target/dev/cairo_fibonacci.sierra.json` (ready for STARK prover)
 
-### 🚀 生成实际的 STARK Proof
+### 🚀 Generate Actual STARK Proof
 
-**推荐方法：使用 StarkNet + Katana**
+**Recommended Method: Use StarkNet + Katana**
 ```bash
-# 安装 Starknet Foundry（包含 Katana 本地节点）
+# Install Starknet Foundry (includes Katana local node)
 curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 snfoundryup
 
-# 启动本地节点
+# Start local node
 katana &
 
-# 声明合约并生成 proof
+# Declare contract and generate proof
 starkli declare target/dev/cairo_fibonacci.contract_class.json --rpc http://localhost:5050
 ```
 
-📖 **详细指南**：
-- `STARK_PROOF_GUIDE.md` - 所有proof生成方法对比
-- `PROOF_GENERATION_SUMMARY.md` - 快速总结和推荐
+📖 **Detailed Guide**:
+- `STARK_PROOF_GUIDE.md` - Comparison of all proof generation methods
+- `PROOF_GENERATION_SUMMARY.md` - Quick summary and recommendations
 
-### 🚀 NEW: Stwo-Cairo 超高速证明器
+### 🚀 NEW: Stwo-Cairo Ultra-Fast Prover
 
-**[Stwo-Cairo](https://github.com/starkware-libs/stwo-cairo)** 是 StarkWare 最新的下一代证明器，基于 Circle STARKs 技术。
+**[Stwo-Cairo](https://github.com/starkware-libs/stwo-cairo)** is StarkWare's latest next-generation prover, based on Circle STARKs technology.
 
-**性能提升**：
-- ⚡ 证明时间快 **60%** (15s vs 40s)
-- 📉 证明体积小 **25%** (150KB vs 200KB)
-- 🚀 验证时间快 **50%** (1s vs 2s)
+**Performance Improvements**:
+- ⚡ Proving time **60%** faster (15s vs 40s)
+- 📉 Proof size **25%** smaller (150KB vs 200KB)
+- 🚀 Verification time **50%** faster (1s vs 2s)
 
-**快速开始**：
+**Quick Start**:
 ```bash
-# 1. 安装 Stwo-Cairo 工具链
+# 1. Install Stwo-Cairo toolchain
 ./install_stwo.sh
 
-# 2. 运行演示（自动生成和验证证明）
+# 2. Run demo (automatically generates and verifies proof)
 ./run_stwo_demo.sh
 ```
 
-**完整文档**：
-- **`STWO_README.md`** - 📖 总览和文档索引
-- **`STWO_QUICK_START.md`** - ⚡ 5分钟快速上手
-- **`STWO_INTEGRATION_GUIDE.md`** - 🔧 详细集成步骤
-- **`STWO_COMPARISON.md`** - 📊 性能对比分析
+**Full Documentation**:
+- **`STWO_README.md`** - 📖 Overview and documentation index
+- **`STWO_QUICK_START.md`** - ⚡ 5-minute quick start
+- **`STWO_INTEGRATION_GUIDE.md`** - 🔧 Detailed integration steps
+- **`STWO_COMPARISON.md`** - 📊 Performance comparison analysis
 
-**适用场景**：✅ 完美适合本项目（纯计算任务）
+**Applicable Scenarios**: ✅ Perfectly suitable for this project (pure computation tasks)
 
 ---
 

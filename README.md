@@ -27,7 +27,7 @@ cd docker/scripts
 - ✅ Consistent CI/CD integration
 - ✅ Simple cleanup
 
-📖 **Full Guide:** [docs/ISOLATION-DOCKER.md](docs/ISOLATION-DOCKER.md) | [中文版](docs/ISOLATION-DOCKER.zh-CN.md)
+📖 **Full Guide:** [docs/ISOLATION-DOCKER.md](docs/ISOLATION-DOCKER.md)
 
 ### 🏠 Local Environment Managers (Advanced Users)
 
@@ -50,7 +50,7 @@ source ~/zkvm-workspaces/sp1-workspace/activate.sh
 - ✅ Full control over environment
 
 📖 **Full Guide:
-** [docs/ISOLATION-LOCAL-ENV.md](docs/ISOLATION-LOCAL-ENV.md) | [中文版](docs/ISOLATION-LOCAL-ENV.zh-CN.md)
+** [docs/ISOLATION-LOCAL-ENV.md](docs/ISOLATION-LOCAL-ENV.md)
 
 ### 📊 Which Approach Should You Use?
 
@@ -63,14 +63,14 @@ source ~/zkvm-workspaces/sp1-workspace/activate.sh
 | Need hardware access (GPU) | 🏠 Local             |
 
 📖 **Detailed Comparison:
-** [docs/ISOLATION-COMPARISON.md](docs/ISOLATION-COMPARISON.md) | [中文版](docs/ISOLATION-COMPARISON.zh-CN.md)
+** [docs/ISOLATION-COMPARISON.md](docs/ISOLATION-COMPARISON.md)
 
 ### 🔍 Understanding the Conflicts
 
 Learn about specific conflicts and why isolation is necessary:
 
 📖 **Conflict Analysis:
-** [docs/TOOLCHAIN-CONFLICTS.md](docker/docs/TOOLCHAIN-CONFLICTS.mdICTS.md) | [中文版](docs/TOOLCHAIN-CONFLICTS.zh-CN.md)
+** [docs/TOOLCHAIN-CONFLICTS.md](docker/docs/TOOLCHAIN-CONFLICTS.mdICTS.md)
 
 ---
 

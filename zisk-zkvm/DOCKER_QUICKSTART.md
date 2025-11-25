@@ -1,54 +1,54 @@
-# ZisK Docker 快速开始
+# ZisK Docker Quick Start
 
-在 macOS 上使用 Docker 生成 ZisK proof 的快速指南。
+Quick guide to generating ZisK proofs on macOS using Docker.
 
 ---
 
-## ⚡ 一键开始
+## ⚡ One-Click Start
 
 ```bash
-# 1. 构建基础镜像（首次，5-10 分钟）
+# 1. Build base image (first time, 5-10 mins)
 cd docker/scripts && ./build-base.sh && cd ..
 
-# 2. 构建 ZisK 镜像（首次，10-15 分钟）
+# 2. Build ZisK image (first time, 10-15 mins)
 docker compose build zisk-zkvm
 
-# 3. 测试运行（1-2 分钟）
+# 3. Test run (1-2 mins)
 docker compose --profile zisk up zisk-zkvm
 
-# 4. 生成 proof（首次 5-10 分钟含 ROM setup，后续 1-2 分钟）
+# 4. Generate proof (first time 5-10 mins incl. ROM setup, then 1-2 mins)
 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 ```
 
 ---
 
-## 🎯 常用命令
+## 🎯 Common Commands
 
 ```bash
 cd docker
 
-# 测试（快速验证）
+# Test (Quick Verification)
 docker compose --profile zisk up zisk-zkvm
 
-# 生成 proof
+# Generate proof
 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 
-# 自定义输入
+# Custom Input
 FIBONACCI_N=20 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 
-# 交互式 shell
+# Interactive shell
 docker compose run --rm zisk-zkvm bash
 ```
 
 ---
 
-## 📋 在容器内的命令
+## 📋 Commands Inside Container
 
 ```bash
-# 进入容器
+# Enter container
 docker compose run --rm zisk-zkvm bash
 
-# 执行命令
+# Execute commands
 cd zisk-guest
 cargo-zisk build --release
 cargo-zisk run --release -i ../build/input.bin
@@ -60,9 +60,9 @@ cargo-zisk verify -p ../proof/vadcop_final_proof.bin
 
 ---
 
-## ✅ 预期输出
+## ✅ Expected Output
 
-### 测试模式
+### Test Mode
 ```
 ZisK ZKVM - Fibonacci Demo
 Mode: test
@@ -78,7 +78,7 @@ Fibonacci(10) = 89
 00000059
 ```
 
-### Proof 模式
+### Proof Mode
 ```
 === Generating proof ===
 [INFO] Generating proof...
@@ -90,39 +90,38 @@ Fibonacci(10) = 89
 
 ---
 
-## ⏱️ 时间预期（macOS Apple Silicon）
+## ⏱️ Expected Time (macOS Apple Silicon)
 
-| 操作 | 首次 | 后续 |
+| Operation | First Time | Subsequent |
 |-----|------|------|
-| 基础镜像构建 | 5-10 分钟 | - |
-| ZisK 镜像构建 | 10-15 分钟 | - |
-| 测试运行 | 1-2 分钟 | 30-60 秒 |
-| ROM setup | 5-10 分钟 | （缓存，跳过）|
-| Proof 生成 | 1-2 分钟 | 1-2 分钟 |
+| Base Image Build | 5-10 mins | - |
+| ZisK Image Build | 10-15 mins | - |
+| Test Run | 1-2 mins | 30-60 secs |
+| ROM setup | 5-10 mins | (Cached, skipped)|
+| Proof Generation | 1-2 mins | 1-2 mins |
 
 ---
 
-## 🔍 常见问题
+## 🔍 FAQ
 
-**Q: 为什么需要 Docker？**  
-A: ZisK 不支持在 macOS 上生成 proof，需要 Linux x86_64 环境。
+**Q: Why is Docker needed?**  
+A: ZisK does not support proof generation on macOS, requiring a Linux x86_64 environment.
 
-**Q: 为什么第一次这么慢？**  
-A: 需要下载镜像、安装依赖、ROM setup。这些都会缓存，后续会快很多。
+**Q: Why is it so slow the first time?**  
+A: Needs to download images, install dependencies, ROM setup. These are cached, subsequent runs are much faster.
 
-**Q: 修改代码后需要重建镜像吗？**  
-A: 不需要！代码是挂载的，直接运行即可。
+**Q: Do I need to rebuild the image after modifying code?**  
+A: No! Code is mounted, just run it.
 
-**Q: proof 文件在哪里？**  
-A: 在 `zisk-zkvm/proof/` 目录，会自动同步到 host。
-
----
-
-## 📚 详细文档
-
-查看 `DOCKER_GUIDE.md` 获取完整的使用说明和故障排除。
+**Q: Where is the proof file?**  
+A: In the `zisk-zkvm/proof/` directory, automatically synced to host.
 
 ---
 
-**快速开始完成！** 🎉
+## 📚 Detailed Documentation
 
+See `DOCKER_GUIDE.md` for full usage instructions and troubleshooting.
+
+---
+
+**Quick Start Complete!** 🎉

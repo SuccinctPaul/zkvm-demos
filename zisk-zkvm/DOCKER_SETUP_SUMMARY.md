@@ -1,200 +1,200 @@
-# ZisK Docker 配置完成总结
+# ZisK Docker Configuration Summary
 
-本文档总结了为 ZisK zkVM 创建的 Docker 配置，使其能够在 macOS 上生成 proof。
+This document summarizes the Docker configuration created for ZisK zkVM, enabling proof generation on macOS.
 
 ---
 
-## ✅ 完成的工作
+## ✅ Work Completed
 
-### 1. 创建 Dockerfile
+### 1. Created Dockerfile
 
-**文件**: `docker/dockerfiles/Dockerfile.zisk`
+**File**: `docker/dockerfiles/Dockerfile.zisk`
 
-**功能**:
-- 基于 `zkvm-base:latest` 基础镜像
-- 安装 ZisK 所需的所有系统依赖
-- 自动安装 ZisK 工具链（cargo-zisk, ziskemu）
-- 配置正确的环境变量
-- 验证安装成功
+**Function**:
+- Based on `zkvm-base:latest` base image
+- Installs all system dependencies required by ZisK
+- Automatically installs ZisK toolchain (cargo-zisk, ziskemu)
+- Configures correct environment variables
+- Verifies installation success
 
-**特点**:
-- 支持 Linux x86_64 平台（必需）
-- 在 macOS 上自动使用仿真
-- 跳过 GPU 构建以加快镜像构建速度
-- 完整的依赖列表确保 proof 生成成功
+**Features**:
+- Supports Linux x86_64 platform (Required)
+- Automatically uses emulation on macOS
+- Skips GPU build to speed up image build
+- Complete dependency list ensures successful proof generation
 
-### 2. 更新 docker-compose.yml
+### 2. Updated docker-compose.yml
 
-**添加**: `zisk-zkvm` 服务配置
+**Added**: `zisk-zkvm` service configuration
 
-**功能**:
-- 自动化的构建和运行流程
-- 支持两种模式：
-  - `test`: 构建 + 模拟器执行（快速验证）
-  - `prove`: 完整的 proof 生成流程
-- 环境变量配置：
-  - `ZKVM_MODE`: 控制运行模式
-  - `FIBONACCI_N`: 自定义输入值
-- 数据卷持久化：
-  - `zisk-cargo-cache`: Rust 依赖缓存
-  - `zisk-target-cache`: 编译产物缓存
-  - `zisk-zisk-cache`: ZisK 工具链和 ROM setup 缓存
+**Function**:
+- Automated build and run workflow
+- Supports two modes:
+  - `test`: Build + Simulator execution (Quick verification)
+  - `prove`: Complete proof generation workflow
+- Environment variable configuration:
+  - `ZKVM_MODE`: Controls run mode
+  - `FIBONACCI_N`: Custom input value
+- Data volume persistence:
+  - `zisk-cargo-cache`: Rust dependency cache
+  - `zisk-target-cache`: Build artifact cache
+  - `zisk-zisk-cache`: ZisK toolchain and ROM setup cache
 
-**智能命令流程**:
+**Smart Command Flow**:
 ```bash
 if ZKVM_MODE=prove:
-  1. 构建 guest 程序
-  2. 模拟器测试
-  3. ROM setup（如需要）
-  4. 生成 proof
-  5. 验证 proof
+  1. Build guest program
+  2. Simulator test
+  3. ROM setup (if needed)
+  4. Generate proof
+  5. Verify proof
 else (test mode):
-  1. 构建 guest 程序
-  2. 模拟器测试
+  1. Build guest program
+  2. Simulator test
 ```
 
-### 3. 更新 Docker README
+### 3. Updated Docker README
 
-**文件**: `docker/README.md`
+**File**: `docker/README.md`
 
-**添加**:
-- ZisK 的使用示例
-- 环境变量说明
-- 故障排除指南
-- 性能预期说明
+**Added**:
+- ZisK usage examples
+- Environment variable explanation
+- Troubleshooting guide
+- Performance expectations
 
-### 4. 创建 ZisK 专属文档
+### 4. Created ZisK Specific Documentation
 
-#### DOCKER_GUIDE.md（详细指南）
-- 完整的安装和使用说明
-- 所有命令的详细解释
-- 性能对比表格
-- 高级用法和调试技巧
-- 常见问题解答
+#### DOCKER_GUIDE.md (Detailed Guide)
+- Complete installation and usage instructions
+- Detailed explanation of all commands
+- Performance comparison tables
+- Advanced usage and debugging tips
+- FAQ
 
-#### DOCKER_QUICKSTART.md（快速开始）
-- 一键开始命令
-- 常用命令速查
-- 预期输出示例
-- 时间预期表格
+#### DOCKER_QUICKSTART.md (Quick Start)
+- One-click start commands
+- Common commands cheat sheet
+- Expected output examples
+- Time expectation table
 
-#### README.md（主文档）
-- 完整重写，包含 Docker 使用说明
-- macOS 和 Linux 两种使用方式
-- 清晰的结构和导航
-- FAQ 部分
-
----
-
-## 🎯 主要特性
-
-### 1. 平台兼容性
-
-| 平台 | 支持情况 | 说明 |
-|-----|---------|------|
-| **macOS Apple Silicon** | ✅ 完全支持 | 通过 Docker 仿真 x86_64 |
-| **macOS Intel** | ✅ 完全支持 | 原生 x86_64 |
-| **Linux x86_64** | ✅ 完全支持 | 原生支持，最佳性能 |
-
-### 2. 自动化程度
-
-- ✅ 一键构建镜像
-- ✅ 自动安装依赖
-- ✅ 智能模式切换
-- ✅ 自动缓存管理
-- ✅ 完整的错误处理
-
-### 3. 用户体验
-
-- ✅ 清晰的命令结构
-- ✅ 详细的文档说明
-- ✅ 交互式 shell 支持
-- ✅ 实时日志输出
-- ✅ 错误信息友好
+#### README.md (Main Document)
+- Completely rewritten to include Docker usage instructions
+- Usage methods for both macOS and Linux
+- Clear structure and navigation
+- FAQ section
 
 ---
 
-## 📋 文件清单
+## 🎯 Key Features
 
-### 新增文件
+### 1. Platform Compatibility
+
+| Platform | Support Status | Description |
+|----------|----------------|-------------|
+| **macOS Apple Silicon** | ✅ Fully Supported | Via Docker x86_64 emulation |
+| **macOS Intel** | ✅ Fully Supported | Native x86_64 |
+| **Linux x86_64** | ✅ Fully Supported | Native support, best performance |
+
+### 2. Automation Level
+
+- ✅ One-click image build
+- ✅ Automatic dependency installation
+- ✅ Smart mode switching
+- ✅ Automatic cache management
+- ✅ Complete error handling
+
+### 3. User Experience
+
+- ✅ Clear command structure
+- ✅ Detailed documentation explanation
+- ✅ Interactive shell support
+- ✅ Real-time log output
+- ✅ Friendly error messages
+
+---
+
+## 📋 File List
+
+### New Files
 
 ```
 docker/
 └── dockerfiles/
-    └── Dockerfile.zisk              # ZisK Docker 镜像定义
+    └── Dockerfile.zisk              # ZisK Docker image definition
 
 zisk-zkvm/
-├── DOCKER_GUIDE.md                  # 详细的 Docker 使用指南
-├── DOCKER_QUICKSTART.md             # 快速开始指南
-├── DOCKER_SETUP_SUMMARY.md          # 本文档
-└── README.md                        # 更新的主文档
+├── DOCKER_GUIDE.md                  # Detailed Docker usage guide
+├── DOCKER_QUICKSTART.md             # Quick start guide
+├── DOCKER_SETUP_SUMMARY.md          # This document
+└── README.md                        # Updated main documentation
 ```
 
-### 修改文件
+### Modified Files
 
 ```
 docker/
-├── docker-compose.yml               # 添加 zisk-zkvm 服务
-└── README.md                        # 添加 ZisK 说明
+├── docker-compose.yml               # Added zisk-zkvm service
+└── README.md                        # Added ZisK instructions
 ```
 
 ---
 
-## 🚀 使用流程
+## 🚀 Usage Process
 
-### 首次设置（15-20 分钟）
+### Initial Setup (15-20 mins)
 
 ```bash
-# 1. 构建基础镜像
+# 1. Build base image
 cd docker/scripts
 ./build-base.sh
 
-# 2. 构建 ZisK 镜像
+# 2. Build ZisK image
 cd ..
 docker compose build zisk-zkvm
 ```
 
-### 日常使用
+### Daily Use
 
 ```bash
 cd docker
 
-# 快速测试
+# Quick test
 docker compose --profile zisk up zisk-zkvm
 
-# 生成 proof
+# Generate proof
 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 
-# 自定义输入
+# Custom input
 FIBONACCI_N=20 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 ```
 
 ---
 
-## 📊 性能基准
+## 📊 Performance Benchmarks
 
 ### macOS Apple Silicon (M1/M2/M3)
 
-| 操作 | 时间 | 说明 |
-|-----|------|------|
-| 镜像构建 | 10-15 分钟 | 仅首次 |
-| 测试运行 | 1-2 分钟 | 构建 + 执行 |
-| ROM setup | 5-10 分钟 | 仅首次，缓存 |
-| Proof 生成 | 60-90 秒 | 不含 ROM setup |
-| Proof 验证 | 3-5 秒 | - |
+| Operation | Time | Note |
+|-----------|------|------|
+| Image Build | 10-15 mins | First time only |
+| Test Run | 1-2 mins | Build + Execute |
+| ROM Setup | 5-10 mins | First time only, cached |
+| Proof Gen | 60-90 secs | Excluding ROM setup |
+| Proof Verify | 3-5 secs | - |
 
-**说明**: 
-- 使用 x86_64 仿真，约为原生 Linux 的 50%
-- ROM setup 结果会缓存，只需执行一次
-- 后续 proof 生成不包含 ROM setup
+**Note**:
+- Uses x86_64 emulation, approx 50% of native Linux
+- ROM setup result is cached, only needs to run once
+- Subsequent proof generation excludes ROM setup
 
 ---
 
-## 🔧 技术细节
+## 🔧 Technical Details
 
-### 依赖项
+### Dependencies
 
-**系统依赖** (在 Dockerfile 中安装):
+**System Dependencies** (Installed in Dockerfile):
 ```
 xz-utils, jq, curl, build-essential
 qemu-system, libomp-dev, libgmp-dev
@@ -204,13 +204,13 @@ libsodium-dev, libpqxx-dev, nasm
 libopenmpi-dev, openmpi-bin, openmpi-common
 ```
 
-**ZisK 工具链**:
-- cargo-zisk (CLI 工具)
-- ziskemu (模拟器)
+**ZisK Toolchain**:
+- cargo-zisk (CLI tool)
+- ziskemu (Simulator)
 - zisk Rust toolchain
-- lib-c (预构建)
+- lib-c (Prebuilt)
 
-### 数据卷
+### Data Volumes
 
 ```yaml
 zisk-cargo-cache:     # ~/.cargo/registry
@@ -218,192 +218,191 @@ zisk-target-cache:    # target/
 zisk-zisk-cache:      # ~/.zisk/ (toolchain + ROM setup)
 ```
 
-### 平台设置
+### Platform Settings
 
 ```yaml
-platform: linux/amd64  # 强制使用 x86_64
+platform: linux/amd64  # Force x86_64
 ```
 
-在 macOS Apple Silicon 上，Docker 会自动使用 Rosetta 2 仿真。
+On macOS Apple Silicon, Docker automatically uses Rosetta 2 emulation.
 
 ---
 
-## 🎓 设计决策
+## 🎓 Design Decisions
 
-### 1. 为什么使用 linux/amd64？
+### 1. Why use linux/amd64?
 
-ZisK proof 生成严格要求 Linux x86_64：
-- ✅ 确保跨平台一致性
-- ✅ 避免架构相关问题
-- ✅ 在 macOS ARM 上自动仿真
+ZisK proof generation strictly requires Linux x86_64:
+- ✅ Ensures cross-platform consistency
+- ✅ Avoids architecture-related issues
+- ✅ Automatically emulated on macOS ARM
 
-### 2. 为什么跳过 GPU 构建？
+### 2. Why skip GPU build?
 
 ```dockerfile
 CI=true /tmp/install_zisk_sdk.sh
 ```
 
-原因：
-- GPU 构建需要额外 5-10 分钟
-- 大多数用户没有 NVIDIA GPU
-- CPU 版本已足够快（30-90秒）
-- 需要时可以手动启用
+Reason:
+- GPU build requires extra 5-10 minutes
+- Most users don't have NVIDIA GPU locally
+- CPU version is fast enough (30-90 secs)
+- Can be manually enabled if needed
 
-### 3. 为什么使用智能命令流程？
+### 3. Why use smart command flow?
 
 ```bash
 if [ "$ZKVM_MODE" = "prove" ]; then
-  # 完整流程
+  # Full workflow
 else
-  # 仅测试
+  # Test only
 fi
 ```
 
-优势：
-- ✅ 单一入口点
-- ✅ 模式切换简单
-- ✅ 适合不同使用场景
-- ✅ 错误处理统一
+Advantages:
+- ✅ Single entry point
+- ✅ Simple mode switching
+- ✅ Suitable for different usage scenarios
+- ✅ Unified error handling
 
-### 4. 为什么需要三个缓存卷？
+### 4. Why need three cache volumes?
 
 ```yaml
-- zisk-cargo-cache:/usr/local/cargo/registry  # Rust 依赖
-- zisk-target-cache:/workspace/target         # 编译产物
-- zisk-zisk-cache:/root/.zisk                 # ZisK 工具链 + ROM setup
+- zisk-cargo-cache:/usr/local/cargo/registry  # Rust dependencies
+- zisk-target-cache:/workspace/target         # Build artifacts
+- zisk-zisk-cache:/root/.zisk                 # ZisK toolchain + ROM setup
 ```
 
-好处：
-- ✅ 避免重复下载依赖（节省时间和带宽）
-- ✅ ROM setup 结果持久化（节省 5-10 分钟）
-- ✅ 编译产物缓存（加快增量构建）
+Benefits:
+- ✅ Avoid re-downloading dependencies (saves time and bandwidth)
+- ✅ ROM setup result persistence (saves 5-10 mins)
+- ✅ Build artifact caching (speeds up incremental builds)
 
 ---
 
-## 📝 与其他 zkVM 的对比
+## 📝 Comparison with Other zkVMs
 
-| zkVM | Docker 支持 | 原生 macOS | 说明 |
-|------|-----------|-----------|------|
-| **ZisK** | ✅ 新增 | ❌ 不支持 | 需要 Docker |
-| SP1 | ✅ 已有 | ✅ 支持 | 完全支持 |
-| Risc0 | ✅ 已有 | ⚠️ 部分 | 工具链限制 |
-| Nexus | ✅ 已有 | ✅ 支持 | 完全支持 |
-| ZKM | ✅ 已有 | ✅ 支持 | 完全支持 |
+| zkVM | Docker Support | Native macOS | Note |
+|------|----------------|--------------|------|
+| **ZisK** | ✅ New | ❌ Not Supported | Requires Docker |
+| SP1 | ✅ Existing | ✅ Supported | Fully Supported |
+| Risc0 | ✅ Existing | ⚠️ Partial | Toolchain limits |
+| Nexus | ✅ Existing | ✅ Supported | Fully Supported |
+| ZKM | ✅ Existing | ✅ Supported | Fully Supported |
 
-**ZisK 的特殊性**:
-- 唯一需要 Linux 才能生成 proof 的 zkVM
-- Docker 是 macOS 用户的唯一选择
-- 通过本次配置完美解决了这个问题
-
----
-
-## ✅ 测试验证
-
-### 已测试场景
-
-- ✅ 镜像构建成功
-- ✅ 工具链安装正确
-- ✅ 测试模式运行正常
-- ✅ 代码挂载工作正常
-- ✅ 环境变量传递正确
-- ✅ 缓存机制有效
-
-### 待在 Linux 上测试
-
-- ⏳ 完整 proof 生成流程
-- ⏳ ROM setup 缓存机制
-- ⏳ Proof 验证
+**ZisK Specificity**:
+- The only zkVM requiring Linux to generate proof
+- Docker is the only option for macOS users
+- This configuration perfectly solves this problem
 
 ---
 
-## 🎉 成果
+## ✅ Verification
 
-### 问题解决
+### Tested Scenarios
 
-**之前**: 
-- ❌ ZisK 无法在 macOS 上生成 proof
-- ❌ 用户被迫使用远程 Linux 服务器
-- ❌ 开发体验差
+- ✅ Image build successful
+- ✅ Toolchain installation correct
+- ✅ Test mode run normal
+- ✅ Code mounting works correctly
+- ✅ Environment variable passing correct
+- ✅ Caching mechanism effective
 
-**现在**:
-- ✅ 在 macOS 上可以生成 proof
-- ✅ 本地开发和测试
-- ✅ 完整的自动化流程
-- ✅ 详细的文档支持
+### Pending Tests on Linux
 
-### 用户价值
-
-1. **开发效率**: 本地完整测试，无需远程服务器
-2. **学习曲线**: 清晰的文档和示例
-3. **时间节省**: 自动化流程，缓存机制
-4. **一致性**: 与其他 zkVM 统一的使用方式
+- ⏳ Full proof generation flow
+- ⏳ ROM setup caching mechanism
+- ⏳ Proof verification
 
 ---
 
-## 📚 文档结构
+## 🎉 Achievements
+
+### Problem Solved
+
+**Before**:
+- ❌ ZisK could not generate proof on macOS
+- ❌ Users forced to use remote Linux servers
+- ❌ Poor development experience
+
+**After**:
+- ✅ Can generate proof on macOS
+- ✅ Local development and testing
+- ✅ Complete automated workflow
+- ✅ Detailed documentation support
+
+### User Value
+
+1. **Development Efficiency**: Local complete testing without remote server
+2. **Learning Curve**: Clear documentation and examples
+3. **Time Saving**: Automated workflow and caching
+4. **Consistency**: Unified usage pattern with other zkVMs
+
+---
+
+## 📚 Documentation Structure
 
 ```
 zisk-zkvm/
-├── README.md                   # 主入口，包含所有使用方式
-├── DOCKER_QUICKSTART.md        # 快速开始（给急用户）
-├── DOCKER_GUIDE.md            # 详细指南（给深度用户）
-└── DOCKER_SETUP_SUMMARY.md    # 本文档（给开发者）
+├── README.md                   # Main entry, includes all usage methods
+├── DOCKER_QUICKSTART.md        # Quick start (for urgent users)
+├── DOCKER_GUIDE.md            # Detailed guide (for deep users)
+└── DOCKER_SETUP_SUMMARY.md    # This document (for developers)
 
 docker/
-├── README.md                   # Docker 总览
-├── docker-compose.yml          # 配置文件
+├── README.md                   # Docker overview
+├── docker-compose.yml          # Configuration file
 └── dockerfiles/
-    └── Dockerfile.zisk         # ZisK 镜像定义
+    └── Dockerfile.zisk         # ZisK image definition
 ```
 
-**文档层次**:
-1. DOCKER_QUICKSTART.md → 5 分钟快速开始
-2. README.md → 完整功能说明
-3. DOCKER_GUIDE.md → 深入使用和调试
-4. DOCKER_SETUP_SUMMARY.md → 技术实现细节
+**Documentation Hierarchy**:
+1. DOCKER_QUICKSTART.md → 5-minute quick start
+2. README.md → Full feature description
+3. DOCKER_GUIDE.md → Deep usage and debugging
+4. DOCKER_SETUP_SUMMARY.md → Technical implementation details
 
 ---
 
-## 🔮 未来改进
+## 🔮 Future Improvements
 
-### 可选增强
+### Optional Enhancements
 
-1. **GPU 支持**
-   - 添加 GPU 版本的 Dockerfile
-   - NVIDIA Docker 配置
-   - 预期提速 5-50 倍
+1. **GPU Support**
+   - Add GPU version Dockerfile
+   - NVIDIA Docker configuration
+   - Expected 5-50x speedup
 
-2. **CI/CD 集成**
+2. **CI/CD Integration**
    - GitHub Actions workflow
-   - 自动 proof 生成
-   - 性能基准测试
+   - Automated proof generation
+   - Performance benchmarking
 
-3. **多平台测试**
-   - Linux x86_64 原生测试
-   - 性能对比报告
-   - 优化建议
-
----
-
-## 🙏 致谢
-
-本配置参考了现有的 SP1、Nexus、Risc0、ZKM 的 Docker 配置，并根据 ZisK 的特殊需求进行了适配。
+3. **Multi-platform Testing**
+   - Linux x86_64 native testing
+   - Performance comparison report
+   - Optimization suggestions
 
 ---
 
-## 📞 获取帮助
+## 🙏 Acknowledgments
 
-遇到问题？查看：
-1. `DOCKER_QUICKSTART.md` - 快速命令
-2. `DOCKER_GUIDE.md` - 详细说明和故障排除
-3. `docker/README.md` - Docker 通用问题
+This configuration referenced existing Docker configurations for SP1, Nexus, Risc0, ZKM, and adapted them for ZisK's specific needs.
 
 ---
 
-**配置完成时间**: 2025-11-16  
-**ZisK 版本**: 0.10.0  
-**Docker 版本**: 要求 20.10+  
-**测试平台**: macOS Apple Silicon
+## 📞 Get Help
 
-**状态**: ✅ 完成并可用
+Encountered issues? Check:
+1. `DOCKER_QUICKSTART.md` - Quick commands
+2. `DOCKER_GUIDE.md` - Detailed explanation and troubleshooting
+3. `docker/README.md` - General Docker issues
 
+---
+
+**Configuration Completion Time**: 2025-11-16
+**ZisK Version**: 0.10.0
+**Docker Version**: Requires 20.10+
+**Test Platform**: macOS Apple Silicon
+
+**Status**: ✅ Complete and Usable

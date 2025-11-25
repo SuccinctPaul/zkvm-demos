@@ -1,48 +1,48 @@
-# ZisK Docker 使用指南
+# ZisK Docker Usage Guide
 
-由于 ZisK 不支持在 macOS 上生成 proof，本指南介绍如何使用 Docker 在 macOS 上通过 Linux 容器生成 proof。
-
----
-
-## 🎯 为什么需要 Docker？
-
-**ZisK 的限制：**
-- ✅ macOS: 支持开发和测试（编译、模拟器执行）
-- ❌ macOS: **不支持 proof 生成**（ROM setup、prove、verify）
-- ✅ Linux x86_64: 完全支持所有功能
-
-**Docker 解决方案：**
-- 在 macOS 上运行 Linux x86_64 容器
-- 完整支持 proof 生成
-- 代码挂载，无需重复构建
+Since ZisK does not support proof generation on macOS, this guide explains how to use Docker to generate proofs on macOS via a Linux container.
 
 ---
 
-## 🚀 快速开始
+## 🎯 Why Docker?
 
-### 1. 首次设置
+**ZisK Limitations:**
+- ✅ macOS: Supports dev and test (compile, emulator)
+- ❌ macOS: **Does not support proof generation** (ROM setup, prove, verify)
+- ✅ Linux x86_64: Fully supports all features
+
+**Docker Solution:**
+- Run Linux x86_64 container on macOS
+- Full proof generation support
+- Code mounting, no rebuild needed
+
+---
+
+## 🚀 Quick Start
+
+### 1. First Setup
 
 ```bash
-# 进入 docker 目录
+# Enter docker directory
 cd /Users/paul/zkp/zkvms/zkvm-demos/docker
 
-# 构建基础镜像（仅首次需要，约 5-10 分钟）
+# Build base image (only first time, ~5-10 mins)
 cd scripts
 ./build-base.sh
 cd ..
 
-# 构建 ZisK 镜像（约 10-15 分钟，包含所有依赖）
+# Build ZisK image (~10-15 mins, includes all dependencies)
 docker compose build zisk-zkvm
 ```
 
-### 2. 测试模式（快速验证）
+### 2. Test Mode (Quick Verification)
 
 ```bash
-# 运行测试：构建 + 模拟器执行
+# Run test: Build + Emulator execution
 docker compose --profile zisk up zisk-zkvm
 ```
 
-**预期输出：**
+**Expected Output:**
 ```
 ZisK ZKVM - Fibonacci Demo
 Mode: test
@@ -60,240 +60,240 @@ Fibonacci(10) = 89
 To generate proof, set ZKVM_MODE=prove
 ```
 
-### 3. 生成 Proof
+### 3. Generate Proof
 
 ```bash
-# 完整流程：构建 + 执行 + ROM setup + 生成 proof + 验证
+# Full flow: Build + Exec + ROM setup + Prove + Verify
 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 ```
 
-**第一次运行会包含 ROM setup（2-5 分钟），之后会快很多。**
+**First run includes ROM setup (2-5 mins), subsequent runs are faster.**
 
 ---
 
-## 📋 常用命令
+## 📋 Common Commands
 
-### 基本操作
+### Basic Operations
 
 ```bash
 cd /Users/paul/zkp/zkvms/zkvm-demos/docker
 
-# 测试模式（默认，快速）
+# Test Mode (Default, Fast)
 docker compose --profile zisk up zisk-zkvm
 
-# Proof 模式（完整流程）
+# Proof Mode (Full Flow)
 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 
-# 自定义 Fibonacci 数值
+# Custom Fibonacci Value
 FIBONACCI_N=20 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 
-# 后台运行
+# Run in background
 docker compose --profile zisk up -d zisk-zkvm
 
-# 查看日志
+# View logs
 docker compose logs -f zisk-zkvm
 
-# 停止容器
+# Stop containers
 docker compose down
 ```
 
-### 交互式 Shell（推荐，完全控制）
+### Interactive Shell (Recommended, Full Control)
 
 ```bash
-# 进入容器
+# Enter container
 docker compose run --rm zisk-zkvm bash
 
-# 在容器内手动执行命令
+# Execute commands inside container
 cd zisk-guest
 
-# 构建
+# Build
 cargo-zisk build --release
 
-# 测试
+# Test
 cargo-zisk run --release -i ../build/input.bin
 
-# ROM setup（仅首次）
+# ROM setup (First time only)
 cargo-zisk rom-setup -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest
 
-# 生成 proof
+# Generate proof
 cargo-zisk prove -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest \
                  -i ../build/input.bin -o ../proof -a -y
 
-# 验证 proof
+# Verify proof
 cargo-zisk verify -p ../proof/vadcop_final_proof.bin
 
-# 退出容器
+# Exit container
 exit
 ```
 
 ---
 
-## 🔧 环境变量
+## 🔧 Environment Variables
 
-| 变量 | 默认值 | 说明 |
+| Variable | Default | Description |
 |-----|-------|------|
-| `ZKVM_MODE` | `test` | `test`: 仅测试，`prove`: 生成 proof |
-| `FIBONACCI_N` | `10` | Fibonacci 数列的第 N 项 |
-| `RUST_LOG` | `info` | 日志级别 |
+| `ZKVM_MODE` | `test` | `test`: Test only, `prove`: Generate proof |
+| `FIBONACCI_N` | `10` | Nth Fibonacci number |
+| `RUST_LOG` | `info` | Log level |
 
-**使用示例：**
+**Usage Example:**
 ```bash
-# 计算 Fibonacci(30) 并生成 proof
+# Compute Fibonacci(30) and generate proof
 FIBONACCI_N=30 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 ```
 
 ---
 
-## 📊 性能预期
+## 📊 Performance Expectations
 
 ### macOS Apple Silicon (M1/M2/M3)
 
-由于使用 x86_64 仿真，性能会有所下降：
+Performance is reduced due to x86_64 emulation:
 
-| 操作 | 原生 Linux | Docker on macOS (仿真) |
+| Operation | Native Linux | Docker on macOS (Emulation) |
 |-----|-----------|----------------------|
-| 构建 | ~1-2s | ~2-3s |
-| 执行（模拟器）| <0.01s | <0.1s |
-| ROM setup | 2-5 分钟 | 5-10 分钟 |
-| Proof 生成 | 30-45s | 60-90s |
-| Proof 验证 | ~2s | ~4s |
+| Build | ~1-2s | ~2-3s |
+| Execute (Emulator) | <0.01s | <0.1s |
+| ROM setup | 2-5 mins | 5-10 mins |
+| Proof Generation | 30-45s | 60-90s |
+| Proof Verification | ~2s | ~4s |
 
-**优化建议：**
-- ROM setup 只需一次，结果会缓存
-- 后续 proof 生成不包含 ROM setup，速度更快
-- 使用交互式 shell 可以避免重复启动容器
+**Optimization Tips:**
+- ROM setup is once-only, results cached
+- Subsequent proof generation skips ROM setup, faster
+- Use interactive shell to avoid restarting container
 
 ---
 
-## 💾 数据持久化
+## 💾 Data Persistence
 
-Docker 使用卷来缓存数据，避免重复下载和构建：
+Docker uses volumes to cache data, avoiding repeated downloads and builds:
 
 ```bash
-# 查看 ZisK 相关的卷
+# View ZisK related volumes
 docker volume ls --filter "name=zisk"
 
-# 输出：
-# zisk-cargo-cache    - Rust 依赖缓存
-# zisk-target-cache   - 编译产物缓存
-# zisk-zisk-cache     - ZisK 工具链和 ROM setup 缓存
+# Output:
+# zisk-cargo-cache    - Rust dependency cache
+# zisk-target-cache   - Build artifact cache
+# zisk-zisk-cache     - ZisK toolchain and ROM setup cache
 ```
 
-**清理缓存（如果需要）：**
+**Clean Cache (If needed):**
 ```bash
-# 清理所有 ZisK 缓存
+# Clean all ZisK caches
 docker volume rm docker_zisk-cargo-cache docker_zisk-target-cache docker_zisk-zisk-cache
 
-# 或清理所有未使用的卷
+# Or clean all unused volumes
 docker volume prune
 ```
 
 ---
 
-## 🔍 故障排除
+## 🔍 Troubleshooting
 
-### 问题 1: "zkvm-base:latest not found"
+### Issue 1: "zkvm-base:latest not found"
 
-**原因：** 未构建基础镜像
+**Reason:** Base image not built
 
-**解决：**
+**Solution:**
 ```bash
 cd docker/scripts
 ./build-base.sh
 ```
 
-### 问题 2: ROM setup 很慢
+### Issue 2: ROM setup is slow
 
-**原因：** macOS 上使用 x86_64 仿真，正常现象
+**Reason:** x86_64 emulation on macOS, normal behavior
 
-**解决：**
-- 第一次会慢（5-10 分钟），但结果会缓存
-- 后续运行不需要 ROM setup
-- 如果清理了 `zisk-zisk-cache` 卷，需要重新 setup
+**Solution:**
+- First time slow (5-10 mins), but cached
+- Subsequent runs don't need ROM setup
+- If `zisk-zisk-cache` volume is cleaned, setup needed again
 
-### 问题 3: Proof 生成失败
+### Issue 3: Proof Generation Failed
 
-**检查：**
+**Check:**
 ```bash
-# 进入容器查看详细错误
+# Enter container to check detailed error
 docker compose run --rm zisk-zkvm bash
 cd zisk-guest
 cargo-zisk prove -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest \
                  -i ../build/input.bin -o ../proof -a -y
 ```
 
-**常见原因：**
-- ROM setup 未完成
-- 输入文件不存在（需要先运行 `cargo build` 生成 input.bin）
-- 磁盘空间不足
+**Common Causes:**
+- ROM setup not completed
+- Input file missing (Run `cargo build` first to generate input.bin)
+- Insufficient disk space
 
-### 问题 4: 磁盘空间不足
+### Issue 4: Insufficient Disk Space
 
-**检查：**
+**Check:**
 ```bash
 docker system df
 ```
 
-**清理：**
+**Clean:**
 ```bash
-# 清理未使用的镜像和容器
+# Clean unused images and containers
 docker system prune
 
-# 清理所有（包括缓存卷）
+# Clean all (including cache volumes)
 docker system prune -a --volumes
 ```
 
-### 问题 5: 代码修改后没有生效
+### Issue 5: Code Changes Not Effective
 
-**原因：** 代码是挂载的，不需要重新构建镜像
+**Reason:** Code is mounted, no image rebuild needed
 
-**正确做法：**
+**Correct Action:**
 ```bash
-# 修改代码后，直接运行即可
+# After modifying code, just run
 vim zisk-zkvm/zisk-guest/src/main.rs
-docker compose --profile zisk up zisk-zkvm  # 不需要 --build
+docker compose --profile zisk up zisk-zkvm  # No --build needed
 ```
 
-**何时需要重建：**
-- 只在修改了 `Cargo.toml` 或 `Dockerfile` 后需要重建
+**When Rebuild is Needed:**
+- Only after modifying `Cargo.toml` or `Dockerfile`
 ```bash
 docker compose build zisk-zkvm
 ```
 
 ---
 
-## 📝 完整工作流程示例
+## 📝 Complete Workflow Example
 
-### 场景 1: 开发和测试（macOS 本地）
+### Scenario 1: Dev & Test (macOS Local)
 
 ```bash
-# 1. 本地修改代码
+# 1. Modify code locally
 vim zisk-zkvm/zisk-guest/src/main.rs
 
-# 2. 本地测试（快速）
+# 2. Test locally (Fast)
 cd zisk-zkvm/zisk-guest
 cargo-zisk build --release
 cargo-zisk run --release -i ../build/input.bin
 
-# 3. 确认无误后，提交代码
+# 3. Commit code after verification
 git add .
 git commit -m "Update fibonacci implementation"
 ```
 
-### 场景 2: 生成 Proof（Docker）
+### Scenario 2: Generate Proof (Docker)
 
 ```bash
-# 1. 使用 Docker 生成 proof
+# 1. Generate proof using Docker
 cd docker
 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 
-# 2. 查看生成的 proof
+# 2. View generated proof
 ls -lh ../zisk-zkvm/proof/
 
-# 3. proof 文件会保存在 host 的 zisk-zkvm/proof/ 目录
+# 3. proof file saved in host's zisk-zkvm/proof/ directory
 ```
 
-### 场景 3: 批量生成不同输入的 Proof
+### Scenario 3: Batch Generate Proofs for Different Inputs
 
 ```bash
 cd docker
@@ -310,56 +310,56 @@ FIBONACCI_N=30 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
 
 ---
 
-## 🎓 高级用法
+## 🎓 Advanced Usage
 
-### 使用交互式 Shell 进行调试
+### Interactive Shell Debugging
 
 ```bash
-# 进入容器
+# Enter container
 docker compose run --rm zisk-zkvm bash
 
-# 检查工具链
+# Check toolchain
 cargo-zisk --version
 ziskemu --version
 rustup toolchain list | grep zisk
 
-# 查看文件结构
+# View file structure
 ls -la
 cd zisk-guest
 ls -la target/riscv64ima-zisk-zkvm-elf/release/
 
-# 查看 ROM setup 状态
+# Check ROM setup status
 ls -la ~/.zisk/
 
-# 运行单个步骤
+# Run single step
 cargo-zisk build --release
 cargo-zisk run --release -i ../build/input.bin
 
-# 退出
+# Exit
 exit
 ```
 
-### 挂载额外的目录
+### Mount Extra Directories
 
-修改 `docker-compose.yml`：
+Modify `docker-compose.yml`:
 ```yaml
 volumes:
   - ../:/workspace
-  - /path/to/custom/data:/data  # 添加自定义挂载
+  - /path/to/custom/data:/data  # Add custom mount
 ```
 
-### 使用 GPU 加速（需要 NVIDIA GPU + Linux）
+### Use GPU Acceleration (Requires NVIDIA GPU + Linux)
 
-修改 `Dockerfile.zisk`，移除 `CI=true`：
+Modify `Dockerfile.zisk`, remove `CI=true`:
 ```dockerfile
-# 原来：
+# Before:
 CI=true /tmp/install_zisk_sdk.sh
 
-# 改为：
+# After:
 /tmp/install_zisk_sdk.sh
 ```
 
-然后在 `docker-compose.yml` 中添加 GPU 支持：
+Then add GPU support in `docker-compose.yml`:
 ```yaml
 zisk-zkvm:
   deploy:
@@ -373,36 +373,35 @@ zisk-zkvm:
 
 ---
 
-## 📚 参考链接
+## 📚 References
 
-- [ZisK 官方文档](https://0xpolygonhermez.github.io/zisk/)
+- [ZisK Official Docs](https://0xpolygonhermez.github.io/zisk/)
 - [ZisK GitHub](https://github.com/0xPolygonHermez/zisk)
-- [Docker 官方文档](https://docs.docker.com/)
+- [Docker Official Docs](https://docs.docker.com/)
 
 ---
 
-## ✅ 总结
+## ✅ Summary
 
-### 优势
-- ✅ 在 macOS 上可以生成 proof
-- ✅ 完整的 Linux 环境
-- ✅ 缓存机制，避免重复构建
-- ✅ 代码挂载，修改即时生效
+### Advantages
+- ✅ Can generate proofs on macOS
+- ✅ Full Linux environment
+- ✅ Caching mechanism, avoid repeated builds
+- ✅ Code mounting, instant changes
 
-### 注意事项
-- ⚠️ 首次构建需要 10-15 分钟
-- ⚠️ macOS 上使用仿真，性能下降 2-3 倍
-- ⚠️ ROM setup 是一次性操作，需要 5-10 分钟
-- ⚠️ 需要足够的磁盘空间（推荐 10GB+）
+### Notes
+- ⚠️ First build takes 10-15 mins
+- ⚠️ Emulation on macOS reduces performance by 2-3x
+- ⚠️ ROM setup is one-time, takes 5-10 mins
+- ⚠️ Sufficient disk space needed (10GB+ recommended)
 
-### 推荐做法
-1. 在 macOS 上开发和测试（使用本地 ziskemu）
-2. 使用 Docker 生成 proof
-3. 如果需要频繁生成 proof，考虑使用 Linux 机器或 VM
+### Recommended Practices
+1. Dev and test on macOS (use local ziskemu)
+2. Use Docker to generate proof
+3. If frequent proof generation needed, consider Linux machine or VM
 
 ---
 
-**创建时间**: 2025-11-16  
-**适用版本**: ZisK 0.10.0  
-**平台**: macOS (Docker) / Linux (原生)
-
+**Created**: 2025-11-16  
+**Version**: ZisK 0.10.0  
+**Platform**: macOS (Docker) / Linux (Native)
