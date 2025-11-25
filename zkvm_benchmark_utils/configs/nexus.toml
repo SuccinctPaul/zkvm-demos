@@ -3,15 +3,15 @@
 # ================================================================
 
 name = "nexus"
-version = "v1.0.0"
+version = "v3.0.0"
 enabled = true
 default_mode = "core"
 
-# 测试规模（Fibonacci N 值）
+# 测试规模（程序输入 N 值）
 # 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）
 test_scales = [10, 20]
 
-# 证明模式 (Nexus 只支持 core 模式)
+# 证明模式 (Nexus 只支持 core/stwo 模式)
 prove_modes = ["core"]
 
 # Nexus 项目路径
@@ -37,35 +37,52 @@ scales = [10, 20]
 # ----------------------------------------------------------------
 [env_vars]
 RUST_LOG = "info"
+# Note: NEXUS_PROOF_MODE is injected by the runner
 
 # ----------------------------------------------------------------
 # 解析规则 (Parsed Metrics)
 # ----------------------------------------------------------------
 [parsed_metrics]
 # ================================================================
+# 基础信息 (Basic Info)
+# ================================================================
+raw_program_name = 'BENCHMARK: program_name=(\w+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w.]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+
+# ================================================================
+# 编译阶段 (Compilation Phase)
+# ================================================================
+raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
+
+# ================================================================
 # 执行阶段 (Execution Phase)
 # ================================================================
-# Nexus 输出格式: "====== Compile Cost: 1.23s"
-raw_compile_time_s = 'Compile Cost: ([\d.]+)s'
-
-# Nexus 输出格式: "ELF: instructions num: 12345"
-raw_instruction_count = 'ELF: instructions num: (\d+)'
+raw_instruction_count = 'BENCHMARK: instruction_count=(\d+)'
 
 # ================================================================
-# VM Circuit Phase (Core Proving)
+# 证明阶段 (Proving Phase)
 # ================================================================
-# Nexus 输出格式: "Prove cost: 1.23 s, proof size: 12345 Bytes"
-raw_prove_time_s = 'Prove cost: ([\d.]+) s'
-raw_proof_size_bytes = 'proof size: (\d+) Bytes'
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
 
 # ================================================================
 # 验证阶段 (Verification Phase)
 # ================================================================
-# Nexus 输出格式: "Verifying execution...  Succeeded!"
-raw_success_status = 'Verifying execution\.\.\.\s+(Succeeded!)'
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
 
-# Summary 中的 proof size（备用）
-raw_summary_proof_size = 'Proof size: (\d+) bytes'
+# ================================================================
+# 备用模式（兼容旧版日志格式）
+# ================================================================
+fallback_compile_time_s = 'Compile Cost: ([\d.]+)s'
+fallback_instruction_count = 'ELF: instructions num: (\d+)'
+fallback_prove_time_s = 'Prove cost: ([\d.]+) s'
+fallback_proof_size = 'proof size: (\d+) Bytes'
+fallback_success = 'Verifying execution\.\.\.\s+(Succeeded!)'
+fallback_summary_proof_size = 'Proof size: (\d+) bytes'
 
 # ----------------------------------------------------------------
 # 指标映射 (Metric Mapping)
@@ -78,12 +95,13 @@ raw_summary_proof_size = 'Proof size: (\d+) bytes'
 "compilation_time_s" = "raw_compile_time_s"
 
 # ====================
-# 2. VM Circuit Phase
+# 2. VM Circuit Phase (Core/Stwo Proving)
 # ====================
-"vm_prove_time_s" = "raw_prove_time_s"
+"vm_prove_time_s" = "raw_proof_time_s"
 "vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
 
 # ====================
-# 5. Verification Phase
+# 3. Verification Phase
 # ====================
+"verification_time_s" = "raw_verification_time_s"
 "success_status" = "raw_success_status"
