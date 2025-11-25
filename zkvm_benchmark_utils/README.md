@@ -62,8 +62,23 @@ version = "v5.0.0"
 enabled = true
 default_mode = "groth16"
 
-# 测试规模
+# 测试规模（向后兼容，如果配置了 programs 则忽略）
 test_scales = [10, 20]
+
+# 程序配置（推荐方式）
+[[programs]]
+name = "fibonacci"
+scales = [10, 20]
+
+# 可以为不同程序配置不同的参数
+[[programs]]
+name = "hash"
+scales = [100, 1000]
+timeout_seconds = 7200  # 可选：程序特定超时
+
+[[programs]]
+name = "sum"
+scales = [100, 1000, 10000]
 
 # 证明模式
 prove_modes = ["core", "compressed", "groth16"]
@@ -180,8 +195,14 @@ cargo run --bin zkvm-benchmark -- run --zkvms sp1,risc0
 # 运行所有启用的 zkVM
 cargo run --bin zkvm-benchmark -- run
 
-# 指定测试规模
+# 指定测试规模（覆盖配置文件）
 cargo run --bin zkvm-benchmark -- run --zkvms sp1 --scales 10,100
+
+# 指定要运行的程序（覆盖配置文件）
+cargo run --bin zkvm-benchmark -- run --zkvms sp1 --programs fibonacci,hash,sum
+
+# 同时指定程序和规模
+cargo run --bin zkvm-benchmark -- run --zkvms sp1 --programs fibonacci,hash --scales 10,100
 
 # 指定报告格式
 cargo run --bin zkvm-benchmark -- run --zkvms sp1 --report-formats json,csv
@@ -245,6 +266,20 @@ RUST_LOG=debug cargo run --bin zkvm-benchmark -- run --zkvms sp1
 | Risc0 | `configs/risc0.toml` | 🔧 待配置 |
 | Nexus | `configs/nexus.toml` | 🔧 待添加 |
 | Jolt | `configs/jolt.toml` | 🔧 待添加 |
+
+## 📋 支持的程序
+
+框架支持以下程序（可通过 `--programs` 参数或配置文件指定）：
+
+- `fibonacci` / `fib`: 计算第 n 个斐波那契数
+- `sum`: 计算 1 到 n 的和
+- `factorial` / `fact`: 计算 n 的阶乘
+- `isprime` / `prime`: 判断 n 是否为质数
+- `popcount` / `bitcount`: 计算 n 的二进制中 1 的个数
+- `hash` / `sha256`: SHA256 哈希计算
+- `signature` / `sig` / `ecdsa`: ECDSA 签名验证
+
+所有程序都通过 `PROGRAM_ID` 环境变量传递给 zkVM host，参数通过 `PROGRAM_N` 环境变量传递（对于 Fibonacci，也支持 `FIBONACCI_N` 以保持向后兼容）。
 
 ---
 

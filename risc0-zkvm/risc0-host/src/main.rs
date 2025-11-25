@@ -21,6 +21,21 @@ fn main() {
     println!("📊 Input N: {}", input.n);
     println!();
 
+    println!("\n========== BENCHMARK START ==========");
+    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: zkvm_name=risc0");
+
+    // Proof mode from environment
+    let proof_mode = std::env::var("RISC0_PROOF_MODE").unwrap_or_else(|_| "groth16".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
+
+    let opts = match proof_mode.as_str() {
+        "core" => ProverOpts::default(),
+        "compressed" => ProverOpts::succinct(),
+        "groth16" => ProverOpts::groth16(),
+        _ => panic!("Unknown proof mode: {}", proof_mode),
+    };
+
     // Create executor environment with inputs
     let env = ExecutorEnv::builder()
         .write(&input.program.id())
@@ -30,60 +45,44 @@ fn main() {
         .build()
         .unwrap();
 
-    // Proof information by proving the specified ELF binary.
-    // This struct contains the receipt along with statistics about execution of the guest
-    let proof_mode = std::env::var("RISC0_PROOF_MODE").unwrap_or_else(|_| "groth16".to_string());
-    println!("Selected proof mode: {}", proof_mode);
-
-    let opts = match proof_mode.as_str() {
-        "core" => ProverOpts::default(),
-        "compressed" => ProverOpts::succinct(),
-        "groth16" => ProverOpts::groth16(),
-        _ => panic!("Unknown proof mode: {}", proof_mode),
-    };
-
-    // Split Execution and Proving to capture granular metrics
-    println!("Starting execution...");
-    let exec_start = Instant::now();
-    let exec = risc0_zkvm::default_executor();
-    let session = exec.execute(env, METHODS_ELF).unwrap();
-    let exec_duration = exec_start.elapsed();
-    println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
-
-    // Calculate cycles from session
-    // segments contains the execution trace info
-    // Note: In Risc0 1.0+, session.user_cycles etc might be accessible via session.get_exit_code() or similar
-    // For now we rely on guest printing "cycle tracker" or the internal logger.
-    // We can also print segment count here.
-    // session.segments is private/internal usually, but let's see if we can get info.
-    // Actually, just proceeding to prove.
-
-    println!("Starting proving...");
+    // ========== Proving Phase (includes execution) ==========
+    println!("\n--- Proving Phase ---");
+    println!("Starting proving (mode: {})...", proof_mode);
     let prove_start = Instant::now();
-    let prove_info = default_prover()
-        .prove_with_opts(env, METHODS_ELF, &opts)
-        .unwrap();
-    // prover.prove_session produces the receipt
-    let ctx = risc0_zkvm::VerifierContext::default();
-    let prove_info = prover.prove_session(&ctx, &session, &opts).unwrap();
+    let prover = default_prover();
+    let prove_info = prover.prove_with_opts(env, METHODS_ELF, &opts).unwrap();
     let prove_duration = prove_start.elapsed();
 
+    // Extract receipt and stats
+    let receipt = prove_info.receipt;
+    let stats = prove_info.stats;
+
+    println!("BENCHMARK: total_cycles={}", stats.total_cycles);
+    println!("BENCHMARK: user_cycles={}", stats.user_cycles);
+    println!("BENCHMARK: segment_count={}", stats.segments);
     println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
 
+    // Get proof size from seal
+    let seal_size = receipt.seal_size();
+    println!("BENCHMARK: proof_size_bytes={}", seal_size);
+
     println!(
-        "proof mode: {:?}, proof size: {:?} Bytes, proof time total cost(s): {:?}",
+        "\nproof mode: {}, proof size: {} Bytes, proof time: {:.3}s",
         proof_mode,
-        prove_info.receipt.seal_size(),
+        seal_size,
         prove_duration.as_secs_f64()
     );
 
-    // extract the receipt.
-    let receipt = prove_info.receipt;
+    // ========== Verification Phase ==========
+    println!("\n--- Verification Phase ---");
+    let verify_start = Instant::now();
+    receipt.verify(METHODS_ID).expect("Verification failed");
+    let verify_duration = verify_start.elapsed();
 
-    // For example:
-    // let _output: u32 = receipt.journal.decode().unwrap();
+    println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+    println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
+    println!("BENCHMARK: success_status=success");
 
-    // The receipt was verified at the end of proving, but the below code is an
-    // example of how someone else could verify this receipt.
-    receipt.verify(METHODS_ID).unwrap();
+    println!("\n========== BENCHMARK END ==========");
+    println!("✅ Proof generated and verified successfully!");
 }

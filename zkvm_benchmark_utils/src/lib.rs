@@ -18,10 +18,10 @@ pub mod reporting;
 pub mod system;
 
 // Re-exports for convenience
-pub use core::config::{BenchmarkConfig, ParsedMetrics, ZkVmConfig};
+pub use core::config::{BenchmarkConfig, ParsedMetrics, ProgramConfig, ZkVmConfig};
 pub use core::error::{BenchmarkError, Result};
 // Re-export UnifiedMetrics instead of BenchmarkMetrics
-pub use core::metrics::UnifiedMetrics;
+pub use core::metrics::{ProgramName, UnifiedMetrics};
 
 pub use execution::command_parser::{CommandParser, ParsedCommand};
 pub use execution::executor::BenchmarkExecutor;

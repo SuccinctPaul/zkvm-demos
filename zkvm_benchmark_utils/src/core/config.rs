@@ -27,6 +27,9 @@ pub struct ZkVmConfig {
     pub enabled: bool,
     pub default_mode: ProofMode,
     pub prove_modes: Vec<ProofMode>,
+    /// Programs to test. If None or empty, defaults to [Fibonacci]
+    pub programs: Option<Vec<ProgramConfig>>,
+    /// Deprecated: Use programs[].scales instead. Kept for backward compatibility.
     pub test_scales: Option<Vec<u32>>,
     pub working_dir: String,
     pub build_command: Option<String>,
@@ -34,12 +37,26 @@ pub struct ZkVmConfig {
     pub timeout_seconds: Option<u64>,
     pub repeat_count: Option<u32>,
     pub env_vars: Option<HashMap<String, String>>,
-    #[serde(rename = "parsed_metrics")]
+    #[serde(rename = "parsed_metrics", default)]
     pub parsed_metrics: ParsedMetrics,
     #[serde(rename = "metric_mapping", default)]
     pub metric_mapping: HashMap<String, String>,
     pub stage_merge: Option<StageMerge>,
     pub proof_size_config: Option<ProofSizeConfig>,
+}
+
+/// Configuration for a single program
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProgramConfig {
+    /// Program name (e.g., "fibonacci", "hash", "sum")
+    pub name: String,
+    /// Test scales/parameters for this program
+    pub scales: Vec<u32>,
+    /// Program-specific environment variables
+    #[serde(default)]
+    pub env_vars: Option<HashMap<String, String>>,
+    /// Program-specific timeout (overrides zkVM timeout)
+    pub timeout_seconds: Option<u64>,
 }
 
 impl ZkVmConfig {
@@ -79,6 +96,7 @@ impl ZkVmConfig {
     }
 
     /// Get test scales (use config value or default)
+    /// Deprecated: Use get_programs() instead
     pub fn get_test_scales(&self, default_scales: Option<&[u32]>) -> Vec<u32> {
         if let Some(scales) = &self.test_scales {
             scales.clone()
@@ -86,6 +104,39 @@ impl ZkVmConfig {
             default.to_vec()
         } else {
             vec![10] // fallback default
+        }
+    }
+
+    /// Get program configurations, with fallback to default Fibonacci program
+    pub fn get_programs(&self) -> Vec<ProgramConfig> {
+        if let Some(ref programs) = self.programs {
+            if programs.is_empty() {
+                // Default to Fibonacci if programs list is empty
+                vec![ProgramConfig {
+                    name: "fibonacci".to_string(),
+                    scales: self.get_test_scales(None),
+                    env_vars: None,
+                    timeout_seconds: None,
+                }]
+            } else {
+                programs.clone()
+            }
+        } else if let Some(scales) = &self.test_scales {
+            // Backward compatibility: use test_scales for Fibonacci
+            vec![ProgramConfig {
+                name: "fibonacci".to_string(),
+                scales: scales.clone(),
+                env_vars: None,
+                timeout_seconds: None,
+            }]
+        } else {
+            // Default fallback
+            vec![ProgramConfig {
+                name: "fibonacci".to_string(),
+                scales: vec![10],
+                env_vars: None,
+                timeout_seconds: None,
+            }]
         }
     }
 }
@@ -191,6 +242,12 @@ impl BenchmarkConfig {
                 enabled: true,
                 default_mode: ProofMode::Groth16,
                 prove_modes: vec![ProofMode::Core, ProofMode::Compressed, ProofMode::Groth16],
+                programs: Some(vec![ProgramConfig {
+                    name: "fibonacci".to_string(),
+                    scales: vec![10, 20],
+                    env_vars: None,
+                    timeout_seconds: None,
+                }]),
                 test_scales: Some(vec![10, 20]),
                 working_dir: "sp1-zkvm/sp1-host".to_string(),
                 build_command: Some("cargo build --release".to_string()),

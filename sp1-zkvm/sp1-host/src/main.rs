@@ -76,7 +76,7 @@ fn main() {
         println!("\n========== BENCHMARK START ==========");
 
         // Metadata
-        println!("BENCHMARK: program_name=fibonacci_{}", fib_n);
+        println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
         println!("BENCHMARK: zkvm_name=SP1");
         println!("BENCHMARK: zkvm_version=v5.0.0");
 
@@ -86,7 +86,7 @@ fn main() {
 
         // ========== Stage 0: Execution ==========
         let exec_start = Instant::now();
-        let (_output, report) = client.execute(FIBONACCI_ELF, &stdin).run().unwrap();
+        let (_output, report) = client.execute(GUEST_ELF, &stdin).run().unwrap();
         let exec_time = exec_start.elapsed();
 
         println!("\n--- Execution Phase ---");

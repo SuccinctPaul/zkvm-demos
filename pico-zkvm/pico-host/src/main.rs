@@ -16,7 +16,17 @@ fn main() -> anyhow::Result<()> {
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
 
-    println!("\n1. Initializing Pico zkVM prover...");
+    // Benchmark header
+    println!("\n========== BENCHMARK START ==========");
+    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: zkvm_name=pico");
+    println!("BENCHMARK: zkvm_version=v1.1.6");
+
+    // Proof mode from environment (Pico only supports "fast" mode currently)
+    let proof_mode = std::env::var("PICO_PROOF_MODE").unwrap_or_else(|_| "fast".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
+
+    println!("\n--- Initialization Phase ---");
     let init_start = Instant::now();
 
     // Load the guest program ELF
@@ -41,16 +51,14 @@ fn main() -> anyhow::Result<()> {
         "Failed to read guest ELF. Please build the guest program first with 'cargo pico build' or place a pre-built ELF in pico-guest/elf/riscv32im-pico-zkvm-elf"
     );
 
-    println!(
-        "Initialization completed in {:.2}s",
-        init_start.elapsed().as_secs_f64()
-    );
-    println!("ELF size: {} bytes", elf.len());
+    let init_duration = init_start.elapsed();
+    println!("BENCHMARK: elf_size_bytes={}", elf.len());
+    println!("BENCHMARK: initialization_time_s={:.6}", init_duration.as_secs_f64());
 
     // Initialize the prover client
     let client = DefaultProverClient::new(&elf);
 
-    println!("\n2. Executing program in zkVM...");
+    println!("\n--- Execution Phase ---");
     let exec_start = Instant::now();
 
     // Create input for the guest program
@@ -58,40 +66,43 @@ fn main() -> anyhow::Result<()> {
     stdin_builder.write(&input.program.id());
     stdin_builder.write(&input.n);
 
-    println!(
-        "Execution setup completed in {:.2}s",
-        exec_start.elapsed().as_secs_f64()
-    );
+    let exec_setup_duration = exec_start.elapsed();
+    println!("BENCHMARK: execution_setup_time_s={:.6}", exec_setup_duration.as_secs_f64());
 
-    println!("\n3. Generating zero-knowledge proof...");
+    println!("\n--- Proving Phase ---");
     let prove_start = Instant::now();
 
     // Generate proof
     let proof = client.prove_fast(stdin_builder)?;
 
     let prove_duration = prove_start.elapsed();
-    println!(
-        "Proof generation completed in {:.2}s",
-        prove_duration.as_secs_f64()
-    );
+    println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
 
     // Read the result from public values
     if let Some(public_buffer) = &proof.pv_stream {
         let result: u32 =
             bincode::deserialize(public_buffer).expect("Failed to deserialize public values");
-        println!("Result: {}", result);
+        
+        let proof_size = public_buffer.len();
+        println!("BENCHMARK: proof_size_bytes={}", proof_size);
+        println!("BENCHMARK: output_result={}", result);
 
         println!("\n============ Summary ============");
         println!("Program: {}", input.program.as_str());
         println!("Output: {}", result);
-        println!("Proof size: {} bytes", public_buffer.len());
+        println!("Proof size: {} bytes", proof_size);
         println!("Prove time: {:.2}s", prove_duration.as_secs_f64());
         println!("=================================\n");
     } else {
+        println!("BENCHMARK: proof_size_bytes=0");
         println!("Warning: No public values in proof");
     }
 
-    println!("Proof generated successfully!");
+    // Pico doesn't have built-in verification in prove_fast mode
+    // Mark success based on proof generation
+    println!("BENCHMARK: success_status=success");
+    println!("\n========== BENCHMARK END ==========");
+    println!("✅ Proof generated successfully!");
 
     Ok(())
 }

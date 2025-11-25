@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use std::collections::HashMap;
 use zkvm_benchmark_utils::{
-    BenchmarkConfig, BenchmarkExecutor, BenchmarkReporter, ReportFormat, ZkVmConfig,
+    BenchmarkConfig, BenchmarkExecutor, BenchmarkReporter, ProgramConfig, ReportFormat, ZkVmConfig,
 };
 
 #[derive(Parser)]
@@ -30,6 +30,14 @@ enum Commands {
         #[arg(long)]
         zkvms: Option<String>,
 
+        /// Programs to run (comma-separated, e.g., "fibonacci,hash,sum"). If not specified, uses programs from config
+        #[arg(long)]
+        programs: Option<String>,
+
+        /// Test scales/parameters (comma-separated, e.g., "10,20,100"). Overrides config values
+        #[arg(long)]
+        scales: Option<String>,
+
         /// Report formats to generate (csv,json,markdown,console). Default: all
         #[arg(long)]
         report_formats: Option<String>,
@@ -47,9 +55,11 @@ async fn main() -> anyhow::Result<()> {
         Commands::Run {
             output,
             zkvms,
+            programs,
+            scales,
             report_formats,
         } => {
-            run_benchmarks(output, zkvms, report_formats).await?;
+            run_benchmarks(output, zkvms, programs, scales, report_formats).await?;
         }
     }
 
@@ -59,6 +69,8 @@ async fn main() -> anyhow::Result<()> {
 async fn run_benchmarks(
     output: Option<PathBuf>,
     zkvms_filter: Option<String>,
+    programs_filter: Option<String>,
+    scales_filter: Option<String>,
     report_formats: Option<String>,
 ) -> anyhow::Result<()> {
     info!("═══════════════════════════════════════════════════════════");
@@ -81,6 +93,18 @@ async fn run_benchmarks(
 
     info!("📦 Selected zkVMs: {}", zkvm_names.join(", "));
 
+    // Parse program filter if specified
+    let program_names: Option<Vec<String>> = programs_filter.map(|p| {
+        p.split(',').map(|s| s.trim().to_string()).collect()
+    });
+
+    // Parse scale filter if specified
+    let scale_values: Option<Vec<u32>> = scales_filter.map(|s| {
+        s.split(',')
+            .filter_map(|x| x.trim().parse::<u32>().ok())
+            .collect()
+    });
+
     // Load zkVM configurations
     info!("📖 Loading zkVM configurations...");
     let mut zkvms = HashMap::new();
@@ -88,16 +112,57 @@ async fn run_benchmarks(
 
     for zkvm_name in &zkvm_names {
         info!("  📄 Loading config for: {}", zkvm_name);
-        let zkvm_config = ZkVmConfig::from_name(zkvm_name)?;
+        let mut zkvm_config = ZkVmConfig::from_name(zkvm_name)?;
 
-        // Apply scale filter if specified
+        // Apply program filter if specified
+        if let Some(ref prog_names) = program_names {
+            let mut filtered_programs = Vec::new();
+            for prog_name in prog_names {
+                // Find existing program config or create new one
+                let existing_prog = zkvm_config.get_programs()
+                    .into_iter()
+                    .find(|p| p.name == *prog_name);
+                
+                if let Some(mut prog_config) = existing_prog {
+                    // Apply scale filter if specified
+                    if let Some(ref scales) = scale_values {
+                        prog_config.scales = scales.clone();
+                    }
+                    filtered_programs.push(prog_config);
+                } else {
+                    // Create new program config
+                    let scales = scale_values.clone().unwrap_or_else(|| {
+                        zkvm_config.get_test_scales(None)
+                    });
+                    filtered_programs.push(ProgramConfig {
+                        name: prog_name.clone(),
+                        scales,
+                        env_vars: None,
+                        timeout_seconds: None,
+                    });
+                }
+            }
+            zkvm_config.programs = Some(filtered_programs);
+        } else if let Some(ref scales) = scale_values {
+            // Apply scale filter to all programs if no program filter specified
+            let mut programs = zkvm_config.get_programs();
+            for prog in &mut programs {
+                prog.scales = scales.clone();
+            }
+            zkvm_config.programs = Some(programs);
+        }
+
+        // Apply scale filter if specified (for backward compatibility with test_scales)
         if let Some(ref config_scales) = zkvm_config.test_scales {
             test_scales = config_scales.clone();
         }
 
         info!(
-            "  ✅ Config loaded: modes={:?}, scales={:?}",
-            zkvm_config.prove_modes, zkvm_config.test_scales
+            "  ✅ Config loaded: modes={:?}, programs={:?}",
+            zkvm_config.prove_modes,
+            zkvm_config.get_programs().iter()
+                .map(|p| format!("{}: {:?}", p.name, p.scales))
+                .collect::<Vec<_>>()
         );
         zkvms.insert(zkvm_name.clone(), zkvm_config);
     }

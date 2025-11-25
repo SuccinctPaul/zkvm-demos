@@ -9,23 +9,28 @@ enabled = false
 default_mode = "core"
 
 # 测试规模（Fibonacci N 值）
+# 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）
 test_scales = [10, 20]
+
+# 程序配置（推荐使用此方式配置多个程序）
+# 如果未配置 programs，将使用 test_scales 作为 Fibonacci 的参数
+[[programs]]
+name = "fibonacci"
+scales = [10, 20]
+
+# 可以为不同程序配置不同的参数和超时
+# [[programs]]
+# name = "hash"
+# scales = [100, 1000]
+# timeout_seconds = 7200  # 可选：程序特定超时
+
+# [[programs]]
+# name = "sum"
+# scales = [100, 1000, 10000]
 
 # 证明模式 (core, compressed, groth16, plonk)
 prove_modes = ["core"]
 
-# 项目路径 (Relative to workspace root)
-working_dir = "../template-zkvm/template-host"
-
-# 构建和运行命令
-build_command = "cargo build --release"
-run_command = "cargo run --release"
-
-# 超时设置（秒）
-timeout_seconds = 3600
-
-# 重复次数
-repeat_count = 1
 
 # ----------------------------------------------------------------
 # 环境变量

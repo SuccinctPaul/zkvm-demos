@@ -157,20 +157,30 @@ impl BenchmarkExecutor {
                 .parse::<ZkVmName>()
                 .expect("Unknown zkVM name in configuration");
 
-            for scale in &self.config.test_scales {
-                let repeat_count = self.config.repeat_count.unwrap_or(1);
+            // Get programs from config (with fallback to default)
+            let programs = zkvm_config.get_programs();
+            let repeat_count = self.config.repeat_count.unwrap_or(1);
 
-                for repeat in 1..=repeat_count {
-                    for mode in &zkvm_config.prove_modes {
-                        let test_run = TestRun {
-                            zkvm_name: zkvm_name_enum.clone(),
-                            program_name: ProgramName::Fibonacci, // Default for now
-                            mode: mode.clone(),
-                            scale: *scale,
-                            repeat,
-                        };
+            for program_config in &programs {
+                // Parse program name
+                let program_name = program_config
+                    .name
+                    .parse::<ProgramName>()
+                    .unwrap_or_else(|_| ProgramName::Custom(program_config.name.clone()));
 
-                        tasks.push(((*zkvm_name).clone(), (*zkvm_config).clone(), test_run));
+                for scale in &program_config.scales {
+                    for repeat in 1..=repeat_count {
+                        for mode in &zkvm_config.prove_modes {
+                            let test_run = TestRun {
+                                zkvm_name: zkvm_name_enum.clone(),
+                                program_name: program_name.clone(),
+                                mode: mode.clone(),
+                                scale: *scale,
+                                repeat,
+                            };
+
+                            tasks.push(((*zkvm_name).clone(), (*zkvm_config).clone(), test_run));
+                        }
                     }
                 }
             }
@@ -190,7 +200,32 @@ impl BenchmarkExecutor {
 
         // Prepare env vars
         let mut env_vars = zkvm_config.env_vars.clone().unwrap_or_default();
-        env_vars.insert("FIBONACCI_N".to_string(), test_run.scale.to_string());
+        
+        // Add program-specific env vars
+        let programs = zkvm_config.get_programs();
+        if let Some(program_config) = programs.iter().find(|p| {
+            p.name.parse::<ProgramName>()
+                .map(|pn| pn == test_run.program_name)
+                .unwrap_or(false)
+        }) {
+            if let Some(ref prog_env_vars) = program_config.env_vars {
+                env_vars.extend(prog_env_vars.clone());
+            }
+        }
+        
+        // Add program ID and input parameter
+        env_vars.insert("PROGRAM_ID".to_string(), test_run.program_name.program_id().to_string());
+        // For backward compatibility, also set FIBONACCI_N if it's Fibonacci
+        match test_run.program_name {
+            ProgramName::Fibonacci => {
+                env_vars.insert("FIBONACCI_N".to_string(), test_run.scale.to_string());
+            }
+            _ => {
+                // Generic parameter name for other programs
+                env_vars.insert("PROGRAM_N".to_string(), test_run.scale.to_string());
+            }
+        }
+        
         env_vars.insert(
             format!("{}_PROOF_MODE", zkvm_name.to_uppercase()),
             test_run.mode.to_string(),
@@ -206,12 +241,20 @@ impl BenchmarkExecutor {
             .build_zkvm(zkvm_name, zkvm_config, work_dir, &env_vars)
             .await
         {
-            warn!("  ⚠️  Build {zkvm_name} warning: {}", e);
+            error!("  ❌ Build {zkvm_name} failed: {}", e);
+            return Ok(ExecutionResult {
+                test_run: test_run.clone(),
+                metrics: None,
+                log_content: format!("Build failed: {}", e),
+                success: false,
+                error: Some(format!("Build failed: {}", e)),
+                resource_stats: None,
+            });
         }
 
         // 2. Execute zkVM
         let execution_result = self
-            .execute_zkvm(zkvm_name, zkvm_config, work_dir, &env_vars)
+            .execute_zkvm(zkvm_name, zkvm_config, work_dir, &env_vars, test_run)
             .await;
 
         let (log_content, resource_stats) = match execution_result {
@@ -312,8 +355,26 @@ impl BenchmarkExecutor {
         zkvm_config: &ZkVmConfig,
         work_dir: &Path,
         env_vars: &HashMap<String, String>,
+        test_run: &TestRun,
     ) -> Result<(String, Option<ResourceStats>)> {
-        let timeout_secs = self.config.timeout_seconds.unwrap_or(3600);
+        // Use program-specific timeout if available, otherwise zkVM timeout, otherwise config timeout
+        let timeout_secs = {
+            let programs = zkvm_config.get_programs();
+            if let Some(program_config) = programs.iter().find(|p| {
+                p.name.parse::<ProgramName>()
+                    .map(|pn| pn == test_run.program_name)
+                    .unwrap_or(false)
+            }) {
+                program_config.timeout_seconds
+                    .or(zkvm_config.timeout_seconds)
+                    .or(self.config.timeout_seconds)
+                    .unwrap_or(3600)
+            } else {
+                zkvm_config.timeout_seconds
+                    .or(self.config.timeout_seconds)
+                    .unwrap_or(3600)
+            }
+        };
         info!("  ⏱️  Executing timeout: {} seconds", timeout_secs);
         info!("  ▶️  Executing {zkvm_name}: {}", zkvm_config.run_command);
 
@@ -408,9 +469,12 @@ impl BenchmarkExecutor {
         work_dir: &Path,
         env_vars: &HashMap<String, String>,
     ) -> Result<String> {
-        self.run_command_with_monitoring(command, work_dir, env_vars, false)
-            .await
-            .map(|(output, _)| output)
+        let (output, _) = self.run_command_with_monitoring(command, work_dir, env_vars, false).await?;
+        
+        // Check if command succeeded - run_command_with_monitoring returns output even on failure
+        // We need to check the output for error patterns or rely on the caller to check
+        // For now, we return the output and let the caller decide
+        Ok(output)
     }
 
     /// Run command with monitoring helper
@@ -505,7 +569,16 @@ impl BenchmarkExecutor {
             let combined = format!("{}\n{}", stdout, stderr);
 
             if !output.status.success() {
-                warn!("Command exited with status: {}", output.status);
+                let exit_code = output.status.code().unwrap_or(-1);
+                return Err(BenchmarkError::Execution(format!(
+                    "Command exited with status {}: {}",
+                    exit_code,
+                    if combined.len() > 500 {
+                        format!("{}...", &combined[..500])
+                    } else {
+                        combined.clone()
+                    }
+                )));
             }
 
             Ok((combined, None))

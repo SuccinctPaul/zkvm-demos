@@ -171,7 +171,13 @@ impl std::str::FromStr for ZkVmName {
 #[serde(rename_all = "snake_case")]
 pub enum ProgramName {
     Fibonacci,
-    Sha256,
+    Sum,
+    Factorial,
+    IsPrime,
+    PopCount,
+    Hash,
+    Sha256, // Alias for Hash
+    Signature,
     #[serde(untagged)]
     Custom(String),
 }
@@ -180,7 +186,13 @@ impl std::fmt::Display for ProgramName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ProgramName::Fibonacci => write!(f, "fibonacci"),
+            ProgramName::Sum => write!(f, "sum"),
+            ProgramName::Factorial => write!(f, "factorial"),
+            ProgramName::IsPrime => write!(f, "isprime"),
+            ProgramName::PopCount => write!(f, "popcount"),
+            ProgramName::Hash => write!(f, "hash"),
             ProgramName::Sha256 => write!(f, "sha256"),
+            ProgramName::Signature => write!(f, "signature"),
             ProgramName::Custom(s) => write!(f, "{}", s),
         }
     }
@@ -191,9 +203,30 @@ impl std::str::FromStr for ProgramName {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "fibonacci" => Ok(ProgramName::Fibonacci),
-            "sha256" => Ok(ProgramName::Sha256),
+            "fibonacci" | "fib" => Ok(ProgramName::Fibonacci),
+            "sum" => Ok(ProgramName::Sum),
+            "factorial" | "fact" => Ok(ProgramName::Factorial),
+            "isprime" | "prime" => Ok(ProgramName::IsPrime),
+            "popcount" | "bitcount" => Ok(ProgramName::PopCount),
+            "hash" | "sha256" => Ok(ProgramName::Hash),
+            "signature" | "sig" | "ecdsa" => Ok(ProgramName::Signature),
             _ => Ok(ProgramName::Custom(s.to_string())),
+        }
+    }
+}
+
+impl ProgramName {
+    /// Get the program ID as used in the common library
+    pub fn program_id(&self) -> u32 {
+        match self {
+            ProgramName::Fibonacci => 0,
+            ProgramName::Sum => 1,
+            ProgramName::Factorial => 2,
+            ProgramName::IsPrime => 3,
+            ProgramName::PopCount => 4,
+            ProgramName::Hash | ProgramName::Sha256 => 5,
+            ProgramName::Signature => 6,
+            ProgramName::Custom(_) => 0, // Default to Fibonacci for custom programs
         }
     }
 }

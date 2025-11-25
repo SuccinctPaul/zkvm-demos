@@ -8,9 +8,10 @@ enabled = true
 default_mode = "core"
 
 # 测试规模（Fibonacci N 值）
+# 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）
 test_scales = [10, 20]
 
-# 证明模式
+# 证明模式 (Jolt 只支持 core 模式)
 prove_modes = ["core"]
 
 # Jolt 项目路径
@@ -26,6 +27,11 @@ timeout_seconds = 3600
 # 重复次数
 repeat_count = 1
 
+# 程序配置
+[[programs]]
+name = "fibonacci"
+scales = [10, 20]
+
 # ----------------------------------------------------------------
 # 环境变量
 # ----------------------------------------------------------------
@@ -36,20 +42,50 @@ RUST_LOG = "info"
 # 解析规则 (Parsed Metrics)
 # ----------------------------------------------------------------
 [parsed_metrics]
-# Preprocessing
-raw_compile_time = 'Compile time:\s+([\d.]+)s'
-raw_preprocess_time = 'Preprocess time:\s+([\d.]+)s'
-raw_build_time = 'Build time:\s+([\d.]+)s'
+# ================================================================
+# 执行阶段 (Execution Phase)
+# ================================================================
+# Jolt 输出格式: "Compile time:     0.56s"
+raw_compile_time_s = 'Compile time:\s+([\d.]+)s'
+raw_preprocess_time_s = 'Preprocess time:\s+([\d.]+)s'
+raw_build_time_s = 'Build time:\s+([\d.]+)s'
 
-# VM Circuit Phase (Core)
-raw_prove_time = 'Prove time:\s+([\d.]+)s'
-raw_verify_time = 'Verify time:\s+([\d.]+)s'
-raw_total_time = 'Total time:\s+([\d.]+)s'
+# ================================================================
+# VM Circuit Phase (Core Proving)
+# ================================================================
+# Jolt 输出格式: "Prove time:       1.23s"
+raw_prove_time_s = 'Prove time:\s+([\d.]+)s'
+
+# ================================================================
+# 验证阶段 (Verification Phase)
+# ================================================================
+# Jolt 输出格式: "Verify time:      0.05s"
+raw_verify_time_s = 'Verify time:\s+([\d.]+)s'
+
+# 总时间（如果输出的话）
+raw_total_time_s = 'Total time:\s+([\d.]+)s'
+
+# 成功状态
+raw_success_status = '(Jolt zkVM Demo completed successfully!)'
 
 # ----------------------------------------------------------------
 # 指标映射 (Metric Mapping)
 # ----------------------------------------------------------------
 [metric_mapping]
-"vm_prove_time_s" = "raw_prove_time"
-"verification_time_s" = "raw_verify_time"
-"total_time_s" = "raw_total_time"
+# ====================
+# 1. Execution Phase
+# ====================
+"compilation_time_s" = "raw_compile_time_s"
+"preprocess_time_s" = "raw_preprocess_time_s"
+"build_time_s" = "raw_build_time_s"
+
+# ====================
+# 2. VM Circuit Phase
+# ====================
+"vm_prove_time_s" = "raw_prove_time_s"
+
+# ====================
+# 5. Verification Phase
+# ====================
+"verification_time_s" = "raw_verify_time_s"
+"success_status" = "raw_success_status"

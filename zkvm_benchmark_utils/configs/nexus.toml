@@ -8,9 +8,10 @@ enabled = true
 default_mode = "core"
 
 # 测试规模（Fibonacci N 值）
+# 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）
 test_scales = [10, 20]
 
-# 证明模式
+# 证明模式 (Nexus 只支持 core 模式)
 prove_modes = ["core"]
 
 # Nexus 项目路径
@@ -26,6 +27,11 @@ timeout_seconds = 3600
 # 重复次数
 repeat_count = 1
 
+# 程序配置
+[[programs]]
+name = "fibonacci"
+scales = [10, 20]
+
 # ----------------------------------------------------------------
 # 环境变量
 # ----------------------------------------------------------------
@@ -36,16 +42,30 @@ RUST_LOG = "info"
 # 解析规则 (Parsed Metrics)
 # ----------------------------------------------------------------
 [parsed_metrics]
-# Execution Phase
-raw_compile_time = 'Compile Cost: ([\d.]+)s'
+# ================================================================
+# 执行阶段 (Execution Phase)
+# ================================================================
+# Nexus 输出格式: "====== Compile Cost: 1.23s"
+raw_compile_time_s = 'Compile Cost: ([\d.]+)s'
+
+# Nexus 输出格式: "ELF: instructions num: 12345"
 raw_instruction_count = 'ELF: instructions num: (\d+)'
 
-# VM Circuit Phase (Core)
-raw_proof_time = 'Prove cost: ([\d.]+) s'
+# ================================================================
+# VM Circuit Phase (Core Proving)
+# ================================================================
+# Nexus 输出格式: "Prove cost: 1.23 s, proof size: 12345 Bytes"
+raw_prove_time_s = 'Prove cost: ([\d.]+) s'
 raw_proof_size_bytes = 'proof size: (\d+) Bytes'
 
-# Verification Phase
+# ================================================================
+# 验证阶段 (Verification Phase)
+# ================================================================
+# Nexus 输出格式: "Verifying execution...  Succeeded!"
 raw_success_status = 'Verifying execution\.\.\.\s+(Succeeded!)'
+
+# Summary 中的 proof size（备用）
+raw_summary_proof_size = 'Proof size: (\d+) bytes'
 
 # ----------------------------------------------------------------
 # 指标映射 (Metric Mapping)
@@ -55,12 +75,12 @@ raw_success_status = 'Verifying execution\.\.\.\s+(Succeeded!)'
 # 1. Execution Phase
 # ====================
 "instruction_count" = "raw_instruction_count"
-"compilation_time_s" = "raw_compile_time"
+"compilation_time_s" = "raw_compile_time_s"
 
 # ====================
 # 2. VM Circuit Phase
 # ====================
-"vm_prove_time_s" = "raw_proof_time"
+"vm_prove_time_s" = "raw_prove_time_s"
 "vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
 
 # ====================

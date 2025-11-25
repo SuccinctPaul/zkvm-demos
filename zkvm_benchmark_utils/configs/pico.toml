@@ -1,23 +1,25 @@
 # ================================================================
-# RISC0 zkVM Benchmark Configuration
+# Pico zkVM Benchmark Configuration
 # ================================================================
 
-name = "risc0"
-version = "v1.0.0"
+name = "pico"
+version = "v1.1.6"
 enabled = true
-default_mode = "groth16"
+default_mode = "fast"
 
 # 测试规模（程序输入 N 值）
 # 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）
 test_scales = [10, 20]
 
 # 证明模式
-prove_modes = ["core", "compressed", "groth16"]
+# Pico 目前只支持 "fast" 模式
+prove_modes = ["fast"]
 
-# RISC0 项目路径
-working_dir = "../risc0-zkvm/risc0-host"
+# Pico 项目路径
+working_dir = "../pico-zkvm/pico-host"
 
 # 构建和运行命令
+# 注意：Guest ELF 需要预先构建或使用预构建的 ELF
 build_command = "cargo build --release"
 run_command = "cargo run --release"
 
@@ -27,7 +29,7 @@ timeout_seconds = 3600
 # 重复次数
 repeat_count = 1
 
-# 程序配置（推荐使用此方式配置多个程序）
+# 程序配置
 [[programs]]
 name = "fibonacci"
 scales = [10, 20]
@@ -37,8 +39,7 @@ scales = [10, 20]
 # ----------------------------------------------------------------
 [env_vars]
 RUST_LOG = "debug"
-RISC0_DEV_MODE = "0"
-# Note: RISC0_PROOF_MODE is injected by the runner
+# Note: PICO_PROOF_MODE is injected by the runner
 
 # ----------------------------------------------------------------
 # 解析规则 (Parsed Metrics)
@@ -49,45 +50,38 @@ RISC0_DEV_MODE = "0"
 # ================================================================
 raw_program_name = 'BENCHMARK: program_name=(\w+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w.]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+
+# ================================================================
+# 初始化阶段 (Initialization Phase)
+# ================================================================
+raw_elf_size_bytes = 'BENCHMARK: elf_size_bytes=(\d+)'
+raw_initialization_time_s = 'BENCHMARK: initialization_time_s=([\d.]+)'
 
 # ================================================================
 # 执行阶段 (Execution Phase)
 # ================================================================
-# Host 输出格式: "BENCHMARK: total_cycles=12345"
-raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
-raw_user_cycles = 'BENCHMARK: user_cycles=(\d+)'
-raw_segment_count = 'BENCHMARK: segment_count=(\d+)'
+raw_execution_setup_time_s = 'BENCHMARK: execution_setup_time_s=([\d.]+)'
 
 # ================================================================
 # 证明阶段 (Proving Phase)
 # ================================================================
-# Host 输出格式: "BENCHMARK: proof_time_s=1.234567"
 raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
-
-# Host 输出格式: "BENCHMARK: proof_size_bytes=12345"
 raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
 
 # ================================================================
-# 验证阶段 (Verification Phase)
+# 输出结果 (Output)
 # ================================================================
-# Host 输出格式: "BENCHMARK: verification_time_s=0.123456"
-raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
-raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
-
-# Host 输出格式: "BENCHMARK: success_status=success"
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
 
 # ================================================================
-# 备用模式（兼容旧版日志格式）
+# SDK 内部日志 (SDK Internal Logs)
 # ================================================================
-# 旧格式: "proof mode: core, proof size: 12345 Bytes, proof time: 1.234s"
-fallback_proof_mode = 'proof mode: (\w+),'
-fallback_proof_size = 'proof size: (\d+) Bytes'
-fallback_proof_time = 'proof time: ([\d.]+)s'
-
-# Guest 输出格式（cycle tracker）
-guest_cycles = 'fibonacci \(cycle tracker\): (\d+)'
+# Pico SDK 可能输出的内部日志指标
+pico_execution_cycles = 'execution cycles: (\d+)'
+pico_proving_time = 'proving time: ([\d.]+)s'
 
 # ----------------------------------------------------------------
 # 指标映射 (Metric Mapping)
@@ -96,33 +90,21 @@ guest_cycles = 'fibonacci \(cycle tracker\): (\d+)'
 # ====================
 # 1. Execution Phase
 # ====================
-"total_cycles" = "raw_total_cycles"
-"instruction_count" = "raw_user_cycles"
+"execution_time_s" = "raw_execution_setup_time_s"
 
 # ====================
-# 2. VM Circuit Phase (Core Proving)
+# 2. VM Circuit Phase (Pico uses "fast" mode which is single-stage)
 # ====================
-"vm_chunk_count" = "raw_segment_count"
 "vm_prove_time_s" = "raw_proof_time_s"
 "vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
 
 # ====================
-# 3. Aggressive Phase (Compressed)
+# 3. Verification Phase
 # ====================
-# RISC0 的 compressed 模式 (succinct) 复用相同的 proof 指标
-"aggressive_prove_time_s" = "raw_proof_time_s"
-"aggressive_proof_size_bytes" = "raw_proof_size_bytes"
-
-# ====================
-# 4. SNARK Phase (Groth16)
-# ====================
-# RISC0 的 groth16 模式复用相同的 proof 指标
-"snark_proof_time_s" = "raw_proof_time_s"
-"snark_proof_size_bytes" = "raw_proof_size_bytes"
-"snark_type" = "raw_proof_mode"
-
-# ====================
-# 5. Verification Phase
-# ====================
-"verification_time_s" = "raw_verification_time_s"
 "success_status" = "raw_success_status"
+
+# ====================
+# 4. Initialization
+# ====================
+"prover_initialization_time_s" = "raw_initialization_time_s"
+
