@@ -1,0 +1,36 @@
+[package]
+name = "cairo-m-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Cairo-M SDK dependencies
+# Note: These are placeholders - actual dependencies depend on cairo-m's crate structure
+# Once cairo-m publishes crates, these would be:
+# cairo-m-compiler = { git = "https://github.com/kkrt-labs/cairo-m.git" }
+# cairo-m-runner = { git = "https://github.com/kkrt-labs/cairo-m.git" }
+# cairo-m-prover = { git = "https://github.com/kkrt-labs/cairo-m.git" }
+
+common.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+
+# Logging
+log.workspace = true
+env_logger.workspace = true
+
+# Environment variables
+dotenv.workspace = true
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Timing
+

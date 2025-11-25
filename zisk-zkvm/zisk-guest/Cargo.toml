@@ -1,0 +1,9 @@
+[package]
+name = "zisk-guest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ziskos = { workspace = true }
+common = { path = "../../common", default-features = false }

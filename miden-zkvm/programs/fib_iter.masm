@@ -1,0 +1,60 @@
+# Miden Assembly: Iterative Fibonacci
+# Computes Fibonacci number iteratively
+# Input from advice provider, output on stack
+
+begin
+    # Push input n from advice provider
+    adv_push.1
+    
+    # Duplicate n for comparison
+    dup.0
+    
+    # If n <= 1, return 1
+    push.1
+    lte
+    if.true
+        drop
+        push.1
+    else
+        # Setup: counter = n, prev = 0, curr = 1
+        push.0      # prev = 0
+        push.1      # curr = 1
+        movup.2     # move n to top: [n, curr, prev]
+        
+        # Loop n times
+        repeat.30
+            # Check if counter > 0
+            dup.0
+            neq.0
+            if.true
+                # next = prev + curr
+                dup.2       # [prev, n, curr, prev]
+                dup.2       # [curr, prev, n, curr, prev]
+                add         # [next, n, curr, prev]
+                
+                # Update: prev = curr
+                movdn.2     # [n, curr, next, prev]
+                swap        # [curr, n, next, prev]
+                movdn.3     # [n, next, prev, curr]
+                movup.3     # [curr, n, next, prev]
+                drop        # [n, next, prev]
+                movup.2     # [prev, n, next]
+                drop        # [n, next]
+                dup.1       # [next, n, next]
+                movdn.2     # [n, next, next]
+                movup.2     # [next, n, next]
+                drop        # [n, next]
+                
+                # Decrement counter
+                push.1
+                sub
+                swap
+            end
+        end
+        
+        # Result is in curr, clean up
+        swap
+        drop
+    end
+end
+

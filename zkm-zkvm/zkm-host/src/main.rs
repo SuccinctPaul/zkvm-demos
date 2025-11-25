@@ -1,19 +1,8 @@
-//! An end-to-end example of using the SP1 SDK to generate a proof of a program that can be executed
-//! or have a core proof generated.
-//!
-//! You can run this script using the following command:
-//! ```shell
-//! RUST_LOG=info cargo run --release -- --execute
-//! ```
-//! or
-//! ```shell
-//! RUST_LOG=info cargo run --release -- --prove
-//! ```
-
 use zkm_sdk::{include_elf, ProverClient, ZKMProofKind, ZKMStdin};
+use common::load_program_input;
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
-pub const FIBONACCI_ELF: &[u8] = include_elf!("zkm-guest");
+pub const GUEST_ELF: &[u8] = include_elf!("zkm-guest");
 
 fn main() {
     // Setup the logger.
@@ -24,34 +13,32 @@ fn main() {
     let client = ProverClient::new();
 
     // Setup the inputs.
-    let fib_n = common::load_fib_n();
-    println!("fib_n = {}", fib_n);
+    let input = load_program_input();
+    println!("╔════════════════════════════════════════╗");
+    println!("║        ZKM Multi-Program Demo         ║");
+    println!("╚════════════════════════════════════════╝");
+    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📊 Input N: {}", input.n);
+    println!();
+    
     let mut stdin = ZKMStdin::new();
-    stdin.write(&fib_n);
+    stdin.write(&input.program.id());
+    stdin.write(&input.n);
 
     // Execute the program
-    let (_output, _report) = client.execute(FIBONACCI_ELF, stdin.clone()).run().unwrap();
-
-    // Read the output.
-    // let expect = fib::fibonacci(fib_n);
-    // assert_eq!(a, expected_a);
-    // assert_eq!(b, expected_b);
-    // println!("Values are correct!");
-
-    // Record the number of cycles executed.
-    // println!(
-    //     "Number of instructions: {}",
-    //     report.total_instruction_count()
-    // );
-    // println!("Number of cycles: {}", report.total_syscall_count());
-    // // println!("report: {}", report);
-    // println!("Program executed successfully.");
+    println!("⚙️  Executing program...");
+    let (_output, report) = client.execute(GUEST_ELF, stdin.clone()).run().unwrap();
+    
+    println!("✅ Execution completed");
+    println!("📊 Instructions: {}", report.total_instruction_count());
 
     println!("\n");
     // Setup the program for proving.
-    let (pk, vk) = client.setup(FIBONACCI_ELF);
+    println!("🔧 Setting up proving environment...");
+    let (pk, vk) = client.setup(GUEST_ELF);
 
     // Generate the proof
+    println!("🔐 Generating proof...");
     let proof_mode = ZKMProofKind::Groth16;
     let prover = match proof_mode {
         ZKMProofKind::Core => client.prove(&pk, stdin).core(),
@@ -62,7 +49,7 @@ fn main() {
     };
     let proof = prover.run().expect("failed to generate proof");
 
-    println!("Successfully generated proof!");
+    println!("✅ Successfully generated proof!");
     println!(
         "proof_mode: {:?} , proof size: {:?} Bytes",
         proof_mode,
@@ -70,6 +57,7 @@ fn main() {
     );
 
     // Verify the proof.
+    println!("🔍 Verifying proof...");
     client.verify(&proof, &vk).expect("failed to verify proof");
-    println!("Successfully verified proof!");
+    println!("✨ Successfully verified proof!");
 }

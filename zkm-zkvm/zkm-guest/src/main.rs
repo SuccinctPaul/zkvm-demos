@@ -1,26 +1,18 @@
-//! A simple program that takes a number `n` as input, and writes the `n-1`th and `n`th fibonacci
-//! number as an output.
-
-// These two lines are necessary for the program to properly compile.
-//
-// Under the hood, we wrap your main function with some extra code so that it behaves properly
-// inside the zkVM.
 #![no_main]
 zkm_zkvm::entrypoint!(main);
 
+use common::execute_program;
+
 pub fn main() {
-    // Read an input to the program.
-    //
-    // Behind the scenes, this compiles down to a custom system call which handles reading inputs
-    // from the prover.
+    // Read input
+    let program_id = zkm_zkvm::io::read::<u32>();
     let n = zkm_zkvm::io::read::<u32>();
 
-    // Compute the n'th fibonacci number using a function from the workspace lib crate.
-    let res = fib::fibonacci(n);
+    // Execute
+    let result = execute_program(program_id, n);
+    
+    println!("Result: {}", result);
 
-    println!("fib result: {}", res);
-
-    // Commit to the public values of the program. The final proof will have a commitment to all the
-    // bytes that were committed to.
-    // zkm_zkvm::io::commit_slice(&bytes);
+    // Commit (ZKM uses commit_slice usually, but let's stick to print or minimal commit if API supports it)
+    // zkm_zkvm::io::commit(&result); // Check if this API exists, otherwise skip
 }

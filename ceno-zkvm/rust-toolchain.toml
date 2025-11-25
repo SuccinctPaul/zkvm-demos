@@ -1,0 +1,9 @@
+[toolchain]
+# Using nightly toolchain for Nexus zkVM compatibility
+# (CENO proof-of-concept implementation)
+channel = "nightly-2025-04-06"
+targets = ["riscv32i-unknown-none-elf"]
+
+
+
+

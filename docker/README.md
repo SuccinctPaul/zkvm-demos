@@ -1,6 +1,6 @@
 # ZKVM Docker Environment
 
-Isolated Docker environments for multiple ZKVMs (SP1, Nexus, Risc0, ZKM) to avoid toolchain conflicts.
+Isolated Docker environments for multiple ZKVMs (SP1, Nexus, Risc0, ZKM, ZisK) to avoid toolchain conflicts.
 
 ## 🚀 Quick Start
 
@@ -81,6 +81,35 @@ ZKVM_ARGS="--prove" docker compose --profile zkm up zkm-zkvm    # Prove mode
 docker compose run --rm zkm-zkvm bash
 ```
 
+### 🟡 ZisK ZKVM
+
+```bash
+cd docker
+docker compose build zisk-zkvm
+
+# Test mode (build + emulator execution)
+docker compose --profile zisk up zisk-zkvm
+
+# Prove mode (build + execute + ROM setup + prove + verify)
+ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
+
+# Custom Fibonacci number
+FIBONACCI_N=20 ZKVM_MODE=prove docker compose --profile zisk up zisk-zkvm
+
+# Interactive shell for manual control
+docker compose run --rm zisk-zkvm bash
+# Then inside container:
+cd zisk-guest
+cargo-zisk build --release
+cargo-zisk run --release -i ../build/input.bin
+cargo-zisk rom-setup -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest
+cargo-zisk prove -e target/riscv64ima-zisk-zkvm-elf/release/zisk-guest \
+                 -i ../build/input.bin -o ../proof -a -y
+cargo-zisk verify -p ../proof/vadcop_final_proof.bin
+```
+
+**Note**: ZisK proof generation is only supported on Linux x86_64. On macOS with Apple Silicon, Docker will use emulation (slower but works).
+
 ## 💡 Key Points
 
 - **Build once, run many times** - No rebuild needed unless dependencies change
@@ -115,7 +144,8 @@ docker/
 │   ├── Dockerfile.nexus
 │   ├── Dockerfile.risc0
 │   ├── Dockerfile.sp1
-│   └── Dockerfile.zkm
+│   ├── Dockerfile.zkm
+│   └── Dockerfile.zisk      # ZisK with proof generation support
 └── scripts/
     └── build-base.sh        # Build base image
 ```
@@ -125,6 +155,12 @@ docker/
 **"zkvm-base:latest not found"** - Run `./build-base.sh` first
 
 **Risc0 on Apple Silicon (M1/M2/M3)** - Risc0 toolchain doesn't support ARM64. Build uses `linux/amd64` with emulation (works but slower)
+
+**ZisK on macOS** - ZisK proof generation requires Linux x86_64. Docker uses `linux/amd64` platform with emulation on macOS (works but slower). For better performance, use a Linux machine or VM.
+
+**ZisK ROM setup takes long time** - ROM setup is a one-time operation that can take 2-5 minutes. Results are cached in the `zisk-zisk-cache` volume.
+
+**ZisK proof generation slow** - First proof generation includes ROM setup. Subsequent proofs are faster (~30-45s). On Apple Silicon with emulation, expect 2-3x slower.
 
 **Slow first run** - Normal (5-10 mins). Cached runs: 30s-2mins
 

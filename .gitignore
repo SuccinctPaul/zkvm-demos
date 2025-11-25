@@ -26,5 +26,11 @@ debug
 .DS_Store
 
 .data
-
+**/*.rule
 **/*.pb
+
+**/zisk-provingkey-0.10.0.tar.gz
+
+
+**/*.data
+**/*.bin

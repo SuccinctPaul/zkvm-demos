@@ -1,0 +1,18 @@
+[workspace]
+members = [
+    "ceno-guest",
+    "ceno-host",
+]
+resolver = "2"
+
+[workspace.dependencies]
+common = { path = "../common" }
+fib = { path = "../fib" }
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[profile.dev]
+opt-level = 0
+

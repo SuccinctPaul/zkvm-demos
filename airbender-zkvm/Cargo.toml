@@ -1,0 +1,39 @@
+[workspace]
+members = [
+    "airbender-guest",
+    "airbender-host",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+common = { path = "../common" }
+fib = { path = "../fib" }
+
+# Airbender zkVM dependencies
+# Note: These are based on the ere project structure
+# Actual versions may need adjustment based on zkSync's releases
+anyhow = "1.0"
+bincode = "1.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tempfile = "3.0"
+thiserror = "1.0"
+
+# Note: airbender_execution_utils may need to be sourced from zkSync's repository
+# or the ere project until officially published to crates.io
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[profile.dev]
+opt-level = 3
+
+[workspace.lints]
+
