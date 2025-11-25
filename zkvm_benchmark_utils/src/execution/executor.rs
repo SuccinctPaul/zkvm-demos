@@ -440,6 +440,7 @@ impl BenchmarkExecutor {
 
                 // Set metadata
                 m.metadata.zkvm_name = zkvm_name.clone();
+                m.metadata.zkvm_version = zkvm_config.version.clone();
                 m.metadata.program_name = program_name.clone();
                 m.metadata.mode = Some(mode.clone());
                 if let Ok(s) = param.parse::<u32>() {

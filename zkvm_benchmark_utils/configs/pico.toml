@@ -1,27 +1,31 @@
 # ================================================================
 # Pico zkVM Benchmark Configuration
 # ================================================================
+# ⚠️ 注意：Pico SDK v1.1.6 有工具链兼容性问题
+# 使用预构建的二进制文件运行，跳过构建步骤
 
 name = "pico"
 version = "v1.1.6"
 enabled = true
-default_mode = "fast"
+default_mode = "core"
 
 # 测试规模（程序输入 N 值）
 # 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）
 test_scales = [10, 20]
 
 # 证明模式
-# Pico 目前只支持 "fast" 模式
-prove_modes = ["fast"]
+# Pico 的 prove_fast 方法映射到 "core" 模式
+prove_modes = ["core"]
 
-# Pico 项目路径
-working_dir = "../pico-zkvm/pico-host"
+# Pico 项目路径（使用 pico-zkvm 根目录作为工作目录）
+working_dir = "../pico-zkvm"
 
 # 构建和运行命令
-# 注意：Guest ELF 需要预先构建或使用预构建的 ELF
-build_command = "cargo build --release"
-run_command = "cargo run --release"
+# ⚠️ 跳过构建：Pico SDK v1.1.6 有工具链兼容性问题
+#    - error[E0635]: unknown feature `const_cmp`
+#    - error[E0658]: using `_` for array lengths is unstable
+# 使用预构建的二进制文件，不设置 build_command
+run_command = "./target/release/pico-host"
 
 # 超时设置（秒）
 timeout_seconds = 3600
@@ -46,42 +50,78 @@ RUST_LOG = "debug"
 # ----------------------------------------------------------------
 [parsed_metrics]
 # ================================================================
-# 基础信息 (Basic Info)
+# RiscV Execution Report (核心指标)
+# 日志格式: "|- cycles:           5361"
 # ================================================================
-raw_program_name = 'BENCHMARK: program_name=(\w+)'
-raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w.]+)'
-raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_total_cycles = '\|-\s*cycles:\s+(\d+)'
+raw_chunk_num = '\|-\s*chunk_num:\s+(\d+)'
+raw_chunk_size = '\|-\s*chunk_size:\s+(\d+)'
+raw_chunk_batch_size = '\|-\s*chunk_batch_size:\s+(\d+)'
 
 # ================================================================
 # 初始化阶段 (Initialization Phase)
 # ================================================================
-raw_elf_size_bytes = 'BENCHMARK: elf_size_bytes=(\d+)'
-raw_initialization_time_s = 'BENCHMARK: initialization_time_s=([\d.]+)'
+raw_elf_size_bytes = 'ELF size: (\d+) bytes'
+raw_initialization_time_s = 'Initialization completed in ([\d.]+)s'
 
 # ================================================================
-# 执行阶段 (Execution Phase)
+# 证明阶段详细时间 (Proving Phase Details)
 # ================================================================
-raw_execution_setup_time_s = 'BENCHMARK: execution_setup_time_s=([\d.]+)'
+# RISCV 机器证明总时间: "RISCV MACHINE PROVE: close time.busy=2.17s"
+raw_riscv_prove_time_s = 'RISCV MACHINE PROVE: close time\.busy=([\d.]+)s'
+# 完成 RISCV 时间: "--- Finish riscv in 2.167714125s"
+raw_finish_riscv_time_s = '--- Finish riscv in ([\d.]+)s'
+# 用户友好的证明时间: "Proof generation completed in 2.33s"
+raw_total_prove_time_s = 'Proof generation completed in ([\d.]+)s'
+# 备用格式: "Prove time: 2.33s"
+raw_prove_time_alt = 'Prove time: ([\d.]+)s'
 
 # ================================================================
-# 证明阶段 (Proving Phase)
+# Chunk 证明时间统计
+# 日志格式: "total  │      4329 ms"
 # ================================================================
-raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
-raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+raw_chunks_total_prove_ms = 'total\s+│\s+(\d+)\s+ms'
 
 # ================================================================
-# 输出结果 (Output)
+# 证明大小 (Proof Size)
 # ================================================================
-raw_output_result = 'BENCHMARK: output_result=(\d+)'
-raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_proof_size_bytes = 'Proof size: (\d+) bytes'
 
 # ================================================================
-# SDK 内部日志 (SDK Internal Logs)
+# 验证阶段 (Verification Phase)
 # ================================================================
-# Pico SDK 可能输出的内部日志指标
-pico_execution_cycles = 'execution cycles: (\d+)'
-pico_proving_time = 'proving time: ([\d.]+)s'
+# "riscv_prover prove success"
+raw_prove_success = 'riscv_prover prove (success)'
+# "riscv_prover proof verify success"  
+raw_verify_success = 'riscv_prover proof verify (success)'
+
+# ================================================================
+# 芯片统计 (Chip Statistics)
+# 日志格式: "chip Cpu | width 117 rows 32768 cells 3833856"
+# ================================================================
+raw_cpu_chip_rows = 'chip Cpu\s+\| width \d+\s+rows (\d+)'
+raw_cpu_chip_cells = 'chip Cpu\s+\| width \d+\s+rows \d+\s+cells (\d+)'
+raw_program_chip_rows = 'chip Program\s+\| width \d+\s+rows (\d+)'
+raw_memory_chip_rows = 'chip MemoryReadWrite\s+\| width \d+\s+rows (\d+)'
+
+# ================================================================
+# Setup Keys 时间
+# 日志格式: "setup_keys: close time.busy=199ms"
+# ================================================================
+raw_setup_keys_time_ms = 'setup_keys: close time\.busy=([\d.]+)ms'
+
+# ================================================================
+# Core Prove 时间 (每个 chunk)
+# 日志格式: "core_prove: close time.busy=1.60s"
+# ================================================================
+raw_core_prove_time_s = 'core_prove: close time\.busy=([\d.]+)s'
+
+# ================================================================
+# BENCHMARK 格式 (新版代码，如果预构建更新后可用)
+# ================================================================
+benchmark_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+benchmark_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+benchmark_success_status = 'BENCHMARK: success_status=(\w+)'
 
 # ----------------------------------------------------------------
 # 指标映射 (Metric Mapping)
@@ -90,21 +130,22 @@ pico_proving_time = 'proving time: ([\d.]+)s'
 # ====================
 # 1. Execution Phase
 # ====================
-"execution_time_s" = "raw_execution_setup_time_s"
+"total_cycles" = "raw_total_cycles"
 
 # ====================
-# 2. VM Circuit Phase (Pico uses "fast" mode which is single-stage)
+# 2. VM Circuit Phase
 # ====================
-"vm_prove_time_s" = "raw_proof_time_s"
+"vm_chunk_count" = "raw_chunk_num"
+"vm_chunk_size_rows" = "raw_chunk_size"
+"vm_prove_time_s" = "raw_total_prove_time_s"
 "vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
 
 # ====================
 # 3. Verification Phase
 # ====================
-"success_status" = "raw_success_status"
+"success_status" = "raw_verify_success"
 
 # ====================
 # 4. Initialization
 # ====================
 "prover_initialization_time_s" = "raw_initialization_time_s"
-

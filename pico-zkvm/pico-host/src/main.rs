@@ -22,8 +22,8 @@ fn main() -> anyhow::Result<()> {
     println!("BENCHMARK: zkvm_name=pico");
     println!("BENCHMARK: zkvm_version=v1.1.6");
 
-    // Proof mode from environment (Pico only supports "fast" mode currently)
-    let proof_mode = std::env::var("PICO_PROOF_MODE").unwrap_or_else(|_| "fast".to_string());
+    // Proof mode from environment (Pico uses prove_fast which maps to "core" mode)
+    let proof_mode = std::env::var("PICO_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
     println!("BENCHMARK: proof_mode={}", proof_mode);
 
     println!("\n--- Initialization Phase ---");

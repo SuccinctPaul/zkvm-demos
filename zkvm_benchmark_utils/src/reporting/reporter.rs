@@ -138,7 +138,8 @@ impl BenchmarkReporter {
                 let entry = grouped_metrics.entry(key.clone()).or_insert_with(|| {
                     let mut m = crate::core::metrics::UnifiedMetrics::new(program, zkvm);
                     m.metadata.scale = Some(scale);
-                    m.metadata.mode = None; // Aggregated
+                    m.metadata.mode = metrics.metadata.mode.clone(); // Preserve mode from first result
+                    m.metadata.zkvm_version = metrics.metadata.zkvm_version.clone(); // Preserve version
                     m
                 });
 
@@ -274,7 +275,7 @@ impl BenchmarkReporter {
                 .mode
                 .as_ref()
                 .map(|m| m.to_string())
-                .unwrap_or_else(|| ProofMode::Groth16.to_string()),
+                .unwrap_or_else(|| ProofMode::Core.to_string()),  // Default to Core, not Groth16
             metrics
                 .metadata
                 .scale

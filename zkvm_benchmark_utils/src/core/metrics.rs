@@ -18,7 +18,7 @@ pub mod std_keys {
 
     // VM Circuit
     pub const VM_CHUNK_COUNT: &str = "vm_chunk_count";
-    // pub const CHUNK_SIZE: &str = "vm_chunk_size_rows";
+    pub const VM_CHUNK_SIZE_ROWS: &str = "vm_chunk_size_rows";
     pub const VM_PROVE_TIME: &str = "vm_prove_time_s";
     pub const VM_PROOF_SIZE: &str = "vm_prove_proof_size_bytes";
 
@@ -82,7 +82,7 @@ impl std::str::FromStr for ProofMode {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "core" => Ok(ProofMode::Core),
+            "core" | "fast" => Ok(ProofMode::Core),  // "fast" maps to Core for Pico compatibility
             "compressed" | "aggressive" | "shrink" => Ok(ProofMode::Compressed),
             "groth16" => Ok(ProofMode::Groth16),
             "plonk" => Ok(ProofMode::Plonk),
@@ -499,6 +499,9 @@ impl UnifiedMetrics {
         // VM Circuit
         if let Some(v) = get_u64(std_keys::VM_CHUNK_COUNT) {
             self.vm_circuit.chunk_count = Some(v);
+        }
+        if let Some(v) = get_u64(std_keys::VM_CHUNK_SIZE_ROWS) {
+            self.vm_circuit.chunk_size_rows = Some(v);
         }
         if let Some(v) = get_u64(std_keys::VM_PROOF_SIZE) {
             self.vm_circuit.proof_size_bytes = Some(v);
