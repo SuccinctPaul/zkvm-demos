@@ -11,8 +11,10 @@ test_scales = [10, 20]
 prove_modes = ["core", "compressed", "groth16", "plonk"]
 
 working_dir = "../zkm-zkvm/zkm-host"
-build_command = "cargo build --release"
-run_command = "cargo run --release"
+
+# Note: ZKM requires sourcing the toolchain environment first
+build_command = "bash -c 'source ~/.zkm-toolchain/env && cargo build --release'"
+run_command = "bash -c 'source ~/.zkm-toolchain/env && cargo run --release'"
 
 timeout_seconds = 3600
 repeat_count = 1
@@ -49,4 +51,3 @@ legacy_proof_size = 'proof size: (\d+) Bytes'
 "vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
 "verification_time_s" = "raw_verification_time_s"
 "success_status" = "raw_success_status"
-
