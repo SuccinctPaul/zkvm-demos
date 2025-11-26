@@ -3,6 +3,7 @@ use miden_assembly::Assembler;
 use miden_vm::{
     DefaultHost, MemAdviceProvider, ProgramInfo, ProvingOptions, StackInputs, AdviceInputs,
 };
+use miden_processor::ExecutionOptions;
 use std::time::Instant;
 use common::{load_program_input, execute_program};
 
@@ -56,7 +57,6 @@ fn main() -> Result<()> {
     println!("\n3. Preparing inputs...");
     
     // Use stack inputs directly - Miden expects inputs in reverse order on stack
-    // So to have [program_id, n] accessible, we push [n, program_id]
     let stack_values: Vec<u64> = vec![input.n as u64, input.program.id() as u64];
     let stack_inputs = StackInputs::try_from_ints(stack_values)
         .map_err(|e| anyhow::anyhow!("Failed to create stack inputs: {}", e))?;
@@ -66,8 +66,46 @@ fn main() -> Result<()> {
     
     println!("   ✓ Inputs prepared (on stack)");
 
-    // Step 4: Execute and prove
-    println!("\n4. Executing program and generating proof...");
+    // Step 4a: First execute to get trace info (cycles)
+    println!("\n4. Executing program...");
+    let exec_start = Instant::now();
+    
+    let host_for_exec = DefaultHost::new(advice_provider.clone());
+    let exec_options = ExecutionOptions::default();
+    
+    let execution_result = miden_vm::execute(
+        &program,
+        stack_inputs.clone(),
+        host_for_exec,
+        exec_options,
+    );
+    
+    let exec_duration = exec_start.elapsed();
+    
+    match &execution_result {
+        Ok(trace) => {
+            // Get trace length (represents execution cycles)
+            let trace_len = trace.get_trace_len();
+            println!("   ✓ Execution completed");
+            println!("   Trace length (cycles): {}", trace_len);
+            println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
+            println!("BENCHMARK: total_cycles={}", trace_len);
+        }
+        Err(e) => {
+            println!("   ✗ Execution failed: {}", e);
+            println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
+            println!("BENCHMARK: success_status=failed");
+            println!("BENCHMARK: error_message={}", e.to_string().replace('\n', " "));
+            
+            let total_duration = total_start.elapsed();
+            println!("BENCHMARK: total_time_s={:.6}", total_duration.as_secs_f64());
+            
+            return Err(anyhow::anyhow!("Failed to execute program: {}", e));
+        }
+    }
+
+    // Step 4b: Now prove
+    println!("\n5. Generating proof...");
     let prove_start = Instant::now();
     
     let host = DefaultHost::new(advice_provider);
@@ -85,13 +123,19 @@ fn main() -> Result<()> {
     match prove_result {
         Ok((mut stack_outputs, proof)) => {
             println!("   ✓ Proof generated successfully");
-            println!("BENCHMARK: execution_time_s={:.6}", prove_duration.as_secs_f64());
             println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
             
             // Get proof size
             let proof_bytes = proof.to_bytes();
             let proof_size = proof_bytes.len();
             println!("BENCHMARK: proof_size_bytes={}", proof_size);
+            
+            // Calculate proving speed (kHz)
+            if let Ok(trace) = &execution_result {
+                let trace_len = trace.get_trace_len() as f64;
+                let prove_khz = trace_len / (prove_duration.as_secs_f64() * 1000.0);
+                println!("BENCHMARK: vm_prove_khz={:.3}", prove_khz);
+            }
             
             // Get result from stack
             let stack = stack_outputs.stack_mut();
@@ -101,8 +145,8 @@ fn main() -> Result<()> {
             println!("   Result: {}", result);
             println!("BENCHMARK: output_result={}", result);
             
-            // Step 5: Verify the proof
-            println!("\n5. Verifying proof...");
+            // Step 6: Verify the proof
+            println!("\n6. Verifying proof...");
             let program_info = ProgramInfo::from(program);
             
             let verify_start = Instant::now();
@@ -121,7 +165,7 @@ fn main() -> Result<()> {
                     println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
                     
                     // Verify correctness
-                    println!("\n6. Verifying correctness...");
+                    println!("\n7. Verifying correctness...");
                     let expected = execute_program(input.program.id(), input.n);
                     println!("   Expected: {}", expected);
                     println!("   Computed: {}", result);
@@ -147,7 +191,6 @@ fn main() -> Result<()> {
         }
         Err(e) => {
             println!("   ✗ Proof generation failed: {}", e);
-            println!("BENCHMARK: execution_time_s={:.6}", prove_duration.as_secs_f64());
             println!("BENCHMARK: proof_time_s=0.0");
             println!("BENCHMARK: success_status=failed");
             println!("BENCHMARK: error_message={}", e.to_string().replace('\n', " "));
