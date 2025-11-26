@@ -30,11 +30,40 @@ ensure_tool_installed "bash" "to run the ziskup installer"
 ensure_tool_installed "rustup" "for managing Rust toolchains (ZisK installs its own)"
 ensure_tool_installed "cargo" "as cargo-zisk is a cargo subcommand"
 
-# Step 1: Download and run the script that installs the ziskup binary itself.
+# Step 1: Download and run ziskup directly (not install.sh) to control architecture
 # Export SETUP_KEY=proving to ensure no interactive options in `ziskup`.
 export ZISK_VERSION="0.10.0"
 export SETUP_KEY=${SETUP_KEY:=proving}
-curl "https://raw.githubusercontent.com/0xPolygonHermez/zisk/main/ziskup/install.sh" | bash
+
+# Create .zisk/bin directory
+ZISK_DIR="${HOME}/.zisk"
+ZISK_BIN_DIR="${ZISK_DIR}/bin"
+mkdir -p "${ZISK_BIN_DIR}"
+
+# Download ziskup binary directly
+echo "Downloading ziskup..."
+curl -# -L "https://raw.githubusercontent.com/0xPolygonHermez/zisk/main/ziskup/ziskup" -o "${ZISK_BIN_DIR}/ziskup"
+chmod +x "${ZISK_BIN_DIR}/ziskup"
+
+# Detect platform and architecture
+# ZisK only provides: darwin_arm64 and linux_amd64
+# For Docker on Apple Silicon, we need to force linux + amd64
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+
+ZISKUP_ARGS=""
+if [ "$OS" = "linux" ]; then
+    # On Linux, always use amd64 (ZisK doesn't provide linux_arm64)
+    ZISKUP_ARGS="--platform linux --arch amd64"
+    echo "Detected Linux - using linux_amd64 binaries"
+elif [ "$OS" = "darwin" ]; then
+    # On macOS, use darwin_arm64 (only available option for macOS)
+    ZISKUP_ARGS="--platform darwin --arch arm64"
+    echo "Detected macOS - using darwin_arm64 binaries"
+fi
+
+echo "Running ziskup with args: ${ZISKUP_ARGS}"
+"${ZISK_BIN_DIR}/ziskup" --version "v${ZISK_VERSION#v}" ${ZISKUP_ARGS}
 unset SETUP_KEY
 
 # Step 2: Ensure the installed cargo-zisk binary is in PATH for this script session.

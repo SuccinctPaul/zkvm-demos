@@ -1,49 +1,78 @@
 # ZisK ZKVM Toolchain-Only Dockerfile
 # This image contains the development environment and ZisK toolchain for proof generation
 # Source code is mounted at runtime and compiled on-demand
-# Usage: docker run -v $(pwd):/workspace zisk-toolchain bash
+# Usage: docker run --platform linux/amd64 -v $(pwd):/workspace zisk-zkvm bash
+#
+# NOTE: ZisK only provides linux_amd64 binaries, so this image must be built
+# and run on amd64 (x86_64) architecture. On Apple Silicon, use:
+#   docker build --platform linux/amd64 ...
 
-FROM zkvm-base:latest
+# Self-contained base - does not depend on zkvm-base to avoid architecture issues
+FROM --platform=linux/amd64 ubuntu:22.04
 
-# Install ZisK-specific dependencies required for proof generation
-# These are needed by cargo-zisk prove and the proving system
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+
+# Install base system dependencies (from Dockerfile.base) + ZisK-specific dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Core utilities
+    # Base dependencies
+    build-essential \
+    curl \
+    git \
+    wget \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    golang-go \
+    protobuf-compiler \
+    # ZisK-specific dependencies
     xz-utils \
     jq \
-    # QEMU for emulation
+    python3 \
     qemu-system \
-    # Math and crypto libraries
     libomp-dev \
     libgmp-dev \
     libsecp256k1-dev \
     libsodium-dev \
-    # Development libraries
     nlohmann-json3-dev \
     uuid-dev \
     libgrpc++-dev \
     libpqxx-dev \
-    # Assembler
     nasm \
-    # MPI for parallel processing
     libopenmpi-dev \
     openmpi-bin \
     openmpi-common \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Set ZisK environment variables
-ENV ZISK_VERSION="0.10.0" \
-    ZISK_HOME="/root/.zisk" \
-    SETUP_KEY="proving"
+# Install Rust with optimizations
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable \
+    && rustup update && rustup default stable \
+    && rustup component add rust-src
 
-# Copy and run ZisK SDK installer script with modifications for Docker
-COPY scripts/sdk_installers/install_zisk_sdk.sh /tmp/install_zisk_sdk.sh
-RUN chmod +x /tmp/install_zisk_sdk.sh && \
-    # Set CI flag to skip GPU build (can be slow and not needed for basic proof generation)
-    # Remove this line if you want GPU support
-    CI=true /tmp/install_zisk_sdk.sh && \
-    rm -f /tmp/install_zisk_sdk.sh
+# Set Go environment variables
+ENV GOPATH=/go \
+    PATH=/go/bin:$PATH
+
+RUN mkdir -p /go/bin
+
+# Set ZisK environment variables
+# Note: ZISK_VERSION should NOT include the 'v' prefix here, as ziskup adds it
+ENV ZISK_VERSION="0.14.0" \
+    ZISK_HOME="/root/.zisk"
+
+# Install ZisK directly (without using install script to avoid complexity)
+# ZisK provides linux_amd64 binaries
+# Note: Use ${ZISK_VERSION} without 'v' prefix - ziskup adds 'v' automatically
+RUN mkdir -p "${ZISK_HOME}/bin" && \
+    echo "Downloading ZisK v${ZISK_VERSION}..." && \
+    curl -# -L "https://raw.githubusercontent.com/0xPolygonHermez/zisk/main/ziskup/ziskup" -o "${ZISK_HOME}/bin/ziskup" && \
+    chmod +x "${ZISK_HOME}/bin/ziskup" && \
+    echo "Running ziskup with --platform linux --arch amd64..." && \
+    SETUP_KEY=proving "${ZISK_HOME}/bin/ziskup" --version "${ZISK_VERSION}" --platform linux --arch amd64
 
 # Add ZisK binaries to PATH
 ENV PATH="${ZISK_HOME}/bin:$PATH"
@@ -60,4 +89,3 @@ WORKDIR /workspace
 
 # Set default command to bash (interactive shell)
 CMD ["bash"]
-

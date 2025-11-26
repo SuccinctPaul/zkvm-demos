@@ -15,7 +15,7 @@
 # and uses Docker on macOS for proof generation.
 
 name = "zisk"
-version = "v0.10.0"
+version = "v0.14.0"
 enabled = true
 default_mode = "core"
 
@@ -30,19 +30,22 @@ prove_modes = ["core"]
 working_dir = "../zisk-zkvm/zisk-guest"
 
 # Build command
-# cargo-zisk build compiles for RISC-V zkVM target
-build_command = "cargo-zisk build --release"
+# On macOS, cargo-zisk is not available, so we skip build (run_benchmark.sh handles it via Docker)
+# On Linux, you can uncomment this line to enable native build:
+# build_command = "cargo-zisk build --release"
 
 # Run command
 # Uses wrapper script that:
-# 1. Generates input.bin with correct PROGRAM_N
-# 2. Runs cargo-zisk with the generated input
-# Only support the Linux system.
+# 1. Detects platform (macOS -> Docker, Linux -> native)
+# 2. Generates input.bin with correct PROGRAM_N
+# 3. Runs cargo-zisk with the generated input
+# 4. Generates and verifies proof
 run_command = "./run_benchmark.sh"
 
 # Timeout settings (seconds)
-# Proof generation can take 30-90 seconds
-timeout_seconds = 600
+# Docker execution on macOS can take longer (60-120 seconds for proof)
+# ROM setup (first time) can take 5-10 minutes
+timeout_seconds = 900
 
 # Repeat count
 repeat_count = 1
@@ -64,69 +67,62 @@ RUST_LOG = "debug"
 # ----------------------------------------------------------------
 [parsed_metrics]
 # ================================================================
-# Execution Output
-# ZisK outputs computation results via ziskemu
+# BENCHMARK Format (Primary - from run_benchmark.sh wrapper)
+# These are the main metrics output by our benchmark wrapper script
 # ================================================================
+# Program and zkVM info
+benchmark_program_name = 'BENCHMARK: program_name=(\S+)'
+benchmark_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+benchmark_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+benchmark_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+
+# Timing metrics
+benchmark_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+benchmark_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+benchmark_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+
+# Proof metrics
+benchmark_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
+# Status
+benchmark_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Execution Output (from ziskemu)
+# ================================================================
+# Hex output from ziskemu (e.g., "00000037")
+raw_output_hex = '^([0-9a-fA-F]{8})$'
 # Result from guest program: "Result: 89"
 raw_output_result = 'Result:\s*(\d+)'
 # Output value from ziskemu
 raw_output_value = 'Output\s*\[\d+\]\s*=\s*(\d+)'
 
 # ================================================================
-# Build and Execution Time
-# cargo-zisk run outputs timing info
+# Proof Verification (from cargo-zisk verify)
 # ================================================================
-raw_build_time_s = 'Built in ([\d.]+)s'
-raw_execution_time_s = 'Executed in ([\d.]+)s'
+# Verification success: "[INFO ] ProofMan:     ✓ Vadcop Final proof was verified"
+raw_verify_vadcop = 'Vadcop Final proof was (verified)'
+raw_verify_result = 'proof was (\w+)'
 
 # ================================================================
-# ROM Setup (First Time)
-# "cargo-zisk rom-setup" outputs
+# ROM Setup (First Time, optional)
 # ================================================================
 raw_rom_setup_time_s = 'ROM setup completed in ([\d.]+)s'
 
 # ================================================================
-# Proof Generation
-# "cargo-zisk prove" outputs
+# Alternative timing formats (fallback)
 # ================================================================
-# Proof generation time: "Proof generated in 30.5s"
-raw_proof_time_s = 'Proof generated in ([\d.]+)s'
-# Alternative format from ZisK logs
-raw_prove_duration_s = 'prove.*?(\d+\.?\d*)s'
-# ProofMan logs
+raw_build_time_s = 'Built in ([\d.]+)s'
+raw_executed_time_s = 'Executed in ([\d.]+)s'
+raw_proof_generated_s = 'Proof generated in ([\d.]+)s'
 raw_proofman_time_s = 'ProofMan:.*completed in ([\d.]+)s'
 
 # ================================================================
-# Proof Verification
-# "cargo-zisk verify" outputs
-# ================================================================
-# Verification success: "[INFO ] ProofMan:     ✓ Vadcop Final proof was verified"
-raw_verify_success = 'Vadcop Final proof was (verified)'
-raw_verification_time_s = 'Verification completed in ([\d.]+)s'
-raw_verify_result = 'proof was (\w+)'
-
-# ================================================================
-# Cycles and Performance Metrics
-# From ziskemu or cargo-zisk run output
+# Cycles and Performance Metrics (from ziskemu)
 # ================================================================
 raw_total_cycles = 'Total cycles:\s*(\d+)'
 raw_instruction_count = 'Instructions:\s*(\d+)'
 raw_memory_operations = 'Memory operations:\s*(\d+)'
-
-# ================================================================
-# Proof Size
-# ================================================================
-raw_proof_size_bytes = 'Proof size:\s*(\d+)\s*bytes'
-raw_vadcop_proof_size = 'vadcop_final_proof.*?(\d+)\s*bytes'
-
-# ================================================================
-# BENCHMARK Format (if implemented in wrapper)
-# ================================================================
-benchmark_program_name = 'BENCHMARK: program_name=(\w+)'
-benchmark_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-benchmark_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
-benchmark_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
-benchmark_success_status = 'BENCHMARK: success_status=(\w+)'
 
 # ----------------------------------------------------------------
 # Metric Mapping (Raw -> Standard Keys)
@@ -135,28 +131,35 @@ benchmark_success_status = 'BENCHMARK: success_status=(\w+)'
 # ====================
 # 1. Execution Phase
 # ====================
+"execution_time_s" = "benchmark_execution_time_s"
 "total_cycles" = "raw_total_cycles"
 "instruction_count" = "raw_instruction_count"
-"execution_time_s" = "raw_execution_time_s"
 
 # ====================
 # 2. Proving Phase
 # ====================
-"vm_prove_time_s" = "raw_proof_time_s"
-"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+"vm_prove_time_s" = "benchmark_proof_time_s"
+"vm_prove_proof_size_bytes" = "benchmark_proof_size_bytes"
 
 # ====================
 # 3. Verification Phase
 # ====================
-"verification_time_s" = "raw_verification_time_s"
+"verification_time_s" = "benchmark_verification_time_s"
 
 # ====================
 # 4. Status
 # ====================
-"success_status" = "raw_verify_success"
+"success_status" = "benchmark_success_status"
 
 # ====================
 # 5. Initialization (ROM Setup)
 # ====================
 "prover_initialization_time_s" = "raw_rom_setup_time_s"
+
+# ====================
+# 6. Metadata (optional)
+# ====================
+"program_name" = "benchmark_program_name"
+"zkvm_version" = "benchmark_zkvm_version"
+"proof_mode" = "benchmark_proof_mode"
 

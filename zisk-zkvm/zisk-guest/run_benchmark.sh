@@ -111,7 +111,7 @@ with open('build/input.bin', 'wb') as f:
     f.write(struct.pack('<II', program_id, n))
 print(f'BENCHMARK: program_name=fibonacci_{n}')
 print(f'BENCHMARK: zkvm_name=zisk')
-print(f'BENCHMARK: zkvm_version=v0.10.0')
+print(f'BENCHMARK: zkvm_version=v0.14.0')
 print(f'BENCHMARK: proof_mode=core')
 print(f'Generated input.bin: program_id={program_id}, n={n}')
 " "$PROGRAM_ID" "$N"
