@@ -2,8 +2,17 @@
 # ZisK zkVM Benchmark Configuration
 # ================================================================
 # ZisK is a zkVM by Polygon with focus on performance
-# ⚠️ Note: Proof generation only supported on Linux x86_64
-# macOS users should use Docker
+#
+# ⚠️ Platform Support:
+#   - Linux x86_64: Native proof generation ✅
+#   - macOS: Automatic Docker execution ✅ (run_benchmark.sh handles this)
+#
+# 🐳 macOS Docker Setup (first time):
+#   cd docker/scripts && ./build-base.sh && cd ..
+#   docker compose build zisk-zkvm
+#
+# The run_benchmark.sh script automatically detects the platform
+# and uses Docker on macOS for proof generation.
 
 name = "zisk"
 version = "v0.10.0"

@@ -13,8 +13,9 @@ prove_modes = ["core", "compressed", "groth16", "plonk"]
 working_dir = "../zkm-zkvm/zkm-host"
 
 # Note: ZKM requires sourcing the toolchain environment first
-build_command = "bash -c 'source ~/.zkm-toolchain/env && cargo build --release'"
-run_command = "bash -c 'source ~/.zkm-toolchain/env && cargo run --release'"
+# Using wrapper scripts to avoid shell special characters ($, &) blocked by executor
+build_command = "./build.sh"
+run_command = "./run.sh"
 
 timeout_seconds = 3600
 repeat_count = 1

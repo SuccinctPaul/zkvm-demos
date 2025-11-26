@@ -2,6 +2,7 @@
 # zkWasm Benchmark Configuration
 # ================================================================
 # zkWasm is a WebAssembly-based zkVM using Halo2 proofs
+# Homepage: https://github.com/DelphinusLab/zkWasm
 
 name = "zk_wasm"
 version = "v0.1.0"
@@ -10,6 +11,8 @@ default_mode = "core"
 test_scales = [10, 20]
 prove_modes = ["core"]
 
+# NOTE: Must run from zkwasm-zkvm root (not zkwasm-host) because
+# zkwasm-host uses relative paths like "zkwasm-guest/Cargo.toml"
 working_dir = "../zkwasm-zkvm"
 build_command = "cargo build --release -p zkwasm-host"
 run_command = "./target/release/zkwasm-host run"
@@ -21,25 +24,133 @@ repeat_count = 1
 name = "fibonacci"
 scales = [10, 20]
 
+# ----------------------------------------------------------------
+# Environment Variables
+# ----------------------------------------------------------------
 [env_vars]
 RUST_LOG = "debug"
+# Note: PROGRAM_NAME and PROGRAM_N are set automatically by the benchmark runner
 
+# ----------------------------------------------------------------
+# Parsed Metrics (Regular Expressions)
+# ----------------------------------------------------------------
 [parsed_metrics]
-# BENCHMARK format logs
-raw_program_name = 'BENCHMARK: program_name=(\w+)'
+# ================================================================
+# BENCHMARK Format Logs (Primary)
+# These are output by zkwasm-host main.rs when benchmark completes
+# ================================================================
+raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
 raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
 
-# Legacy format fallback
-legacy_wasm_built = 'WASM built successfully'
-legacy_circuit_setup = 'Circuit setup complete'
-legacy_proof_generated = 'Proof generated successfully'
-legacy_proof_verified = 'Proof verified successfully'
+# ================================================================
+# Program Input/Output Info
+# From zkwasm-host output at start of run
+# ================================================================
+raw_program_id = 'Program: \w+ \(ID=(\d+)\)'
+raw_input_n = 'Input N: (\d+)'
+raw_circuit_k = 'Setting up zkWasm circuit \(k=(\d+)\)'
 
+# ================================================================
+# Step Completion Markers
+# These indicate successful completion of each phase
+# ================================================================
+step_wasm_built = '(WASM built successfully)'
+step_circuit_setup = '(Circuit setup complete)'
+step_proof_generated = '(Proof generated successfully)'
+step_proof_verified = '(Proof verified successfully)'
+step_complete = '(Complete! Proof generated and verified successfully)'
+
+# ================================================================
+# Error Detection Patterns
+# Used to detect and diagnose failures
+# ================================================================
+error_wasm_build_failed = '(Failed to build WASM guest program)'
+error_circuit_setup_failed = '(Failed to setup circuit)'
+error_proof_failed = '(Failed to generate proof)'
+error_verify_failed = '(Failed to verify proof)'
+error_cli_not_found = '(zkWasm CLI.*not found)'
+error_missing_target = "(wasm32-unknown-unknown.*target may not be installed)"
+error_compile_failed = "(could not compile.*due to.*previous error)"
+
+# ================================================================
+# zkWasm CLI (zkwasm-cli) Output Metrics
+# These are output by zkwasm-cli during various operations
+# ================================================================
+
+# Guest execution metrics
+cli_guest_instructions = 'total guest instructions used (\d+)'
+
+# Circuit info from debug output
+cli_circuit_k = 'Circuit K: (\d+)'
+cli_max_pages = 'supports up to (\d+) pages'
+cli_max_available_rows = 'max_available_rows: (\d+)'
+cli_execution_table_size = 'size of execution table: (\d+)'
+cli_memory_table_size = 'size of memory writing table: (\d+)'
+
+# Verification result
+cli_verification_succeeded = '(Verification succeeded!)'
+cli_halo2_verify_succeed = '(verify halo2 proof succeed)'
+
+# Instance data
+cli_instance_size = 'loading instance size: (\d+)'
+
+# ================================================================
+# Halo2 Backend Metrics (from debug output)
+# ================================================================
+halo2_quotient_poly_degree = 'quotient_poly_degree (\d+)'
+halo2_constraint_count = 'constraints:?\s*(\d+)'
+halo2_advice_columns = 'advice columns:?\s*(\d+)'
+halo2_lookup_count = 'lookups:?\s*(\d+)'
+halo2_permutation_count = 'permutations:?\s*(\d+)'
+
+# Complexity metrics from evaluation debug
+halo2_complexity_mul = 'complexity is ComplexityProfiler \{ mul: (\d+)'
+halo2_complexity_sum = 'sum: (\d+)'
+halo2_complexity_scale = 'scale: (\d+)'
+halo2_r_deep = 'r deep is (\d+)'
+
+# ================================================================
+# Memory and Resource Metrics (from debug output)
+# ================================================================
+raw_memory_usage_mb = 'memory usage:?\s*([\d.]+)\s*MB'
+raw_peak_memory_mb = 'peak memory:?\s*([\d.]+)\s*MB'
+
+# ----------------------------------------------------------------
+# Metric Mapping (Raw -> Standard Keys)
+# ----------------------------------------------------------------
 [metric_mapping]
-"success_status" = "raw_success_status"
-"total_time_s" = "raw_total_time_s"
+# ====================
+# 1. Execution Phase
+# ====================
+# zkWasm uses "guest instructions" instead of cycles
+"execution_instruction_count" = "cli_guest_instructions"
+"execution_table_size" = "cli_execution_table_size"
+"memory_table_size" = "cli_memory_table_size"
 
+# ====================
+# 2. Circuit Configuration
+# ====================
+"circuit_k" = "cli_circuit_k"
+"circuit_max_rows" = "cli_max_available_rows"
+"circuit_max_pages" = "cli_max_pages"
+
+# ====================
+# 3. SNARK Phase (Halo2)
+# ====================
+"snark_constraint_count" = "halo2_constraint_count"
+"snark_quotient_degree" = "halo2_quotient_poly_degree"
+
+# ====================
+# 4. Verification Phase
+# ====================
+"instance_size" = "cli_instance_size"
+
+# ====================
+# 5. Summary/Status
+# ====================
+"total_time_s" = "raw_total_time_s"
+"success_status" = "raw_success_status"

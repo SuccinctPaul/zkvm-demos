@@ -196,33 +196,48 @@ fn verify() -> Result<()> {
 
 fn find_zkwasm_cli() -> Result<PathBuf> {
     // Try to find zkwasm-cli in PATH or common locations
-    if let Ok(output) = Command::new("which").arg("delphinus-cli").output() {
-        if output.status.success() {
-            let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            if !path.is_empty() {
-                return Ok(PathBuf::from(path));
+    // Note: The CLI binary is named 'zkwasm-cli' (not 'delphinus-cli')
+    for cli_name in ["zkwasm-cli", "delphinus-cli"] {
+        if let Ok(output) = Command::new("which").arg(cli_name).output() {
+            if output.status.success() {
+                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !path.is_empty() {
+                    return Ok(PathBuf::from(path));
+                }
             }
         }
     }
     
     // Check common installation paths
     let common_paths = vec![
-        "delphinus-cli",
-        "./delphinus-cli",
-        "../delphinus-cli",
+        // Standard installation location
+        format!("{}/.zkwasm/zkwasm/target/release/zkwasm-cli", std::env::var("HOME").unwrap_or_default()),
+        format!("{}/.local/bin/zkwasm-cli", std::env::var("HOME").unwrap_or_default()),
+        // Legacy name locations
+        format!("{}/.zkwasm/zkwasm/target/release/delphinus-cli", std::env::var("HOME").unwrap_or_default()),
+        format!("{}/.local/bin/delphinus-cli", std::env::var("HOME").unwrap_or_default()),
+        // Local directory
+        "zkwasm-cli".to_string(),
+        "./zkwasm-cli".to_string(),
+        "delphinus-cli".to_string(),
+        "./delphinus-cli".to_string(),
     ];
     
     for path in common_paths {
-        if Command::new(path).arg("--help").output().is_ok() {
-            return Ok(PathBuf::from(path));
+        let path_buf = PathBuf::from(&path);
+        if path_buf.exists() {
+            // Verify it's executable
+            if Command::new(&path).arg("--help").output().is_ok() {
+                return Ok(path_buf);
+            }
         }
     }
     
     anyhow::bail!(
-        "zkWasm CLI (delphinus-cli) not found. Please install it first:\n\
+        "zkWasm CLI (zkwasm-cli) not found. Please install it first:\n\
          git clone --recurse-submodules https://github.com/DelphinusLab/zkwasm\n\
          cd zkwasm\n\
          cargo build --release\n\
-         Then add target/release/delphinus-cli to your PATH or copy it to this directory."
+         Then add target/release/zkwasm-cli to your PATH or copy it to this directory."
     )
 }

@@ -3,9 +3,89 @@
 # Generates input.bin, executes, generates proof, and verifies
 #
 # Note: Proof generation only supported on Linux x86_64
-# On macOS, only execution will run
+# On macOS, this script automatically uses Docker to run in a Linux environment
 
 set -e
+
+# Detect platform
+OS=$(uname -s)
+ARCH=$(uname -m)
+
+# ================================================================
+# macOS: Automatically use Docker
+# ================================================================
+if [[ "$OS" == "Darwin" ]]; then
+    echo "=========================================="
+    echo "🍎 macOS detected - using Docker for proof generation"
+    echo "=========================================="
+    
+    # Get the project root (two levels up from zisk-guest)
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+    DOCKER_DIR="$PROJECT_ROOT/docker"
+    
+    # Check if Docker is running
+    if ! docker info > /dev/null 2>&1; then
+        echo "❌ Error: Docker is not running. Please start Docker and try again."
+        exit 1
+    fi
+    
+    # Check if zisk-zkvm image exists
+    if ! docker image inspect zisk-zkvm:latest > /dev/null 2>&1; then
+        echo "📦 ZisK Docker image not found. Building it first..."
+        echo "   This may take 15-20 minutes on first run."
+        echo ""
+        
+        # Build base image if needed
+        if ! docker image inspect zkvm-base:latest > /dev/null 2>&1; then
+            echo "📦 Building base image first..."
+            cd "$DOCKER_DIR/scripts"
+            ./build-base.sh
+        fi
+        
+        # Build zisk image
+        cd "$DOCKER_DIR"
+        docker compose build zisk-zkvm
+        echo ""
+        echo "✅ Docker image built successfully"
+    fi
+    
+    # Export environment variables for Docker
+    export FIBONACCI_N="${FIBONACCI_N:-${PROGRAM_N:-10}}"
+    export PROGRAM_N="${PROGRAM_N:-${FIBONACCI_N:-10}}"
+    export PROGRAM_ID="${PROGRAM_ID:-0}"
+    export ZKVM_MODE="prove"
+    
+    echo ""
+    echo "🐳 Running ZisK in Docker container..."
+    echo "   FIBONACCI_N=$FIBONACCI_N"
+    echo "   PROGRAM_N=$PROGRAM_N"
+    echo "   PROGRAM_ID=$PROGRAM_ID"
+    echo ""
+    
+    # Run in Docker with environment variables
+    # Use docker run directly for better control and output capture
+    cd "$PROJECT_ROOT"
+    docker run --rm \
+        --platform linux/amd64 \
+        -v "$PROJECT_ROOT:/workspace" \
+        -v zisk-cargo-cache:/usr/local/cargo/registry \
+        -v zisk-target-cache:/workspace/target \
+        -v zisk-zisk-cache:/root/.zisk \
+        -w /workspace/zisk-zkvm/zisk-guest \
+        -e "FIBONACCI_N=$FIBONACCI_N" \
+        -e "PROGRAM_N=$PROGRAM_N" \
+        -e "PROGRAM_ID=$PROGRAM_ID" \
+        -e "RUST_LOG=${RUST_LOG:-debug}" \
+        zisk-zkvm:latest \
+        bash -c "./run_benchmark.sh"
+    
+    exit $?
+fi
+
+# ================================================================
+# Linux: Native execution
+# ================================================================
 
 # Get parameters from environment
 PROGRAM_ID=${PROGRAM_ID:-0}
@@ -36,7 +116,18 @@ print(f'BENCHMARK: proof_mode=core')
 print(f'Generated input.bin: program_id={program_id}, n={n}')
 " "$PROGRAM_ID" "$N"
 
-# Step 1: Execute program
+# Setup PATH for cargo-zisk (in case not in PATH)
+export PATH="$HOME/.zisk/bin:$PATH"
+
+# Step 1: Build guest program (if needed)
+if [[ ! -f "$ELF_PATH" ]]; then
+    echo "=========================================="
+    echo "Step 0: Building guest program..."
+    echo "=========================================="
+    cargo-zisk build --release
+fi
+
+# Step 2: Execute program
 echo "=========================================="
 echo "Step 1: Executing program..."
 echo "=========================================="
@@ -46,10 +137,7 @@ EXEC_END=$(python3 -c "import time; print(time.time())")
 EXEC_TIME=$(python3 -c "print(f'{$EXEC_END - $EXEC_START:.6f}')")
 echo "BENCHMARK: execution_time_s=$EXEC_TIME"
 
-# Check platform for proof generation
-OS=$(uname -s)
-ARCH=$(uname -m)
-
+# Step 3: Proof generation (Linux x86_64 only)
 if [[ "$OS" == "Linux" && "$ARCH" == "x86_64" ]]; then
     echo ""
     echo "=========================================="
