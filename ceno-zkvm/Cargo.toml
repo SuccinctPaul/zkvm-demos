@@ -7,10 +7,16 @@ resolver = "2"
 
 [workspace.dependencies]
 common = { path = "../common" }
+
+# CENO SDK from Scroll (official implementation)
+# https://github.com/scroll-tech/ceno
+ceno_rt = { git = "https://github.com/scroll-tech/ceno.git", branch = "master" }
+ceno_host = { git = "https://github.com/scroll-tech/ceno.git", branch = "master" }
+ceno_emul = { git = "https://github.com/scroll-tech/ceno.git", branch = "master" }
+
 [profile.release]
 opt-level = 3
 lto = true
 
 [profile.dev]
 opt-level = 0
-

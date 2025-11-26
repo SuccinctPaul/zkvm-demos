@@ -8,15 +8,28 @@ name = "ceno-host"
 path = "src/main.rs"
 
 [dependencies]
-# Using Nexus zkVM as a proof-of-concept implementation
-# until CENO SDK is officially released
-nexus-sdk = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
-nexus-profiler = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
+# CENO SDK from Scroll
+ceno_host = { workspace = true }
+ceno_emul = { workspace = true }
 
 # Common utilities
 common = { path = "../../common" }
+
 # Environment and logging
 dotenv = "0.15"
 env_logger = "0.11"
 log = "0.4"
 
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# CLI
+clap = { version = "4.0", features = ["derive"] }
+
+# Async runtime (if needed)
+tokio = { version = "1.0", features = ["full"], optional = true }
+
+[features]
+default = []
+async = ["tokio"]

@@ -24,26 +24,88 @@ scales = [10, 20]
 [env_vars]
 RUST_LOG = "info"
 
+# ----------------------------------------------------------------
+# Parsed Metrics (Regular Expressions)
+# ----------------------------------------------------------------
 [parsed_metrics]
-# BENCHMARK format logs
-raw_program_name = 'BENCHMARK: program_name=(\w+)'
+# ================================================================
+# BENCHMARK Format Logs (Primary Source)
+# ================================================================
+# Metadata
+raw_program_name = 'BENCHMARK: program_name=([a-zA-Z0-9_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
-raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
-raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
 raw_output_result = 'BENCHMARK: output_result=(\d+)'
+
+# ================================================================
+# Compilation Phase
+# ================================================================
+raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
+
+# ================================================================
+# Execution Phase
+# ================================================================
+raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+
+# ================================================================
+# Proving Phase
+# ================================================================
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
+# ================================================================
+# Verification Phase
+# ================================================================
 raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Total Time
+# ================================================================
 raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
 
-# Legacy format fallback
-legacy_result = 'Result: (\d+)'
+# ================================================================
+# Error Handling
+# ================================================================
+raw_error_message = 'BENCHMARK: error_message=(.+)'
 
+# ================================================================
+# Legacy Format (Fallback Parsing)
+# ================================================================
+legacy_result = 'Result: (\d+)'
+legacy_compile_success = 'Compilation successful'
+legacy_proof_success = 'Proof generated successfully'
+legacy_verify_success = 'Proof verified successfully'
+
+# ----------------------------------------------------------------
+# Metric Mapping (Raw -> Standard Keys)
+# ----------------------------------------------------------------
 [metric_mapping]
-"compilation_time_s" = "raw_compile_time_s"
+# ====================
+# 1. Compilation Phase
+# ====================
+"compile_time_s" = "raw_compile_time_s"
+
+# ====================
+# 2. Execution Phase
+# ====================
+"execution_time_s" = "raw_execution_time_s"
+
+# ====================
+# 3. Proving Phase
+# ====================
 "vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+
+# ====================
+# 4. Verification Phase
+# ====================
 "verification_time_s" = "raw_verification_time_s"
+
+# ====================
+# 5. Status & Summary
+# ====================
 "success_status" = "raw_success_status"
 "total_time_s" = "raw_total_time_s"
-

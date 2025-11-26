@@ -8,11 +8,11 @@ name = "ceno-guest"
 path = "src/main.rs"
 
 [dependencies]
-# Using Nexus zkVM as a proof-of-concept implementation
-nexus-rt = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
+# CENO Runtime from Scroll
+ceno_rt = { workspace = true }
 
 # Common library for benchmarks
 common = { path = "../../common", default-features = false }
 
 [features]
-cycles = [] # Enable cycle counting for run command
+cycles = [] # Enable cycle counting

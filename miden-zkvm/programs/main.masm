@@ -1,21 +1,88 @@
-# Miden Assembly Dispatcher (Simplified)
-# Inputs (on advice stack): [program_id, n]
-# Output (on stack): result
+# Miden Assembly - Fibonacci Calculator
+# Stack inputs: [n, program_id] (program_id at top, then n)
+# Output: Fibonacci(n) result
+#
+# Stack layout at start: [program_id, n, 0, 0, ..., 0] (16 elements)
+# Stack layout at end: [result, ...] (must have <= 16 elements)
 
 begin
-    # Read program_id
-    adv_push.1      # Stack: [program_id]
+    # Stack: [program_id, n, 0, 0, ...] 
+    # We have exactly 16 elements (Miden fills remaining with zeros)
     
-    # Read n
-    adv_push.1      # Stack: [n, program_id]
+    # Drop program_id (we only support fibonacci for this demo)
+    drop
+    # Stack: [n, 0, 0, ...] (still 16 elements, but shifted)
     
-    # We won't implement full logic to avoid stack depth issues in this quick demo
-    # Just consume inputs and return expected result (55)
+    # Now n is at top of stack
+    # For Fibonacci:
+    # fib(0) = 0
+    # fib(1) = 1  
+    # fib(n) = fib(n-1) + fib(n-2)
     
-    # Clean up inputs
-    drop            # Stack: [program_id]
-    drop            # Stack: []
+    # Check for base cases
+    dup
+    push.0
+    eq
+    if.true
+        # n == 0, return 0
+        # Stack: [0, 0, 0, ...]
+        # Already correct, just need to ensure we have the result
+    else
+        dup
+        push.1
+        eq
+        if.true
+            # n == 1, return 1
+            drop
+            push.1
+        else
+            # n >= 2, compute iteratively
+            # We'll use: a = fib(i-1), b = fib(i-2)
+            # Start with a=1, b=0 for i=1
+            
+            # Stack: [n, ...]
+            # Initialize: push b=0, a=1
+            push.0  # b = fib(0) = 0
+            push.1  # a = fib(1) = 1
+            # Stack: [a=1, b=0, n, ...]
+            
+            # We need to iterate n-1 times
+            # Move n to accessible position
+            movup.2     # Stack: [n, a=1, b=0, ...]
+            push.1
+            sub         # Stack: [n-1, a=1, b=0, ...]
+            
+            # Loop n-1 times
+            # Each iteration: new_a = a + b, new_b = a
+            dup
+            push.0
+            gt
+            while.true
+                # Stack: [counter, a, b, ...]
+                # Compute new values
+                movdn.2     # Stack: [a, b, counter, ...]
+                dup         # Stack: [a, a, b, counter, ...]
+                movdn.2     # Stack: [a, b, a, counter, ...]
+                add         # Stack: [a+b, a, counter, ...] = [new_a, new_b, counter, ...]
+                
+                # Decrement counter
+                movup.2     # Stack: [counter, new_a, new_b, ...]
+                push.1
+                sub         # Stack: [counter-1, new_a, new_b, ...]
+                
+                # Check if we should continue
+                dup
+                push.0
+                gt
+            end
+            
+            # Stack: [0, result, old_b, ...]
+            # Clean up: drop counter and old_b, keep result
+            drop        # Stack: [result, old_b, ...]
+            swap
+            drop        # Stack: [result, ...]
+        end
+    end
     
-    # Return result
-    push.55         # Stack: [55]
+    # Final stack: [result, 0, 0, ...] - exactly 16 elements
 end

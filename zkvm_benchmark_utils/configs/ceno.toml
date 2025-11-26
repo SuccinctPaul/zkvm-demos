@@ -1,18 +1,23 @@
 # ================================================================
 # Ceno zkVM Benchmark Configuration
 # ================================================================
-# Ceno is a zkVM built on Nexus SDK (PoC implementation)
+# CENO (Concurrent Enabled Non-uniform) is a zkVM developed by Scroll
+# for sub-30 second transaction finality using GKR-based architecture.
+#
+# Repository: https://github.com/scroll-tech/ceno
+# Paper: https://eprint.iacr.org/2024/387
 
 name = "ceno"
-version = "v3.0.0-nexus"
+version = "v0.1.0-scroll"
 enabled = true
 default_mode = "core"
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../ceno-zkvm/ceno-host"
-build_command = "cargo build --release"
-run_command = "cargo run --release"
+working_dir = "../ceno-zkvm"
+# Note: CENO SDK requires specific nightly toolchain (nightly-2025-08-18)
+# Using shell script to handle environment setup
+run_command = "./run_benchmark.sh"
 
 timeout_seconds = 1800
 repeat_count = 1
@@ -25,27 +30,75 @@ scales = [10, 20]
 RUST_LOG = "info"
 
 [parsed_metrics]
-# BENCHMARK format logs
+# ================================================================
+# BENCHMARK Format Logs (Primary Source)
+# ================================================================
 raw_program_name = 'BENCHMARK: program_name=(\w+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_elf_size = 'BENCHMARK: elf_size_bytes=(\d+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+
+# ================================================================
+# Compilation Phase
+# ================================================================
 raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
 raw_instruction_count = 'BENCHMARK: instruction_count=(\d+)'
+# ELF instructions can also be parsed from legacy format
+legacy_elf_instructions = 'ELF instructions: (\d+)'
+
+# ================================================================
+# Execution Phase
+# ================================================================
+raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
+# Legacy: Result from guest logs
+legacy_result = 'Result: (\d+)'
+
+# ================================================================
+# Proving Phase
+# ================================================================
 raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+# Legacy format
+legacy_proving_time = 'Proving time: ([\d.]+)s'
+
+# ================================================================
+# Verification Phase
+# ================================================================
 raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+
+# ================================================================
+# Status & Summary
+# ================================================================
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
 raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
-
-# Legacy format fallback
+# Legacy: Compilation completed
 legacy_compile_time = 'Compilation completed in ([\d.]+)s'
-legacy_proof_time = 'Proving time: ([\d.]+)s'
 
 [metric_mapping]
+# ====================
+# 1. Compilation Phase
+# ====================
 "compilation_time_s" = "raw_compile_time_s"
 "instruction_count" = "raw_instruction_count"
+
+# ====================
+# 2. Execution Phase
+# ====================
+"execution_time_s" = "raw_execution_time_s"
+
+# ====================
+# 3. Proving Phase
+# ====================
 "vm_prove_time_s" = "raw_proof_time_s"
+
+# ====================
+# 4. Verification Phase
+# ====================
 "verification_time_s" = "raw_verification_time_s"
+
+# ====================
+# 5. Status & Summary
+# ====================
 "success_status" = "raw_success_status"
 "total_time_s" = "raw_total_time_s"
-
