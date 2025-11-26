@@ -43,6 +43,16 @@ enum Commands {
     },
 }
 
+/// Timing results for each phase
+#[derive(Default)]
+struct BenchmarkTimings {
+    build_time_s: f64,
+    setup_time_s: f64,
+    prove_time_s: f64,
+    verify_time_s: f64,
+    total_time_s: f64,
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     
@@ -59,25 +69,99 @@ fn main() -> Result<()> {
             println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
             println!("Input N: {}", input.n);
             
+            let mut timings = BenchmarkTimings::default();
             let total_start = std::time::Instant::now();
-            build_wasm()?;
-            setup_circuit(k)?;
-            prove(input.program.id(), input.n, false)?;
-            verify()?;
-            let total_duration = total_start.elapsed();
             
-            // Output BENCHMARK metrics
+            // Build phase
+            let build_start = std::time::Instant::now();
+            build_wasm()?;
+            timings.build_time_s = build_start.elapsed().as_secs_f64();
+            
+            // Setup phase
+            let setup_start = std::time::Instant::now();
+            setup_circuit(k)?;
+            timings.setup_time_s = setup_start.elapsed().as_secs_f64();
+            
+            // Prove phase
+            let prove_start = std::time::Instant::now();
+            prove(input.program.id(), input.n, false)?;
+            timings.prove_time_s = prove_start.elapsed().as_secs_f64();
+            
+            // Verify phase
+            let verify_start = std::time::Instant::now();
+            verify()?;
+            timings.verify_time_s = verify_start.elapsed().as_secs_f64();
+            
+            timings.total_time_s = total_start.elapsed().as_secs_f64();
+            
+            // Get proof size if available
+            let proof_size = get_proof_size();
+            
+            // Output BENCHMARK metrics in standard format
+            println!("\n--- BENCHMARK METRICS ---");
             println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
             println!("BENCHMARK: zkvm_name=zkwasm");
             println!("BENCHMARK: zkvm_version=v0.1.0");
             println!("BENCHMARK: proof_mode=core");
+            println!("BENCHMARK: circuit_k={}", k);
+            
+            // Timing metrics
+            println!("BENCHMARK: build_time_s={:.6}", timings.build_time_s);
+            println!("BENCHMARK: setup_time_s={:.6}", timings.setup_time_s);
+            println!("BENCHMARK: prove_time_s={:.6}", timings.prove_time_s);
+            println!("BENCHMARK: verify_time_s={:.6}", timings.verify_time_s);
+            println!("BENCHMARK: total_time_s={:.6}", timings.total_time_s);
+            
+            // Proof size
+            if let Some(size) = proof_size {
+                println!("BENCHMARK: proof_size_bytes={}", size);
+            }
+            
             println!("BENCHMARK: success_status=success");
-            println!("BENCHMARK: total_time_s={:.6}", total_duration.as_secs_f64());
-            println!("\n✅ Complete! Proof generated and verified successfully.");
+            println!("--- END BENCHMARK METRICS ---\n");
+            
+            println!("✅ Complete! Proof generated and verified successfully.");
         }
     }
     
     Ok(())
+}
+
+/// Get the proof file size in bytes
+fn get_proof_size() -> Option<u64> {
+    // Try to find the transcript file (proof file)
+    let proof_paths = [
+        "output/output.0.transcript.data",
+        "output/proof.bin",
+    ];
+    
+    for path in &proof_paths {
+        if let Ok(metadata) = fs::metadata(path) {
+            return Some(metadata.len());
+        }
+    }
+    
+    // Try to sum all transcript files
+    if let Ok(entries) = fs::read_dir("output") {
+        let mut total_size = 0u64;
+        let mut found = false;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if name.contains("transcript") || name.ends_with(".proof") {
+                    if let Ok(metadata) = fs::metadata(&path) {
+                        total_size += metadata.len();
+                        found = true;
+                    }
+                }
+            }
+        }
+        if found {
+            return Some(total_size);
+        }
+    }
+    
+    None
 }
 
 fn build_wasm() -> Result<()> {

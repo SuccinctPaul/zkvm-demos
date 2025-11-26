@@ -44,7 +44,15 @@ raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_circuit_k = 'BENCHMARK: circuit_k=(\d+)'
+
+# Timing metrics from BENCHMARK output
+raw_build_time_s = 'BENCHMARK: build_time_s=([\d.]+)'
+raw_setup_time_s = 'BENCHMARK: setup_time_s=([\d.]+)'
+raw_prove_time_s = 'BENCHMARK: prove_time_s=([\d.]+)'
+raw_verify_time_s = 'BENCHMARK: verify_time_s=([\d.]+)'
 raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
 
 # ================================================================
 # Program Input/Output Info
@@ -52,7 +60,6 @@ raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
 # ================================================================
 raw_program_id = 'Program: \w+ \(ID=(\d+)\)'
 raw_input_n = 'Input N: (\d+)'
-raw_circuit_k = 'Setting up zkWasm circuit \(k=(\d+)\)'
 
 # ================================================================
 # Step Completion Markers
@@ -83,13 +90,14 @@ error_compile_failed = "(could not compile.*due to.*previous error)"
 
 # Guest execution metrics
 cli_guest_instructions = 'total guest instructions used (\d+)'
+cli_host_api_used = 'total host api used \{([^}]*)\}'
 
-# Circuit info from debug output
-cli_circuit_k = 'Circuit K: (\d+)'
-cli_max_pages = 'supports up to (\d+) pages'
-cli_max_available_rows = 'max_available_rows: (\d+)'
-cli_execution_table_size = 'size of execution table: (\d+)'
-cli_memory_table_size = 'size of memory writing table: (\d+)'
+# Params reuse detection
+cli_params_reused = '(Found existing params at)'
+cli_params_path = 'Found existing params at "([^"]+)"'
+
+# Proof count
+cli_proof_count = 'Found (\d+) proofs, verifying'
 
 # Verification result
 cli_verification_succeeded = '(Verification succeeded!)'
@@ -99,19 +107,35 @@ cli_halo2_verify_succeed = '(verify halo2 proof succeed)'
 cli_instance_size = 'loading instance size: (\d+)'
 
 # ================================================================
+# Circuit Configuration (from debug output)
+# ================================================================
+cli_circuit_k = 'Circuit K: (\d+)'
+cli_max_pages = 'supports up to (\d+) pages'
+cli_max_available_rows = 'max_available_rows: (\d+)'
+
+# Table sizes - match non-zero values (proving phase, not setup phase)
+cli_execution_table_size = 'size of execution table: ([1-9]\d*)'
+cli_memory_table_size = 'size of memory writing table: ([1-9]\d*)'
+
+# ================================================================
 # Halo2 Backend Metrics (from debug output)
 # ================================================================
 halo2_quotient_poly_degree = 'quotient_poly_degree (\d+)'
+halo2_gpus_number = 'gpus number is (\d+)'
+
+# Complexity metrics from evaluation debug
+halo2_complexity_mul = 'complexity is ComplexityProfiler \{ mul: (\d+)'
+halo2_complexity_sum = ', sum: (\d+)'
+halo2_complexity_scale = ', scale: (\d+)'
+halo2_complexity_unit = ', unit: (\d+)'
+halo2_complexity_y = ', y: (\d+)'
+halo2_r_deep = 'r deep is (\d+)'
+
+# Constraint and column counts (if available)
 halo2_constraint_count = 'constraints:?\s*(\d+)'
 halo2_advice_columns = 'advice columns:?\s*(\d+)'
 halo2_lookup_count = 'lookups:?\s*(\d+)'
 halo2_permutation_count = 'permutations:?\s*(\d+)'
-
-# Complexity metrics from evaluation debug
-halo2_complexity_mul = 'complexity is ComplexityProfiler \{ mul: (\d+)'
-halo2_complexity_sum = 'sum: (\d+)'
-halo2_complexity_scale = 'scale: (\d+)'
-halo2_r_deep = 'r deep is (\d+)'
 
 # ================================================================
 # Memory and Resource Metrics (from debug output)
@@ -121,36 +145,48 @@ raw_peak_memory_mb = 'peak memory:?\s*([\d.]+)\s*MB'
 
 # ----------------------------------------------------------------
 # Metric Mapping (Raw -> Standard Keys)
+# Maps raw metrics to the standard keys used by the framework
+# See zkvm_benchmark_utils/src/core/metrics.rs for standard keys
 # ----------------------------------------------------------------
 [metric_mapping]
 # ====================
 # 1. Execution Phase
 # ====================
-# zkWasm uses "guest instructions" instead of cycles
-"execution_instruction_count" = "cli_guest_instructions"
-"execution_table_size" = "cli_execution_table_size"
-"memory_table_size" = "cli_memory_table_size"
+# zkWasm uses "guest instructions" as the execution metric
+"instruction_count" = "cli_guest_instructions"
 
 # ====================
-# 2. Circuit Configuration
+# 2. VM Circuit Phase (Proving)
 # ====================
-"circuit_k" = "cli_circuit_k"
-"circuit_max_rows" = "cli_max_available_rows"
-"circuit_max_pages" = "cli_max_pages"
+# Map prove time to vm_prove_time_s (standard key)
+"vm_prove_time_s" = "raw_prove_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+
+# Table sizes as chunk info
+"vm_chunk_size_rows" = "cli_execution_table_size"
 
 # ====================
 # 3. SNARK Phase (Halo2)
 # ====================
+"snark_setup_time_s" = "raw_setup_time_s"
 "snark_constraint_count" = "halo2_constraint_count"
-"snark_quotient_degree" = "halo2_quotient_poly_degree"
 
 # ====================
 # 4. Verification Phase
 # ====================
-"instance_size" = "cli_instance_size"
+"verification_time_s" = "raw_verify_time_s"
 
 # ====================
 # 5. Summary/Status
 # ====================
 "total_time_s" = "raw_total_time_s"
 "success_status" = "raw_success_status"
+
+# ====================
+# Custom zkWasm-specific metrics (not mapped to standard)
+# ====================
+# These remain in custom_metrics for reference:
+# - circuit_k, max_available_rows, max_pages
+# - execution_table_size, memory_table_size
+# - halo2_complexity_*, halo2_r_deep, gpus
+# - params_reused, proof_count, instance_size
