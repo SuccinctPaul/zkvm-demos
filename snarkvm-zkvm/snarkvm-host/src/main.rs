@@ -32,16 +32,12 @@ fn main() -> Result<()> {
 
     let total_start = Instant::now();
 
-    // Step 1: Compile/Deploy Leo program (simulated)
+    // Step 1: Compile/Deploy Leo program (reference)
     println!("{}", "1️⃣  Compiling Leo program...".bright_green());
     let compile_start = Instant::now();
-    
-    println!("   • Parsing Aleo instructions");
-    println!("   • Generating R1CS constraints");
-    std::thread::sleep(std::time::Duration::from_millis(50));
-    
+    println!("   Note: Actual compilation requires snarkVM SDK");
     let compile_duration = compile_start.elapsed();
-    println!("   ✓ Compilation completed in {:.3}s", compile_duration.as_secs_f64());
+    println!("   ✓ Compilation step completed");
     println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
     println!();
 
@@ -49,72 +45,33 @@ fn main() -> Result<()> {
     println!("{}", "2️⃣  Executing program...".bright_green());
     let exec_start = Instant::now();
     
-    println!("   • Loading program: main.aleo");
-    println!("   • Preparing inputs: r0={}, r1={}", input.program.id(), input.n);
-    
     // Execute using common library
     let result = execute_program(input.program.id(), input.n);
     
     let exec_duration = exec_start.elapsed();
     
-    // Estimate constraints (Marlin circuit: ~30 constraints per Fibonacci step)
-    let estimated_constraints = (input.n as u64) * 30 + 200;
-    
     println!("   ✓ Execution completed");
     println!("   ✓ Result: {}", result);
-    println!("   ✓ Estimated constraints: {}", estimated_constraints);
     println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
     println!("BENCHMARK: output_result={}", result);
-    println!("BENCHMARK: total_cycles={}", estimated_constraints);
+    // Note: total_cycles (constraints) not available without actual SDK
     println!();
 
-    // Step 3: Generate Marlin proof
+    // Step 3: Generate Marlin proof (reference)
     println!("{}", "3️⃣  Generating Marlin proof...".bright_green());
+    println!("   Note: Actual proof generation requires snarkVM SDK");
     let prove_start = Instant::now();
-    
-    println!("   • Setting up proving key");
-    println!("   • Generating witnesses");
-    println!("   • Creating Marlin proof");
-    
-    // Simulate proof generation time
-    let prove_complexity = ((input.n as u64) / 10).max(1);
-    std::thread::sleep(std::time::Duration::from_millis(prove_complexity * 100 + 150));
-    
     let prove_duration = prove_start.elapsed();
-    
-    // Simulated proof size (Marlin proofs are compact)
-    let proof_size_bytes = 1024 + (input.n as usize) * 64; // ~1KB base + scaling
-    
-    // Calculate proving speed
-    let prove_khz = if prove_duration.as_secs_f64() > 0.0 {
-        (estimated_constraints as f64 / prove_duration.as_secs_f64()) / 1000.0
-    } else {
-        0.0
-    };
-    
-    println!("   ✓ Proof generated");
-    println!("   ✓ Proving time: {:.3}s", prove_duration.as_secs_f64());
-    println!("   ✓ Proof size: {} bytes", proof_size_bytes);
     println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
-    println!("BENCHMARK: proof_size_bytes={}", proof_size_bytes);
-    println!("BENCHMARK: vm_prove_khz={:.3}", prove_khz);
+    // Note: proof_size_bytes, vm_prove_khz not available without actual SDK
     println!();
 
-    // Step 4: Verify proof
+    // Step 4: Verify proof (reference)
     println!("{}", "4️⃣  Verifying proof...".bright_green());
+    println!("   Note: Actual verification requires snarkVM SDK");
     let verify_start = Instant::now();
-    
-    println!("   • Loading verification key");
-    println!("   • Verifying Marlin proof");
-    
-    // Marlin verification is fast
-    std::thread::sleep(std::time::Duration::from_millis(10));
-    
     let verify_duration = verify_start.elapsed();
-    
-    println!("   ✓ Proof verified successfully");
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
-    println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
     println!();
 
     // Verify correctness
@@ -131,7 +88,9 @@ fn main() -> Result<()> {
     let total_duration = total_start.elapsed();
     println!("BENCHMARK: total_time_s={:.6}", total_duration.as_secs_f64());
     
-    println!("\n✅ snarkVM demo completed successfully!");
+    println!("\n✅ snarkVM demo completed!");
+    println!("\nNote: For actual proof generation, use the snarkVM SDK:");
+    println!("  https://github.com/AleoHQ/snarkVM");
 
     Ok(())
 }

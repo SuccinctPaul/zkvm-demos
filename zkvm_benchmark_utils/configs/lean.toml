@@ -38,7 +38,7 @@ scales = [10, 20]
 # Environment Variables
 # ----------------------------------------------------------------
 [env_vars]
-RUST_LOG = "info"
+RUST_LOG = "debug"
 # Note: LEAN_PROOF_MODE is injected by the runner
 
 # ----------------------------------------------------------------

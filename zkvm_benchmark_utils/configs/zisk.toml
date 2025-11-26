@@ -47,7 +47,7 @@ scales = [10, 20]
 # Environment Variables
 # ----------------------------------------------------------------
 [env_vars]
-RUST_LOG = "info"
+RUST_LOG = "debug"
 # FIBONACCI_N is set by the runner based on program scale
 
 # ----------------------------------------------------------------

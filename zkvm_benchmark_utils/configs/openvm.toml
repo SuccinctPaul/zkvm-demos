@@ -22,7 +22,7 @@ name = "fibonacci"
 scales = [10, 20]
 
 [env_vars]
-RUST_LOG = "info"
+RUST_LOG = "debug"
 
 [parsed_metrics]
 # BENCHMARK format logs

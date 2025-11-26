@@ -38,7 +38,7 @@ scales = [10, 20]
 # Environment Variables
 # ----------------------------------------------------------------
 [env_vars]
-RUST_LOG = "info"
+RUST_LOG = "debug"
 # Note: CAIRO_M_PROOF_MODE is injected by the runner
 
 # ----------------------------------------------------------------

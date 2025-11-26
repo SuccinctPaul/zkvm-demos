@@ -37,25 +37,18 @@ fn main() -> Result<()> {
     println!("   Program: {} (ID={})", input.program.as_str(), input.program.id());
     println!("   Input: n = {}", input.n);
     
-    // Calculate expected result for simulation
-    let expected_result = execute_program(input.program.id(), input.n);
-    println!("   Expected result: {}\n", expected_result);
-    
     let total_start = Instant::now();
     
-    // Step 1: Compile guest program (simulated)
-    println!("🔨 Step 1: Compiling guest program...");
+    // Step 1: Compile guest program (reference)
+    println!("\n🔨 Step 1: Compiling guest program...");
     let compile_start = Instant::now();
-    
-    simulate_compilation()?;
-    
+    println!("   Note: Actual compilation requires Powdr SDK");
     let compile_duration = compile_start.elapsed();
-    println!("   ✅ Compilation completed in {:.2}s", compile_duration.as_secs_f64());
+    println!("   ✅ Compilation step completed");
     println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
-    println!();
     
     // Step 2: Execute program
-    println!("🚀 Step 2: Executing program...");
+    println!("\n🚀 Step 2: Executing program...");
     let exec_start = Instant::now();
     
     // Execute the computation
@@ -63,120 +56,44 @@ fn main() -> Result<()> {
     
     let exec_duration = exec_start.elapsed();
     
-    // Estimate cycles (Powdr circuit: ~25 cycles per Fibonacci iteration + overhead)
-    let estimated_cycles = (input.n as u64) * 25 + 100;
-    
     println!("   ✅ Execution completed in {:.6}s", exec_duration.as_secs_f64());
     println!("   Result: {}", result);
-    println!("   Estimated cycles: {}", estimated_cycles);
     println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
     println!("BENCHMARK: output_result={}", result);
-    println!("BENCHMARK: total_cycles={}", estimated_cycles);
-    println!();
+    // Note: total_cycles not available without actual SDK
     
-    // Step 3: Generate proof (simulated)
-    println!("🔐 Step 3: Generating zero-knowledge proof...");
+    // Step 3: Generate proof (reference)
+    println!("\n🔐 Step 3: Generating proof...");
+    println!("   Note: Actual proof generation requires Powdr SDK");
     let prove_start = Instant::now();
-    
-    let proof_data = simulate_proof_generation(input.n, result)?;
-    
     let prove_duration = prove_start.elapsed();
-    
-    // Calculate proving speed
-    let prove_khz = if prove_duration.as_secs_f64() > 0.0 {
-        (estimated_cycles as f64 / prove_duration.as_secs_f64()) / 1000.0
-    } else {
-        0.0
-    };
-    
-    println!("   ✅ Proof generated in {:.3}s", prove_duration.as_secs_f64());
-    println!("   📦 Proof size: {} bytes", proof_data.size);
-    println!("   🎯 Backend: {}", proof_data.backend);
-    println!("   🔐 Security level: {} bits", proof_data.security_bits);
     println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
-    println!("BENCHMARK: proof_size_bytes={}", proof_data.size);
-    println!("BENCHMARK: vm_prove_khz={:.3}", prove_khz);
-    println!("BENCHMARK: backend={}", proof_data.backend);
-    println!("BENCHMARK: security_bits={}", proof_data.security_bits);
-    println!();
+    // Note: proof_size_bytes, vm_prove_khz not available without actual SDK
     
-    // Step 4: Verify proof (simulated)
-    println!("✓ Step 4: Verifying proof...");
+    // Step 4: Verify proof (reference)
+    println!("\n✓ Step 4: Verifying proof...");
+    println!("   Note: Actual verification requires Powdr SDK");
     let verify_start = Instant::now();
-    
-    let verification_result = simulate_proof_verification(&proof_data, expected_result, result)?;
-    
     let verify_duration = verify_start.elapsed();
+    println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
     
-    if verification_result {
-        println!("   ✅ Proof verified successfully!");
-        println!("   ⚡ Verification time: {:.3}s", verify_duration.as_secs_f64());
-        println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
-        println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
+    // Verify correctness
+    let expected = common::benchmarks::fibonacci(input.n);
+    if result == expected {
+        println!("\n✅ Result matches expected value!");
         println!("BENCHMARK: success_status=success");
     } else {
-        println!("   ❌ Proof verification failed!");
-        println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+        println!("\n❌ Result mismatch! Expected: {}, Got: {}", expected, result);
         println!("BENCHMARK: success_status=failed");
-        return Err(anyhow::anyhow!("Proof verification failed"));
     }
     
     // Total time
     let total_duration = total_start.elapsed();
-    println!();
     println!("BENCHMARK: total_time_s={:.6}", total_duration.as_secs_f64());
     
-    println!("\n✅ Powdr zkVM Demo completed successfully!");
+    println!("\n✅ Powdr zkVM Demo completed!");
+    println!("\nNote: For actual proof generation, use the Powdr SDK:");
+    println!("  https://github.com/powdr-labs/powdr");
     
     Ok(())
-}
-
-/// Simulate compilation of guest program to Powdr circuit
-fn simulate_compilation() -> Result<()> {
-    std::thread::sleep(std::time::Duration::from_millis(50));
-    Ok(())
-}
-
-/// Structure representing a zero-knowledge proof
-struct ProofData {
-    size: usize,
-    backend: String,
-    security_bits: u32,
-    #[allow(dead_code)]
-    commitment: Vec<u8>,
-}
-
-/// Simulate proof generation
-fn simulate_proof_generation(n: u32, result: u32) -> Result<ProofData> {
-    let complexity = (n / 10).max(1) as u64;
-    std::thread::sleep(std::time::Duration::from_millis(complexity * 80 + 100));
-    
-    log::info!("Generated proof for result = {}", result);
-    
-    // Simulated proof size (Halo2 proofs are compact)
-    let proof_size = 32 * 1024 + (n as usize) * 256;
-    
-    let proof = ProofData {
-        size: proof_size,
-        backend: "Halo2".to_string(),
-        security_bits: 128,
-        commitment: vec![0xDE, 0xAD, 0xBE, 0xEF],
-    };
-    
-    Ok(proof)
-}
-
-/// Simulate proof verification
-fn simulate_proof_verification(proof: &ProofData, expected_result: u32, actual_result: u32) -> Result<bool> {
-    std::thread::sleep(std::time::Duration::from_millis(10));
-    
-    if proof.size == 0 {
-        return Ok(false);
-    }
-    
-    if actual_result != expected_result {
-        return Ok(false);
-    }
-    
-    Ok(true)
 }

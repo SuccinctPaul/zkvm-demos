@@ -40,12 +40,12 @@ fn main() {
     let total_start = Instant::now();
     
     // Step 1: Build guest program
-    println!("🔨 Step 1: Compiling guest program...");
+    println!("🔨 Step 1: Building guest program...");
     let build_start = Instant::now();
     
     let build_status = build_guest();
-    let build_duration = build_start.elapsed();
     
+    let build_duration = build_start.elapsed();
     if !build_status {
         println!("⚠️  Build skipped (using reference implementation)");
     } else {
@@ -72,49 +72,22 @@ fn main() {
     println!("   Result: {}", result);
     println!("BENCHMARK: output_result={}", result);
     println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
+    // Note: total_cycles not available without actual CENO SDK
     
-    // Estimate cycles based on input size (CENO uses GKR circuits)
-    // For Fibonacci, approximately 10 cycles per iteration + overhead
-    let estimated_cycles = (input.n as u64) * 12 + 100;
-    println!("BENCHMARK: total_cycles={}", estimated_cycles);
-    
-    // Step 3: Generate proof
+    // Step 3: Generate proof (reference)
     println!("\n🔐 Step 3: Generating GKR-based proof...");
+    println!("   Note: Actual proof generation requires CENO SDK");
     let prove_start = Instant::now();
-    
-    // Simulate realistic proving time based on complexity
-    let prove_complexity = ((input.n as u64) / 10).max(1);
-    std::thread::sleep(std::time::Duration::from_millis(prove_complexity * 100 + 150));
-    
     let prove_duration = prove_start.elapsed();
-    
-    // Simulated proof size (CENO uses GKR which has compact proofs)
-    let proof_size_bytes = 32 * 1024 + (input.n as usize) * 256; // ~32KB base + scaling
-    
-    // Calculate proving speed
-    let prove_khz = if prove_duration.as_secs_f64() > 0.0 {
-        (estimated_cycles as f64 / prove_duration.as_secs_f64()) / 1000.0
-    } else {
-        0.0
-    };
-    
-    println!("✅ Proof generated successfully!");
-    println!("   Proving time: {:.3}s", prove_duration.as_secs_f64());
     println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
-    println!("BENCHMARK: proof_size_bytes={}", proof_size_bytes);
-    println!("BENCHMARK: vm_prove_khz={:.3}", prove_khz);
+    // Note: proof_size_bytes, vm_prove_khz not available without actual SDK
     
-    // Step 4: Verify proof
+    // Step 4: Verify proof (reference)
     println!("\n🔍 Step 4: Verifying proof...");
+    println!("   Note: Actual verification requires CENO SDK");
     let verify_start = Instant::now();
-    
-    // GKR verification is fast
-    std::thread::sleep(std::time::Duration::from_millis(5));
-    
     let verify_duration = verify_start.elapsed();
-    println!("✅ Proof verified successfully!");
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
-    println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
     
     // Verify correctness
     let expected = common::benchmarks::fibonacci(input.n);
@@ -126,11 +99,13 @@ fn main() {
         println!("BENCHMARK: success_status=failed");
     }
     
-    // Output summary
+    // Total time
     let total_duration = total_start.elapsed();
-    println!("\nBENCHMARK: total_time_s={:.6}", total_duration.as_secs_f64());
+    println!("BENCHMARK: total_time_s={:.6}", total_duration.as_secs_f64());
     
-    println!("\n✨ CENO zkVM demo completed!");
+    println!("\n✅ CENO zkVM demo completed!");
+    println!("\nNote: For actual proof generation, use the CENO SDK:");
+    println!("  https://github.com/scroll-tech/ceno");
 }
 
 /// Build the guest program for CENO target

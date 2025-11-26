@@ -15,7 +15,6 @@ pub struct NovanetProof {
     pub input: ProgramInput,
     pub output: ProgramOutput,
     pub proof_data: Vec<u8>,
-    pub cycles: u64,
 }
 
 /// Simulated prover for Novanet zkVM
@@ -41,14 +40,10 @@ impl NovanetProver {
         // Execute the computation
         let output = compute_program(input.clone());
         
-        // Estimate cycles (Nova folding has overhead per step)
-        // For Fibonacci: approximately 15 cycles per iteration + overhead
-        let cycles = (input.n as u64) * 15 + 50;
-        
-        // Generate proof data (simulated Nova IVC proof)
+        // Generate proof data
         let proof_data = format!(
-            "Nova-IVC-proof-prog({})-n({})-result({})-cycles({})",
-            input.program_id, input.n, output.result, cycles
+            "Nova-IVC-proof-prog({})-n({})-result({})",
+            input.program_id, input.n, output.result
         )
         .into_bytes();
 
@@ -56,7 +51,6 @@ impl NovanetProver {
             input,
             output,
             proof_data,
-            cycles,
         })
     }
 
@@ -97,7 +91,7 @@ fn main() -> Result<()> {
     println!("   ✓ Compilation completed in {:.2}s\n", compile_duration.as_secs_f64());
     println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
 
-    // Step 2: Execute program (measure execution time separately)
+    // Step 2: Execute program
     println!("2️⃣  Executing program...");
     let exec_start = Instant::now();
     
@@ -106,7 +100,7 @@ fn main() -> Result<()> {
         n: input_data.n 
     };
     
-    // Execute to get result and timing
+    // Execute to get result
     let test_output = compute_program(prog_input.clone());
     let exec_duration = exec_start.elapsed();
     
@@ -114,6 +108,7 @@ fn main() -> Result<()> {
     println!("   ✓ Result: {}", test_output.result);
     println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
     println!("BENCHMARK: output_result={}", test_output.result);
+    // Note: total_cycles not available without actual Nova SDK
 
     // Step 3: Generate proof
     println!("\n3️⃣  Generating Nova IVC proof...");
@@ -121,26 +116,13 @@ fn main() -> Result<()> {
     
     let proof = prover.prove(prog_input)?;
     
-    // Simulate realistic Nova proving time (folding overhead)
-    let fold_time = std::time::Duration::from_micros((input_data.n as u64) * 50 + 100);
-    std::thread::sleep(fold_time);
-    
     let prove_duration = prove_start.elapsed();
-    
-    // Calculate proving speed
-    let prove_khz = if prove_duration.as_secs_f64() > 0.0 {
-        (proof.cycles as f64 / prove_duration.as_secs_f64()) / 1000.0
-    } else {
-        0.0
-    };
     
     println!("   ✓ Proof generated in {:.3}s", prove_duration.as_secs_f64());
     println!("   ✓ Proof size: {} bytes", proof.proof_data.len());
-    println!("   ✓ Cycles: {}", proof.cycles);
     println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
     println!("BENCHMARK: proof_size_bytes={}", proof.proof_data.len());
-    println!("BENCHMARK: total_cycles={}", proof.cycles);
-    println!("BENCHMARK: vm_prove_khz={:.3}", prove_khz);
+    // Note: vm_prove_khz not available without cycle count
 
     // Step 4: Verify proof
     println!("\n4️⃣  Verifying proof...");
@@ -153,7 +135,6 @@ fn main() -> Result<()> {
     if is_valid {
         println!("   ✓ Proof verified successfully in {:.6}s\n", verify_duration.as_secs_f64());
         println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
-        println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
         println!("BENCHMARK: success_status=success");
     } else {
         println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());

@@ -31,7 +31,7 @@ name = "fibonacci"
 scales = [10, 20, 30]
 
 [env_vars]
-RUST_LOG = "info"
+RUST_LOG = "debug"
 PROGRAM_ID = "0"
 # PROGRAM_N is set dynamically by the benchmark runner
 
