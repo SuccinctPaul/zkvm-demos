@@ -35,15 +35,11 @@ repeat_count = 1
 name = "fibonacci"
 scales = [10, 20]
 
-#[[programs]]
-#name = "sum"
-#scales = [100, 1000]
-
 # ----------------------------------------------------------------
 # Environment Variables
 # ----------------------------------------------------------------
 [env_vars]
-RUST_LOG = "debug"
+RUST_LOG = "info"
 # Note: POWDR_PROOF_MODE is injected by the runner
 
 # ----------------------------------------------------------------
@@ -53,10 +49,12 @@ RUST_LOG = "debug"
 # ================================================================
 # BENCHMARK Format Logs (Primary Source)
 # ================================================================
-raw_program_name = 'BENCHMARK: program_name=(\w+)'
+# Metadata
+raw_program_name = 'BENCHMARK: program_name=([a-zA-Z0-9_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
 
 # ================================================================
 # Compilation Phase
@@ -64,21 +62,17 @@ raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
 
 # ================================================================
-# Setup Phase
-# ================================================================
-raw_setup_time_s = 'BENCHMARK: setup_time_s=([\d.]+)'
-
-# ================================================================
 # Execution Phase
 # ================================================================
 raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
-raw_output_result = 'BENCHMARK: output_result=(\d+)'
+raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
 
 # ================================================================
 # Proving Phase
 # ================================================================
 raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
 raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+raw_vm_prove_khz = 'BENCHMARK: vm_prove_khz=([\d.]+)'
 raw_backend = 'BENCHMARK: backend=(\w+)'
 raw_security_bits = 'BENCHMARK: security_bits=(\d+)'
 
@@ -98,11 +92,12 @@ raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
 # Legacy Format (Fallback Parsing)
 # ================================================================
 legacy_compile_time = 'Compilation completed in ([\d.]+)s'
-legacy_setup_time = 'Setup completed in ([\d.]+)s'
 legacy_execution_time = 'Execution completed in ([\d.]+)s'
 legacy_proof_time = 'Proof generated in ([\d.]+)s'
 legacy_verification_time = 'Verification time: ([\d.]+)s'
 legacy_proof_size = 'Proof size: (\d+) bytes'
+legacy_cycles = 'Estimated cycles: (\d+)'
+legacy_result = 'Result: (\d+)'
 
 # ----------------------------------------------------------------
 # Metric Mapping (Raw -> Standard Keys)
@@ -111,31 +106,28 @@ legacy_proof_size = 'Proof size: (\d+) bytes'
 # ====================
 # 1. Compilation Phase
 # ====================
-"compilation_time_s" = "raw_compile_time_s"
+"compile_time_s" = "raw_compile_time_s"
 
 # ====================
-# 2. Setup Phase
-# ====================
-"prover_initialization_time_s" = "raw_setup_time_s"
-
-# ====================
-# 3. Execution Phase
+# 2. Execution Phase
 # ====================
 "execution_time_s" = "raw_execution_time_s"
+"total_cycles" = "raw_total_cycles"
 
 # ====================
-# 4. Proving Phase
+# 3. Proving Phase
 # ====================
 "vm_prove_time_s" = "raw_proof_time_s"
 "vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+"vm_prove_khz" = "raw_vm_prove_khz"
 
 # ====================
-# 5. Verification Phase
+# 4. Verification Phase
 # ====================
 "verification_time_s" = "raw_verification_time_s"
 
 # ====================
-# 6. Status
+# 5. Status & Summary
 # ====================
 "success_status" = "raw_success_status"
-
+"total_time_s" = "raw_total_time_s"
