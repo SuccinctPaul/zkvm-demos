@@ -5,10 +5,7 @@ resolver = "2"
 [workspace.dependencies]
 zkvm_programs = { path = "../programs" }
 
-# Optimize guest program for zkVM execution
+# Optimize for zkVM execution
 [profile.release]
 opt-level = 3
-
-
-
-
+lto = true
