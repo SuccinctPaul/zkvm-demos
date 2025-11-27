@@ -6,7 +6,7 @@
 
 name = "zk_wasm"
 version = "v0.1.0"
-enabled = true
+enabled = false
 default_mode = "core"
 test_scales = [10, 20]
 prove_modes = ["core"]
