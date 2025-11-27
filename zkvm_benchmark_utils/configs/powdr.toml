@@ -6,7 +6,7 @@
 
 name = "powdr"
 version = "v0.1.0-dev"
-enabled = true
+enabled = false  # Requires powdr-rs CLI; falls back to reference execution without it
 default_mode = "core"
 
 # Test scales (program input N values)

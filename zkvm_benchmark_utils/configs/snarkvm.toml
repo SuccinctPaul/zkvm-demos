@@ -5,7 +5,7 @@
 
 name = "snark_vm"
 version = "v0.16.0"
-enabled = true
+enabled = false  # Requires Leo CLI; falls back to reference execution without it
 default_mode = "core"
 test_scales = [10, 20]
 prove_modes = ["core"]

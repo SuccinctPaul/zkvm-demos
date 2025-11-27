@@ -5,9 +5,32 @@
 //! https://github.com/o1-labs/proof-systems
 //!
 //! Features:
-//! - MIPS ELF binary execution
-//! - Kimchi-based zero-knowledge proofs
-//! - Compatible with Optimism Cannon state format
+//! - MIPS ELF binary execution ✅
+//! - Kimchi-based zero-knowledge proofs (reference mode)
+//! - Compatible with Optimism Cannon state format ✅
+//!
+//! ## Implementation Status
+//!
+//! Currently uses:
+//! - `o1vm::elf_loader`: For loading MIPS ELF binaries ✅
+//! - `o1vm::cannon::State`: For VM state management ✅
+//!
+//! For full proving, the following is needed:
+//! ```rust
+//! // 1. Execute MIPS instructions and collect trace
+//! let trace = mips_interpreter.execute(&state)?;
+//!
+//! // 2. Generate witnesses from trace
+//! let witnesses = generate_witnesses(&trace)?;
+//!
+//! // 3. Create Kimchi proof
+//! let proof = kimchi::prove(&prover_index, &witnesses)?;
+//!
+//! // 4. Verify proof
+//! kimchi::verify(&verifier_index, &proof)?;
+//! ```
+//!
+//! See: https://github.com/o1-labs/proof-systems/tree/master/o1vm
 
 use anyhow::{Context, Result};
 use o1vm::{
@@ -37,7 +60,8 @@ fn main() -> Result<()> {
     println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=o1vm");
     println!("BENCHMARK: zkvm_version={}", O1VM_VERSION);
-    println!("BENCHMARK: proof_mode=core");
+    // Note: proof_mode is "reference" because full Kimchi proving is not yet implemented
+    println!("BENCHMARK: proof_mode=reference");
 
     println!(
         "📋 Input: Program={} (ID={}) N={}\n",
@@ -131,49 +155,40 @@ fn main() -> Result<()> {
     println!("BENCHMARK: total_cycles={}", cycles);
     println!();
 
-    // Step 3: Generate proof
-    println!("3️⃣  Generating Kimchi proof...");
+    // Step 3: Generate proof (reference mode - not real Kimchi proof)
+    println!("3️⃣  Proof generation (reference mode)...");
     let prove_start = Instant::now();
 
-    // o1vm uses Kimchi proof system for MIPS/RISC-V execution
-    // The proof generation involves:
-    // 1. Witness generation from execution trace
-    // 2. Constraint system evaluation
-    // 3. Polynomial commitments using IPA
-    // 4. Kimchi proof creation
+    // Note: Full Kimchi proving requires:
+    // 1. MIPS interpreter execution with trace collection
+    // 2. Witness generation from execution trace
+    // 3. Kimchi constraint system evaluation
+    // 4. IPA polynomial commitments
+    //
+    // This reference mode generates a placeholder proof structure.
+    // For real proving, see: https://github.com/o1-labs/proof-systems/tree/master/o1vm
 
-    let proof_result = if state_result.is_some() {
-        // With actual state, we could generate real proofs
-        // This requires the full pickles prover setup
-        generate_mock_proof(input.program.id(), input.n, result, cycles)
-    } else {
-        generate_mock_proof(input.program.id(), input.n, result, cycles)
-    };
+    let proof_result = generate_reference_proof(input.program.id(), input.n, result, cycles);
 
     let prove_duration = prove_start.elapsed();
     let proof_size = proof_result.len();
 
-    println!("   ✓ Proof generated");
-    println!("   Proof size: {} bytes", proof_size);
+    println!("   ⚠ Reference proof generated (not real Kimchi proof)");
+    println!("   Proof size: {} bytes (placeholder)", proof_size);
     println!(
         "BENCHMARK: proof_time_s={:.6}",
         prove_duration.as_secs_f64()
     );
     println!("BENCHMARK: proof_size_bytes={}", proof_size);
-
-    // Calculate proving speed
-    if prove_duration.as_secs_f64() > 0.0 {
-        let prove_khz = (cycles as f64 / prove_duration.as_secs_f64()) / 1000.0;
-        println!("BENCHMARK: vm_prove_khz={:.3}", prove_khz);
-    }
+    // Note: Not reporting vm_prove_khz for reference mode as it would be misleading
     println!();
 
-    // Step 4: Verify proof
-    println!("4️⃣  Verifying proof...");
+    // Step 4: Verify proof (reference mode)
+    println!("4️⃣  Verification (reference mode)...");
     let verify_start = Instant::now();
 
-    // Verify the proof
-    let verification_result = verify_mock_proof(&proof_result, input.program.id(), input.n, result);
+    // Verify the reference proof structure
+    let verification_result = verify_reference_proof(&proof_result, input.program.id(), input.n, result);
 
     let verify_duration = verify_start.elapsed();
     println!(
@@ -182,9 +197,9 @@ fn main() -> Result<()> {
     );
 
     if verification_result {
-        println!("   ✓ Proof verified successfully!");
+        println!("   ✓ Reference proof structure verified");
     } else {
-        println!("   ✗ Verification failed!");
+        println!("   ✗ Reference proof verification failed!");
     }
 
     // Verify correctness
@@ -247,9 +262,9 @@ fn estimate_cycles(program_id: u32, n: u32) -> u64 {
     }
 }
 
-/// Generate a mock proof for demonstration
-/// In production, this would use Kimchi's prove() function
-fn generate_mock_proof(program_id: u32, n: u32, result: u32, cycles: u64) -> Vec<u8> {
+/// Generate a reference proof for demonstration
+/// In production, this would use Kimchi's prove() function with real witnesses
+fn generate_reference_proof(program_id: u32, n: u32, result: u32, cycles: u64) -> Vec<u8> {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     let timestamp = SystemTime::now()
@@ -282,8 +297,8 @@ fn generate_mock_proof(program_id: u32, n: u32, result: u32, cycles: u64) -> Vec
     proof_data
 }
 
-/// Verify a mock proof
-fn verify_mock_proof(proof: &[u8], expected_program_id: u32, expected_n: u32, expected_result: u32) -> bool {
+/// Verify a reference proof structure
+fn verify_reference_proof(proof: &[u8], expected_program_id: u32, expected_n: u32, expected_result: u32) -> bool {
     if proof.len() < 32 {
         return false;
     }

@@ -7,14 +7,24 @@
 //! Repository: <https://github.com/scroll-tech/ceno>
 //! Paper: <https://eprint.iacr.org/2024/387>
 //!
-//! This implementation uses the CENO SDK when available,
-//! falling back to CLI-based execution.
+//! ## Implementation Status
+//!
+//! Currently uses:
+//! - `ceno_emul`: For ELF loading and VM state management ✅
+//! - `ceno_host`: For building inputs (CenoStdin) ✅
+//!
+//! For full proving, enable `ceno_zkvm` in Cargo.toml and use:
+//! ```
+//! use ceno_zkvm::e2e::{run_e2e_with_checkpoint, verify};
+//! let (proof, vk) = run_e2e_with_checkpoint(&platform, &program, &hints)?;
+//! ```
+//!
+//! Or use the CLI: `cargo run --release --package ceno_zkvm --bin e2e`
 
 use ceno_emul::Program;
 use ceno_host::CenoStdin;
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
 use std::time::Instant;
 use zkvm_programs::load_program_input;
 

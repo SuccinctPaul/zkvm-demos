@@ -6,7 +6,7 @@
 
 name = "lean"
 version = "v0.1.0-dev"
-enabled = true
+enabled = false  # SDK not publicly available; uses mock/reference proof only
 default_mode = "core"
 
 # Test scales (program input N values)
