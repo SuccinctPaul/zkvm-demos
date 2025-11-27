@@ -1,5 +1,5 @@
 use std::time::Instant;
-use programs::load_program_input;
+use zkvm_programs::load_program_input;
 
 pub fn main() {
     // Load program input from environment

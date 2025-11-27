@@ -6,7 +6,7 @@
 #![cfg_attr(all(target_os = "zkvm", target_vendor = "zisk"), no_main)]
 
 use ziskos::*;
-use programs::execute_program;
+use zkvm_programs::execute_program;
 
 // Entry point for the ZisK guest program (when targeting zkVM)
 #[cfg(all(target_os = "zkvm", target_vendor = "zisk"))]

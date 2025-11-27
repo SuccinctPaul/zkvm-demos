@@ -11,7 +11,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
-use programs::load_program_input;
+use zkvm_programs::load_program_input;
 
 /// Path to the compiled guest ELF
 const GUEST_ELF_PATH: &str = "target/riscv32im-ceno-zkvm-elf/release/ceno-guest";
@@ -66,7 +66,7 @@ fn main() {
     let exec_start = Instant::now();
     
     // Calculate result using common library
-    let result = programs::execute_program(input.program.id(), input.n);
+    let result = zkvm_programs::execute_program(input.program.id(), input.n);
     
     let exec_duration = exec_start.elapsed();
     println!("   Result: {}", result);
@@ -90,7 +90,7 @@ fn main() {
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
     
     // Verify correctness
-    let expected = programs::benchmarks::fibonacci(input.n);
+    let expected = zkvm_programs::benchmarks::fibonacci(input.n);
     if result == expected {
         println!("✅ Result matches expected value!");
         println!("BENCHMARK: success_status=success");

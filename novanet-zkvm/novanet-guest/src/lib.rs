@@ -4,7 +4,7 @@
 //! in a zero-knowledge proof environment using Novanet zkVM.
 
 use serde::{Deserialize, Serialize};
-use programs::execute_program;
+use zkvm_programs::execute_program;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgramInput {

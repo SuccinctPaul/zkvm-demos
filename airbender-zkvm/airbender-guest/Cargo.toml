@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-common = { workspace = true, default-features = false }
+zkvm_programs = { workspace = true, default-features = false }
 
 # Airbender guest runtime dependencies
 # Note: This is a placeholder structure based on the ere project

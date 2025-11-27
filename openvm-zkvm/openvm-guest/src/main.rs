@@ -1,7 +1,7 @@
 #![no_main]
 #![no_std]
 
-use programs::execute_program;
+use zkvm_programs::execute_program;
 openvm::entry!(main);
 
 pub fn main() {

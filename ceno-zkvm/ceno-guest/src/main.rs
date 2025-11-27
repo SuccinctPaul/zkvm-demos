@@ -10,7 +10,7 @@
 #![no_main]
 
 use ceno_rt::println;
-use programs::execute_program;
+use zkvm_programs::execute_program;
 
 /// Main entry point for CENO guest program
 /// 

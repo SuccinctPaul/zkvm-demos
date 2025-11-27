@@ -3,7 +3,7 @@ members = ["pico-guest", "pico-host"]
 resolver = "2"
 
 [workspace.dependencies]
-programs = { path = "../programs" }
+zkvm_programs = { path = "../programs" }
 
 [profile.dev]
 panic = "abort"

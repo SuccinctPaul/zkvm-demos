@@ -89,15 +89,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
-name = "common"
-version = "0.2.0"
-dependencies = [
- "anyhow",
- "dotenv",
- "sha2",
-]
-
-[[package]]
 name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -244,7 +235,7 @@ dependencies = [
 name = "powdr-guest"
 version = "0.1.0"
 dependencies = [
- "common",
+ "zkvm_programs",
 ]
 
 [[package]]
@@ -252,12 +243,12 @@ name = "powdr-host"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "common",
  "dotenv",
  "env_logger",
  "log",
  "serde",
  "serde_json",
+ "zkvm_programs",
 ]
 
 [[package]]
@@ -415,4 +406,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
 dependencies = [
  "windows-link",
+]
+
+[[package]]
+name = "zkvm_programs"
+version = "0.3.0"
+dependencies = [
+ "dotenv",
+ "sha2",
 ]

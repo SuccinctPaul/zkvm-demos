@@ -12,7 +12,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-programs = { path = "../programs" }
+zkvm_programs = { path = "../programs" }
 
 # misc
 dotenv = "0.15.0"

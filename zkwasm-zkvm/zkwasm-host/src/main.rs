@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::process::Command;
 use std::fs;
-use programs::load_program_input;
+use zkvm_programs::load_program_input;
 
 #[derive(Parser)]
 #[command(name = "zkwasm-host")]

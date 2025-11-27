@@ -7,4 +7,4 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-programs = { path = "../../programs", default-features = false }
+zkvm_programs = { path = "../../programs", default-features = false }

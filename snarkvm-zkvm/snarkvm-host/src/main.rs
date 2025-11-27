@@ -8,7 +8,7 @@
 use anyhow::Result;
 use colored::*;
 use std::time::Instant;
-use programs::{load_program_input, execute_program};
+use zkvm_programs::{load_program_input, execute_program};
 
 const SNARKVM_VERSION: &str = "v0.16.0";
 
@@ -75,7 +75,7 @@ fn main() -> Result<()> {
     println!();
 
     // Verify correctness
-    let expected = programs::benchmarks::fibonacci(input.n);
+    let expected = zkvm_programs::benchmarks::fibonacci(input.n);
     if result == expected {
         println!("✅ Result matches expected value!");
         println!("BENCHMARK: success_status=success");

@@ -6,4 +6,4 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-programs = { path = "../../programs", default-features = false }
+zkvm_programs = { path = "../../programs", default-features = false }

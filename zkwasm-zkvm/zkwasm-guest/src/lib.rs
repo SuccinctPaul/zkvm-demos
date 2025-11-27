@@ -4,7 +4,7 @@
 #![no_std]
 
 use core::panic::PanicInfo;
-use programs::execute_program;
+use zkvm_programs::execute_program;
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {

@@ -13,7 +13,7 @@
 //! ## Usage
 //!
 //! ```rust,ignore
-//! use programs::{Program, execute};
+//! use zkvm_programs::{Program, execute};
 //!
 //! // Execute fibonacci(20)
 //! let result = execute(Program::Fibonacci, 20);

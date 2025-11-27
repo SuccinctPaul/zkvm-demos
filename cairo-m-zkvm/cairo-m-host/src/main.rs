@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::fs;
 use std::time::Instant;
-use programs::{load_program_input, execute_program};
+use zkvm_programs::{load_program_input, execute_program};
 
 const PROGRAM_SOURCE: &str = "../programs/fibonacci.cm";
 const COMPILED_OUTPUT: &str = "../compiled/fibonacci.json";

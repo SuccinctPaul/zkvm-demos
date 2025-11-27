@@ -1,6 +1,6 @@
 use pico_sdk::{client::DefaultProverClient, init_logger};
 use std::time::Instant;
-use programs::load_program_input;
+use zkvm_programs::load_program_input;
 
 fn main() -> anyhow::Result<()> {
     // Setup environment

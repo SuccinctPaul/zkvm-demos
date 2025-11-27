@@ -6,4 +6,4 @@ license.workspace = true
 
 [dependencies]
 ziskos = { workspace = true }
-programs = { path = "../../programs", default-features = false }
+zkvm_programs = { path = "../../programs", default-features = false }

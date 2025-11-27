@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 sp1-zkvm = "5.2.2"
-programs = { path = "../../programs", features = ["std", "crypto"] }
+zkvm_programs = { path = "../../programs", features = ["std", "crypto"] }

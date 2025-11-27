@@ -12,7 +12,7 @@ path = "src/main.rs"
 ceno_rt = { workspace = true }
 
 # Common library for benchmarks
-programs = { path = "../../programs", default-features = false }
+zkvm_programs = { path = "../../programs", default-features = false }
 
 [features]
 cycles = [] # Enable cycle counting

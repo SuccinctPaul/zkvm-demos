@@ -1,5 +1,5 @@
 use zkm_sdk::{include_elf, ProverClient, ZKMProofKind, ZKMStdin};
-use programs::load_program_input;
+use zkvm_programs::load_program_input;
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const GUEST_ELF: &[u8] = include_elf!("zkm-guest");

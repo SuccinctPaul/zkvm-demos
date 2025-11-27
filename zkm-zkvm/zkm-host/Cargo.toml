@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1", default-features = false, features = ["network", "native-gnark"] }
 
-programs = { path = "../../programs" }
+zkvm_programs = { path = "../../programs" }
 #misc
 dotenv = "0.15.0"
 #clap = { version = "4.0", features = ["derive", "env"] }

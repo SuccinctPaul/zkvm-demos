@@ -6,7 +6,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-programs = { path = "../programs" }
+zkvm_programs = { path = "../programs" }
 
 # CENO SDK from Scroll (official implementation)
 # https://github.com/scroll-tech/ceno

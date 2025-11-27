@@ -1,6 +1,6 @@
 #![no_main]
 use risc0_zkvm::guest::env;
-use programs::execute_program;
+use zkvm_programs::execute_program;
 
 risc0_zkvm::guest::entry!(main);
 

@@ -1,7 +1,7 @@
 #![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 use nexus_rt::println;
-use programs::execute_program;
+use zkvm_programs::execute_program;
 
 #[nexus_rt::main]
 #[nexus_rt::public_input(input_packed)]

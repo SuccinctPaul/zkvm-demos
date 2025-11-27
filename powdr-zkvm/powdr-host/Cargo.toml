@@ -6,7 +6,7 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-common = { workspace = true }
+zkvm_programs = { workspace = true }
 dotenv = { workspace = true }
 anyhow = { workspace = true }
 env_logger = { workspace = true }

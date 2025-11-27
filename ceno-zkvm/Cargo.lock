@@ -184,7 +184,7 @@ name = "ceno-guest"
 version = "0.1.0"
 dependencies = [
  "ceno_rt",
- "programs",
+ "zkvm_programs",
 ]
 
 [[package]]
@@ -197,10 +197,10 @@ dependencies = [
  "dotenv",
  "env_logger",
  "log",
- "programs",
  "serde",
  "serde_json",
  "tokio",
+ "zkvm_programs",
 ]
 
 [[package]]
@@ -1496,14 +1496,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "programs"
-version = "0.3.0"
-dependencies = [
- "dotenv",
- "sha2",
-]
-
-[[package]]
 name = "ptr_meta"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2422,3 +2414,11 @@ name = "zeroize"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b97154e67e32c85465826e8bcc1c59429aaaf107c1e4a9e53c8d8ccd5eff88d0"
+
+[[package]]
+name = "zkvm_programs"
+version = "0.3.0"
+dependencies = [
+ "dotenv",
+ "sha2",
+]

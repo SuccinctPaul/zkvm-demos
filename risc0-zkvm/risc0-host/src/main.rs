@@ -1,7 +1,7 @@
 use std::time::Instant;
 use methods::{METHODS_ELF, METHODS_ID};
 use risc0_zkvm::{default_prover, ExecutorEnv, ProverOpts};
-use programs::load_program_input;
+use zkvm_programs::load_program_input;
 
 fn main() {
     // Initialize tracing

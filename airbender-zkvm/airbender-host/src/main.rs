@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use std::time::Instant;
-use programs::{load_program_input, execute_program};
+use zkvm_programs::{load_program_input, execute_program};
 
 const AIRBENDER_VERSION: &str = "v0.1.0-dev";
 

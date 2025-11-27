@@ -6,7 +6,7 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
-use programs::execute_program;
+use zkvm_programs::execute_program;
 
 pub fn main() {
     // Read program ID (0-6) and input parameter

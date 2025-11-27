@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v1.1.6" }
-common = { workspace = true }
+zkvm_programs = { workspace = true }
 dotenv = "0.15.0"
 anyhow = "1.0"
 bincode = "1.3.3"

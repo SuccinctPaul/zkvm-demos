@@ -11,7 +11,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-programs = { path = "../programs" }
+zkvm_programs = { path = "../programs" }
 
 # snarkVM dependencies
 snarkvm = { version = "0.16", features = ["circuit", "console"] }

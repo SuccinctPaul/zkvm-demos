@@ -5,7 +5,7 @@ use miden_vm::{
 };
 use miden_processor::ExecutionOptions;
 use std::time::Instant;
-use programs::{load_program_input, execute_program};
+use zkvm_programs::{load_program_input, execute_program};
 
 const MIDEN_VERSION: &str = "v0.10.0";
 

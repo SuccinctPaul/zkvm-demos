@@ -5,7 +5,7 @@
 use anyhow::Result;
 use guest::{compute_program, ProgramInput, ProgramOutput};
 use std::time::Instant;
-use programs::load_program_input;
+use zkvm_programs::load_program_input;
 
 const NOVANET_VERSION: &str = "v0.1.0-dev";
 

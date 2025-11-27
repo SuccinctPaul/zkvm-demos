@@ -3,7 +3,7 @@ members = ["openvm-guest", "openvm-host"]
 resolver = "2"
 
 [workspace.dependencies]
-programs = { path = "../programs" }
+zkvm_programs = { path = "../programs" }
 
 
 

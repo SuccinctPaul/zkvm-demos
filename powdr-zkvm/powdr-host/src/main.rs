@@ -8,7 +8,7 @@
 
 use std::time::Instant;
 use anyhow::Result;
-use programs::{load_program_input, execute_program};
+use zkvm_programs::{load_program_input, execute_program};
 
 const POWDR_VERSION: &str = "v0.1.0-dev";
 
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
     
     // Verify correctness
-    let expected = programs::benchmarks::fibonacci(input.n);
+    let expected = zkvm_programs::benchmarks::fibonacci(input.n);
     if result == expected {
         println!("\n✅ Result matches expected value!");
         println!("BENCHMARK: success_status=success");

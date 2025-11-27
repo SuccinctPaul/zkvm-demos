@@ -16,7 +16,7 @@ use cli::Args;
 use sp1_sdk::{include_elf, ProverClient, SP1Proof, SP1ProofMode, SP1Stdin};
 use std::time::Instant;
 
-use programs::load_program_input;
+use zkvm_programs::load_program_input;
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const GUEST_ELF: &[u8] = include_elf!("sp1-guest");
