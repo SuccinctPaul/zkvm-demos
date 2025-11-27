@@ -1,18 +1,36 @@
 //! Computation implementations for benchmark programs
 
 use crate::Program;
-
-#[cfg(feature = "crypto")]
 use sha2::{Digest, Sha256};
+
+// ============================================================================
+// Logging Macros (std only)
+// ============================================================================
+
+#[cfg(feature = "std")]
+macro_rules! log_info {
+    ($($arg:tt)*) => {
+        eprintln!("[zkvm_programs] {}", format!($($arg)*));
+    };
+}
+
+#[cfg(not(feature = "std"))]
+macro_rules! log_info {
+    ($($arg:tt)*) => {};
+}
 
 // ============================================================================
 // Main Entry Point
 // ============================================================================
 
 /// Execute a program with the given input
-#[inline]
 pub fn execute(program: Program, n: u32) -> u32 {
-    match program {
+    log_info!("═══════════════════════════════════════════════════════════");
+    log_info!("🚀 Executing: {} (id={}, n={})", program.name(), program.id(), n);
+    log_info!("   Description: {}", program.description());
+    log_info!("═══════════════════════════════════════════════════════════");
+
+    let result = match program {
         Program::Fibonacci => fibonacci(n),
         Program::Sum => sum(n),
         Program::Factorial => factorial(n),
@@ -20,15 +38,31 @@ pub fn execute(program: Program, n: u32) -> u32 {
         Program::PopCount => popcount(n),
         Program::Hash => hash(n),
         Program::Signature => signature(n),
-    }
+    };
+
+    log_info!("───────────────────────────────────────────────────────────");
+    log_info!("✅ Result: {}({}) = {}", program.name(), n, result);
+    log_info!("───────────────────────────────────────────────────────────\n");
+
+    result
 }
 
 /// Execute a program by ID (for guest programs)
 #[inline]
 pub fn execute_by_id(program_id: u32, n: u32) -> u32 {
-    Program::from_id(program_id)
-        .map(|p| execute(p, n))
-        .unwrap_or(0)
+    match Program::from_id(program_id) {
+        Some(program) => execute(program, n),
+        None => {
+            log_info!("❌ Unknown program_id: {}", program_id);
+            0
+        }
+    }
+}
+
+/// Backward compatibility alias for execute_by_id
+#[inline]
+pub fn execute_program(program_id: u32, n: u32) -> u32 {
+    execute_by_id(program_id, n)
 }
 
 // ============================================================================
@@ -40,7 +74,9 @@ pub fn execute_by_id(program_id: u32, n: u32) -> u32 {
 /// Time: O(n), Space: O(1)
 #[inline]
 pub fn fibonacci(n: u32) -> u32 {
-    match n {
+    log_info!("   Computing Fibonacci({})...", n);
+    
+    let result = match n {
         0 => 0,
         1 => 1,
         _ => {
@@ -50,7 +86,10 @@ pub fn fibonacci(n: u32) -> u32 {
             }
             b
         }
-    }
+    };
+    
+    log_info!("   Fibonacci({}) = {}", n, result);
+    result
 }
 
 /// Sum integers from 1 to n
@@ -58,8 +97,13 @@ pub fn fibonacci(n: u32) -> u32 {
 /// Time: O(n), Space: O(1)
 #[inline]
 pub fn sum(n: u32) -> u32 {
+    log_info!("   Computing Sum(1..={})...", n);
+    
     // Could use n*(n+1)/2, but loop is more representative for zkVM
-    (1..=n).fold(0u32, |acc, i| acc.wrapping_add(i))
+    let result = (1..=n).fold(0u32, |acc, i| acc.wrapping_add(i));
+    
+    log_info!("   Sum(1..={}) = {}", n, result);
+    result
 }
 
 /// Compute n factorial
@@ -67,7 +111,12 @@ pub fn sum(n: u32) -> u32 {
 /// Time: O(n), Space: O(1)
 #[inline]
 pub fn factorial(n: u32) -> u32 {
-    (1..=n).fold(1u32, |acc, i| acc.wrapping_mul(i))
+    log_info!("   Computing Factorial({})...", n);
+    
+    let result = (1..=n).fold(1u32, |acc, i| acc.wrapping_mul(i));
+    
+    log_info!("   Factorial({}) = {}", n, result);
+    result
 }
 
 /// Check if n is prime
@@ -76,36 +125,46 @@ pub fn factorial(n: u32) -> u32 {
 /// Time: O(√n), Space: O(1)
 #[inline]
 pub fn is_prime(n: u32) -> u32 {
-    if n < 2 {
-        return 0;
-    }
-    if n == 2 {
-        return 1;
-    }
-    if n % 2 == 0 {
-        return 0;
-    }
-
-    let mut i = 3;
-    while i * i <= n {
-        if n % i == 0 {
-            return 0;
+    log_info!("   Checking IsPrime({})...", n);
+    
+    let result = if n < 2 {
+        0
+    } else if n == 2 {
+        1
+    } else if n % 2 == 0 {
+        0
+    } else {
+        let mut i = 3;
+        let mut is_p = 1;
+        while i * i <= n {
+            if n % i == 0 {
+                is_p = 0;
+                break;
+            }
+            i += 2;
         }
-        i += 2;
-    }
-    1
+        is_p
+    };
+    
+    log_info!("   IsPrime({}) = {} ({})", n, result, if result == 1 { "PRIME" } else { "NOT PRIME" });
+    result
 }
 
 /// Count set bits (population count)
 ///
 /// Time: O(log n), Space: O(1)
 #[inline]
-pub fn popcount(mut n: u32) -> u32 {
+pub fn popcount(n: u32) -> u32 {
+    log_info!("   Computing PopCount({}) [binary: {:032b}]...", n, n);
+    
+    let mut val = n;
     let mut count = 0;
-    while n > 0 {
-        count += n & 1;
-        n >>= 1;
+    while val > 0 {
+        count += val & 1;
+        val >>= 1;
     }
+    
+    log_info!("   PopCount({}) = {} set bits", n, count);
     count
 }
 
@@ -117,9 +176,10 @@ pub fn popcount(mut n: u32) -> u32 {
 ///
 /// Returns first 4 bytes of hash as u32.
 /// Data length is capped at 1024 bytes.
-#[cfg(feature = "crypto")]
 pub fn hash(n: u32) -> u32 {
     let len = n.min(1024);
+    log_info!("   Computing SHA256 hash of {} bytes...", len);
+    
     let mut hasher = Sha256::new();
 
     // Generate deterministic test data
@@ -128,22 +188,20 @@ pub fn hash(n: u32) -> u32 {
     }
 
     let result = hasher.finalize();
-    u32::from_be_bytes([result[0], result[1], result[2], result[3]])
-}
-
-#[cfg(not(feature = "crypto"))]
-pub fn hash(_n: u32) -> u32 {
-    0
+    let hash_value = u32::from_be_bytes([result[0], result[1], result[2], result[3]]);
+    
+    log_info!("   SHA256({} bytes) = 0x{:08x}", len, hash_value);
+    hash_value
 }
 
 /// Verify ECDSA signature (simulated)
 ///
-/// Performs n iterations of hash operations.
+/// Performs n iterations of hash operations to simulate signature verification.
 /// Returns 1 if verification succeeds, 0 otherwise.
 /// Iterations capped at 1-100.
-#[cfg(feature = "crypto")]
 pub fn signature(n: u32) -> u32 {
     let iterations = n.clamp(1, 100);
+    log_info!("   Simulating ECDSA signature verification ({} iterations)...", iterations);
 
     // Simulated signature data
     let pubkey = [0x02u8; 32];
@@ -163,15 +221,12 @@ pub fn signature(n: u32) -> u32 {
 
         // Check hash is not all zeros (would never happen in practice)
         if result[..4].iter().all(|&b| b == 0) {
+            log_info!("   ❌ Signature verification FAILED at iteration {}", i);
             return 0;
         }
     }
 
-    1
-}
-
-#[cfg(not(feature = "crypto"))]
-pub fn signature(_n: u32) -> u32 {
+    log_info!("   ✅ Signature verification SUCCEEDED ({} iterations)", iterations);
     1
 }
 
@@ -245,7 +300,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "crypto")]
     fn test_hash() {
         let h1 = hash(100);
         let h2 = hash(100);
@@ -256,10 +310,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "crypto")]
     fn test_signature() {
         assert_eq!(signature(1), 1);
         assert_eq!(signature(50), 1);
     }
 }
-

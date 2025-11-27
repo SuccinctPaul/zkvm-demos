@@ -4315,14 +4315,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "programs"
-version = "0.3.0"
-dependencies = [
- "dotenv",
- "sha2",
-]
-
-[[package]]
 name = "proptest"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5584,10 +5576,10 @@ dependencies = [
  "clap",
  "dotenv",
  "once_cell",
- "programs",
  "serde_json",
  "sp1-build",
  "sp1-sdk",
+ "zkvm_programs",
 ]
 
 [[package]]
@@ -7348,4 +7340,12 @@ dependencies = [
  "sha2",
  "sha3",
  "subtle",
+]
+
+[[package]]
+name = "zkvm_programs"
+version = "0.3.0"
+dependencies = [
+ "dotenv",
+ "sha2",
 ]

@@ -7,13 +7,12 @@ license = "MIT OR Apache-2.0"
 description = "Benchmark programs for zkvms"
 
 [dependencies]
-# Optional: for loading config from env
+# Crypto: sha2 supports no_std
+sha2 = { version = "0.10", default-features = false }
+
+# Optional: for loading config from env (host only)
 dotenv = { version = "0.15", optional = true }
 
-# Optional: crypto operations (hash, signature)
-sha2 = { version = "0.10", default-features = false, optional = true }
-
 [features]
-default = ["std", "crypto"]
+default = ["std"]
 std = ["dotenv"]
-crypto = ["sha2"]
