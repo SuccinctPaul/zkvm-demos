@@ -34,3 +34,9 @@ debug
 
 **/*.data
 **/*.bin
+
+
+# bench results
+zkvm_benchmark_utils/benchmark-results/parsed-metrics/
+zkvm_benchmark_utils/benchmark-results/raw-logs/
+zkvm_benchmark_utils/benchmark-results/reports/
