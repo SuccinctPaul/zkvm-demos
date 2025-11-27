@@ -91,6 +91,29 @@ impl std::str::FromStr for ProofMode {
     }
 }
 
+impl ProofMode {
+    /// Get the priority of the proof mode (higher is more advanced)
+    /// Priority: Core(0) < Compressed(1) < Plonk(2) < Groth16(3)
+    pub fn priority(&self) -> u8 {
+        match self {
+            ProofMode::Core => 0,
+            ProofMode::Compressed => 1,
+            ProofMode::Plonk => 2,
+            ProofMode::Groth16 => 2,
+        }
+    }
+
+    /// Get the highest priority mode from a list of modes
+    /// Returns Core if the list is empty
+    pub fn highest_from(modes: &[ProofMode]) -> ProofMode {
+        modes
+            .iter()
+            .max_by_key(|m| m.priority())
+            .cloned()
+            .unwrap_or(ProofMode::Core)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
 pub enum ZkVmName {

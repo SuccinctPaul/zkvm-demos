@@ -145,6 +145,8 @@ impl BenchmarkExecutor {
     }
 
     /// Build all test tasks
+    /// Uses only the highest priority proof mode available for each zkVM
+    /// Priority: Groth16 = Plonk > Compressed > Core
     fn build_test_tasks(
         &self,
         enabled_zkvms: &[(&String, &ZkVmConfig)],
@@ -161,6 +163,14 @@ impl BenchmarkExecutor {
             let programs = zkvm_config.get_programs();
             let repeat_count = self.config.repeat_count.unwrap_or(1);
 
+            // Use only the highest priority proof mode
+            // Priority: Groth16 > Plonk > Compressed > Core
+            let highest_mode = ProofMode::highest_from(&zkvm_config.prove_modes);
+            info!(
+                "  📌 {} using highest proof mode: {} (from {:?})",
+                zkvm_name, highest_mode, zkvm_config.prove_modes
+            );
+
             for program_config in &programs {
                 // Parse program name
                 let program_name = program_config
@@ -170,17 +180,15 @@ impl BenchmarkExecutor {
 
                 for scale in &program_config.scales {
                     for repeat in 1..=repeat_count {
-                        for mode in &zkvm_config.prove_modes {
-                            let test_run = TestRun {
-                                zkvm_name: zkvm_name_enum.clone(),
-                                program_name: program_name.clone(),
-                                mode: mode.clone(),
-                                scale: *scale,
-                                repeat,
-                            };
+                        let test_run = TestRun {
+                            zkvm_name: zkvm_name_enum.clone(),
+                            program_name: program_name.clone(),
+                            mode: highest_mode.clone(),
+                            scale: *scale,
+                            repeat,
+                        };
 
-                            tasks.push(((*zkvm_name).clone(), (*zkvm_config).clone(), test_run));
-                        }
+                        tasks.push(((*zkvm_name).clone(), (*zkvm_config).clone(), test_run));
                     }
                 }
             }
@@ -625,6 +633,7 @@ mod tests {
             enabled: true,
             default_mode: ProofMode::Groth16,
             prove_modes: vec![ProofMode::Groth16],
+            programs: None,
             test_scales: None,
             working_dir: ".".to_string(),
             build_command: None,
