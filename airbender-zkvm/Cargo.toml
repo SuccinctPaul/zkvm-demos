@@ -12,7 +12,7 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-common = { path = "../common" }
+programs = { path = "../programs" }
 # Airbender zkVM dependencies
 # Note: These are based on the ere project structure
 # Actual versions may need adjustment based on zkSync's releases

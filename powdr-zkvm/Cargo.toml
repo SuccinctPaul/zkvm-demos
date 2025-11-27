@@ -12,7 +12,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-common = { path = "../common" }
+programs = { path = "../programs" }
 
 # misc
 dotenv = "0.15.0"

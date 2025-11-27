@@ -3,7 +3,7 @@ members = ["pico-guest", "pico-host"]
 resolver = "2"
 
 [workspace.dependencies]
-common = { path = "../common" }
+programs = { path = "../programs" }
 
 [profile.dev]
 panic = "abort"

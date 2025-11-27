@@ -34,6 +34,14 @@ repeat_count = 1
 name = "fibonacci"
 scales = [10, 20]
 
+[[programs]]
+name = "hash"
+scales = [100, 500, 1000]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
 # ----------------------------------------------------------------
 # Environment Variables
 # ----------------------------------------------------------------

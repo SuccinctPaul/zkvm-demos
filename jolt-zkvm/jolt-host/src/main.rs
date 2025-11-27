@@ -1,5 +1,5 @@
 use std::time::Instant;
-use common::load_program_input;
+use programs::load_program_input;
 
 pub fn main() {
     // Load program input from environment

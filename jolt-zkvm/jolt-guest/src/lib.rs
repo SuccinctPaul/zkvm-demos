@@ -1,7 +1,7 @@
 #![cfg_attr(feature = "guest", no_std)]
 #![cfg_attr(feature = "guest", no_main)]
 
-use common::execute_program as common_execute;
+use programs::execute_program as common_execute;
 
 /// Execute a selected program by ID
 /// This function will be proven by Jolt zkVM

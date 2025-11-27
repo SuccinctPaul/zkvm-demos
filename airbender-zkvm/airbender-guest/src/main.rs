@@ -4,7 +4,7 @@
 
 #![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
-use common::execute_program;
+use programs::execute_program;
 
 // RISC-V zkVM entry point
 #[cfg(target_arch = "riscv32")]

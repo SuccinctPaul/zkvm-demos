@@ -18,15 +18,13 @@ test_scales = [10, 20]
 name = "fibonacci"
 scales = [10, 20]
 
-# 可以为不同程序配置不同的参数和超时
-# [[programs]]
-# name = "hash"
-# scales = [100, 1000]
-# timeout_seconds = 7200  # 可选：程序特定超时
+[[programs]]
+name = "hash"
+scales = [100, 500, 1000]
 
-# [[programs]]
-# name = "sum"
-# scales = [100, 1000, 10000]
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
 
 # 证明模式 (core, compressed, groth16, plonk)
 prove_modes = ["core"]

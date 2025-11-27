@@ -12,7 +12,7 @@ path = "src/main.rs"
 ceno_rt = { workspace = true }
 
 # Common library for benchmarks
-common = { path = "../../common", default-features = false }
+programs = { path = "../../programs", default-features = false }
 
 [features]
 cycles = [] # Enable cycle counting

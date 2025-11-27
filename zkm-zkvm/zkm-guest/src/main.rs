@@ -1,7 +1,7 @@
 #![no_main]
 zkm_zkvm::entrypoint!(main);
 
-use common::execute_program;
+use programs::execute_program;
 
 pub fn main() {
     // Read input

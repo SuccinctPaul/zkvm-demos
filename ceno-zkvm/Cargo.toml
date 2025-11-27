@@ -6,7 +6,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-common = { path = "../common" }
+programs = { path = "../programs" }
 
 # CENO SDK from Scroll (official implementation)
 # https://github.com/scroll-tech/ceno

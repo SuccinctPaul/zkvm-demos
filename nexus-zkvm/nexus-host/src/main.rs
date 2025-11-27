@@ -5,7 +5,7 @@ use nexus_sdk::{
     ByGuestCompilation, Local, Prover, Verifiable, Viewable,
 };
 use std::time::Instant;
-use common::load_program_input;
+use programs::load_program_input;
 
 const GUEST_PACKAGE: &str = "nexus-guest";
 

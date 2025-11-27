@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 zkm-zkvm = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1" }
-common = { path = "../../common", default-features = false }
+programs = { path = "../../programs", default-features = false }

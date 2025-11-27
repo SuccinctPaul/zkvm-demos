@@ -1,6 +1,6 @@
 use openvm_sdk::{config::ProverConfig, Prover, StdIn};
 use std::time::Instant;
-use common::load_program_input;
+use programs::load_program_input;
 
 // Include the guest program ELF binary
 openvm_sdk::include_guest!();

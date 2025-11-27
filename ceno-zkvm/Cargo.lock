@@ -184,7 +184,7 @@ name = "ceno-guest"
 version = "0.1.0"
 dependencies = [
  "ceno_rt",
- "common",
+ "programs",
 ]
 
 [[package]]
@@ -194,10 +194,10 @@ dependencies = [
  "ceno_emul",
  "ceno_host",
  "clap",
- "common",
  "dotenv",
  "env_logger",
  "log",
+ "programs",
  "serde",
  "serde_json",
  "tokio",
@@ -311,15 +311,6 @@ name = "colorchoice"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
-
-[[package]]
-name = "common"
-version = "0.2.0"
-dependencies = [
- "anyhow",
- "dotenv",
- "sha2",
-]
 
 [[package]]
 name = "const-oid"
@@ -1502,6 +1493,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ee95bc4ef87b8d5ba32e8b7714ccc834865276eab0aed5c9958d00ec45f49e8"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "programs"
+version = "0.3.0"
+dependencies = [
+ "dotenv",
+ "sha2",
 ]
 
 [[package]]

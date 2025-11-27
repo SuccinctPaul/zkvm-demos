@@ -7,4 +7,4 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-common = { path = "../../common", default-features = false }
+programs = { path = "../../programs", default-features = false }

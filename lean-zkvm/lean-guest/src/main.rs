@@ -3,7 +3,7 @@
 /// This is a reference implementation showing the expected guest program structure
 /// for leanMultisig zkVM.
 
-use common::execute_program;
+use programs::execute_program;
 
 fn main() {
     // In the actual lean zkVM, input would be read from the execution context

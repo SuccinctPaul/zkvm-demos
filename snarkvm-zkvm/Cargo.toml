@@ -11,7 +11,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-common = { path = "../common" }
+programs = { path = "../programs" }
 
 # snarkVM dependencies
 snarkvm = { version = "0.16", features = ["circuit", "console"] }

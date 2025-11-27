@@ -1,7 +1,7 @@
 #![no_main]
 #![no_std]
 
-use common::execute_program;
+use programs::execute_program;
 openvm::entry!(main);
 
 pub fn main() {

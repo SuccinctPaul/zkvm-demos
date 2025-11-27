@@ -13,7 +13,7 @@ ceno_host = { workspace = true }
 ceno_emul = { workspace = true }
 
 # Common utilities
-common = { path = "../../common" }
+programs = { path = "../../programs" }
 
 # Environment and logging
 dotenv = "0.15"

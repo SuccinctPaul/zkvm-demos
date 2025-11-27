@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use std::time::Instant;
-use common::{load_program_input, execute_program};
+use programs::{load_program_input, execute_program};
 
 const LEAN_VERSION: &str = "v0.1.0-dev";
 

@@ -11,7 +11,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-common = { path = "../common" }
+programs = { path = "../programs" }
 
 # Cairo-M dependencies (these would be from the cairo-m repository)
 # Note: These are placeholder paths - actual integration depends on cairo-m's published crates
