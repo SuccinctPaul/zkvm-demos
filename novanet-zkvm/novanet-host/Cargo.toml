@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 guest = { package = "novanet-guest", path = "../novanet-guest" }
-common.workspace = true
+zkvm_programs.workspace = true
 dotenv.workspace = true
 anyhow.workspace = true
 serde = { version = "1.0", features = ["derive"] }

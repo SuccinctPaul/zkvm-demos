@@ -6,7 +6,7 @@ rust-version = "1.75"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-common.workspace = true
+zkvm_programs.workspace = true
 
 # utilities
 anyhow.workspace = true

@@ -10,7 +10,7 @@ name = "airbender-host"
 path = "src/main.rs"
 
 [dependencies]
-common.workspace = true
+zkvm_programs.workspace = true
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true

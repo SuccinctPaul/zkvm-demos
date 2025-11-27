@@ -18,13 +18,6 @@ resolver = "2"
 [workspace.dependencies]
 zkvm_programs = { path = "../programs" }
 
-#misc
-dotenv = "0.15.0"
-anyhow = "1.0.98"
-
-clap = { version = "4.0", features = ["derive", "env"] }
-
-
 
 # Always optimize; building and running the guest takes much longer without optimization.
 [profile.dev]

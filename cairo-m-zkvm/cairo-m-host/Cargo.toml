@@ -13,7 +13,7 @@ license = "MIT OR Apache-2.0"
 # cairo-m-runner = { git = "https://github.com/kkrt-labs/cairo-m.git" }
 # cairo-m-prover = { git = "https://github.com/kkrt-labs/cairo-m.git" }
 
-common.workspace = true
+zkvm_programs.workspace = true
 
 # Serialization
 serde.workspace = true
