@@ -2,20 +2,23 @@
 name = "airbender-guest"
 version.workspace = true
 edition.workspace = true
-rust-version.workspace = true
 license.workspace = true
-
-[dependencies]
-zkvm_programs = { workspace = true, default-features = false }
-
-# Airbender guest runtime dependencies
-# Note: This is a placeholder structure based on the ere project
-# Actual dependencies will need to be adjusted once Airbender SDK is available
-serde = { workspace = true }
 
 [[bin]]
 name = "airbender-guest"
 path = "src/main.rs"
+
+[dependencies]
+# ZKsync Airbender RISC-V runtime
+# https://github.com/matter-labs/zksync-airbender
+airbender_riscv_common.workspace = true
+
+# Local program logic (no_std compatible)
+# Note: Guest programs don't use zkvm_programs directly
+# They implement the computation inline for RISC-V
+
+[features]
+default = []
 
 [lints]
 workspace = true

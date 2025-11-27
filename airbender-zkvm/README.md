@@ -1,247 +1,144 @@
-# Airbender zkVM - Fibonacci Demo
+# ZKsync Airbender zkVM Demo
 
-A demonstration of using **Airbender**, zkSync's high-performance RISC-V zero-knowledge virtual machine, to compute Fibonacci numbers with zero-knowledge proofs.
+High-Performance RISC-V Zero-Knowledge Prover from Matter Labs.
 
-## 🌟 What is Airbender?
+## SDK Integration
 
-**Airbender** is a cutting-edge RISC-V zkVM developed by zkSync that brings unprecedented performance to zero-knowledge proof generation:
+This project integrates the official [ZKsync Airbender](https://github.com/matter-labs/zksync-airbender) SDK (v0.5.0).
 
-- ⚡ **~21.8 MHz** proving speed on H100 GPU (6x faster than competitors)
-- 💰 **$0.0001** per transaction cost (significantly reduced on-chain costs)
-- 🔧 **Full RISC-V ISA** compatibility
-- 🚀 **Production-ready** integration with zkSync Era, Abstract, and Sophon chains
+### References
 
-Airbender represents a major breakthrough in zkVM technology, enabling efficient verification of complex computations while maintaining the security guarantees of zero-knowledge proofs.
+- **Official Repository**: https://github.com/matter-labs/zksync-airbender
+- **Example (basic_fibonacci)**: https://github.com/matter-labs/zksync-airbender/tree/main/examples/basic_fibonacci
+- **ERE Integration Reference**: https://github.com/eth-act/ere/blob/master/crates/zkvm/airbender
 
-## 📋 Project Structure
+### SDK Dependencies
+
+```toml
+# From workspace Cargo.toml
+airbender_execution_utils = { 
+    git = "https://github.com/matter-labs/zksync-airbender.git", 
+    package = "execution_utils", 
+    tag = "v0.5.0" 
+}
+airbender_riscv_common = { 
+    git = "https://github.com/matter-labs/zksync-airbender.git", 
+    package = "riscv_common", 
+    tag = "v0.5.0" 
+}
+```
+
+## Project Structure
 
 ```
 airbender-zkvm/
-├── airbender-guest/      # Guest program (runs in zkVM)
-│   ├── Cargo.toml
+├── airbender-guest/     # RISC-V guest program (for zkVM execution)
 │   └── src/
-│       └── main.rs       # Fibonacci computation in RISC-V
-├── airbender-host/       # Host program (proof generation & verification)
-│   ├── Cargo.toml
+│       ├── main.rs      # Guest program entry point
+│       └── asm_reduced.S # Assembly entry point
+├── airbender-host/      # Host program (benchmark runner)
 │   └── src/
-│       └── main.rs       # Prover and verifier implementation
-├── Cargo.toml            # Workspace configuration
-├── rust-toolchain.toml   # Rust toolchain specification
-└── README.md             # This file
+│       └── main.rs      # Uses execution_utils for VK computation
+├── Cargo.toml           # Workspace configuration
+└── rust-toolchain.toml  # Nightly Rust required
 ```
 
-## 🎯 What This Demo Does
+## Requirements
 
-This demo showcases a complete zero-knowledge proof workflow:
+### For Host Program (Benchmarking)
 
-1. **Guest Program**: A RISC-V program that computes the nth Fibonacci number
-2. **Host Program**: Compiles the guest program, executes it in the zkVM, generates a proof, and verifies it
-3. **Zero-Knowledge**: The proof demonstrates correct computation without revealing the computation trace
+- Rust nightly toolchain
+- ZKsync Airbender SDK (automatically fetched via Cargo)
 
-## 🚀 Quick Start
+### For Full Proving
 
-### Prerequisites
+1. **airbender-cli**: Install from https://github.com/matter-labs/zksync-airbender
+2. **GPU Support**: CUDA for GPU-accelerated proving
+3. **Pre-compiled Guest Binary**: RISC-V ELF compiled to `.bin` format
 
-- Rust toolchain (1.85 or later)
-- RISC-V target: `rustup target add riscv32im-unknown-none-elf`
-- Airbender SDK (installation instructions pending)
+## Usage
 
-### Installation
-
-```bash
-# Install RISC-V target
-rustup target add riscv32im-unknown-none-elf
-
-# Install Airbender SDK (when available)
-# The official SDK will be released by zkSync
-# Check: https://docs.zksync.io/zk-stack/components/zksync-airbender
-```
-
-### Running the Demo
+### Running Benchmarks
 
 ```bash
-# Navigate to the airbender-zkvm directory
 cd airbender-zkvm
 
-# Build the project
-cargo build --release
+# Build host program
+cargo build --release -p airbender-host
 
-# Run the host program
-cargo run --release --bin airbender-host
+# Run benchmark (native fallback)
+PROGRAM_ID=0 SCALE=50 ./target/release/airbender-host
 ```
 
-## 📊 Configuration
-
-The Fibonacci input can be configured via environment variable:
+### Full Proving (with airbender-cli)
 
 ```bash
-# Set the Fibonacci number to compute (default: 10)
-export FIB_N=15
-cargo run --release --bin airbender-host
+# 1. Compile guest to RISC-V
+cargo build --release -p airbender-guest --target riscv32im-unknown-none-elf
+
+# 2. Convert to binary format (requires objcopy)
+rust-objcopy --output-target binary target/riscv32im-unknown-none-elf/release/airbender-guest guest.bin
+
+# 3. Run with airbender-cli
+airbender-cli run --bin guest.bin --input-file input.hex --cycles 1000000
+
+# 4. Generate proof
+airbender-cli prove --bin guest.bin --input-file input.hex --output-dir output/
 ```
 
-## 🔧 Implementation Details
+## SDK API Reference
 
-### Guest Program (`airbender-guest`)
-
-The guest program is compiled to RISC-V bytecode and runs inside the Airbender zkVM:
+### Host Side (execution_utils)
 
 ```rust
-#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
-
-#[cfg(target_arch = "riscv32")]
-#[no_mangle]
-pub extern "C" fn main() {
-    let n: u32 = 10;
-    let result = fib::fibonacci(n);
-    core::hint::black_box(result);
-}
+use airbender_execution_utils::{
+    Machine,                          // Machine type (Standard, etc.)
+    ProgramProof,                     // Proof structure
+    compute_chain_encoding,           // VK hash chain computation
+    generate_params_for_binary,       // Generate VK params from binary
+    universal_circuit_verifier_vk,    // Universal verifier VK
+    verify_recursion_log_23_layer,    // Proof verification
+};
 ```
 
-Key features:
-- `#![no_std]` - Runs in a bare-metal RISC-V environment
-- Uses shared `fib` library for Fibonacci computation
-- Compatible with Airbender's RISC-V execution environment
-
-### Host Program (`airbender-host`)
-
-The host program orchestrates proof generation and verification:
+### Guest Side (riscv_common)
 
 ```rust
-fn main() -> Result<()> {
-    // 1. Compile guest program to RISC-V ELF
-    let elf = compile_guest_program()?;
-    
-    // 2. Execute in zkVM and generate proof
-    let (trace, proof) = airbender_execution_utils::prove(
-        &elf,
-        &input_data,
-        ProofConfig::default(),
-    )?;
-    
-    // 3. Verify the proof
-    airbender_execution_utils::verify(
-        &proof,
-        &public_inputs,
-        &verification_key,
-    )?;
-    
-    Ok(())
-}
+use airbender_riscv_common::{
+    zksync_os_finish_success,         // Signal successful execution
+    zksync_os_finish_error,           // Signal error
+    csr_read_word,                    // Read from CSR
+    csr_write_word,                   // Write to CSR
+};
 ```
 
-## ⚠️ Current Status
+## Output Convention
 
-**Note**: This is a **reference implementation** that demonstrates the expected workflow structure. 
+Airbender uses registers 10-25 for output:
+- **x10-x17**: Public values (8 x u32 = 256 bits)
+- **x18-x25**: VK hash chain for recursion
 
-- The actual Airbender SDK APIs may differ once officially released
-- This demo is based on:
-  - zkSync Airbender documentation
-  - The [ere project](https://github.com/eth-act/ere) structure
-  - Standard RISC-V zkVM patterns
+## CLI Output Format
 
-### What's Working
-- ✅ Project structure and build configuration
-- ✅ RISC-V guest program compilation
-- ✅ Demo workflow and documentation
-
-### What's Pending
-- ⏳ Official Airbender SDK integration
-- ⏳ Actual proof generation using Airbender
-- ⏳ Proof verification implementation
-
-## 📚 Resources
-
-### Official Documentation
-- [zkSync Airbender Overview](https://docs.zksync.io/zk-stack/components/zksync-airbender)
-- [zkSync GitHub Organization](https://github.com/matter-labs)
-
-### Reference Projects
-- [ere Project - Airbender Integration](https://github.com/eth-act/ere/tree/master/crates/zkvm/airbender)
-
-### RISC-V zkVM Background
-- [RISC-V ISA Specification](https://riscv.org/technical/specifications/)
-- [Zero-Knowledge Proofs for RISC-V](https://zkproof.org/)
-
-## 🔄 Updating to Official SDK
-
-Once the Airbender SDK is officially released, update this demo:
-
-1. **Update Dependencies** in `Cargo.toml`:
-```toml
-[workspace.dependencies]
-airbender_execution_utils = "0.x.x"  # Official version
-airbender_runtime = "0.x.x"
+When running with `airbender-cli run`:
+```
+Result: {v0}, {v1}, {v2}, {v3}, {v4}, {v5}, {v6}, {v7}
+Took {cycles} cycles to finish
 ```
 
-2. **Update Guest Program** with official runtime:
-```rust
-use airbender_runtime::*;
+## Performance
 
-#[airbender_runtime::main]
-fn main() {
-    // Use official SDK APIs
-}
-```
+Airbender targets:
+- ~21.8 MHz proving speed on H100 GPU
+- Full RISC-V ISA compatibility
+- Optimized for Ethereum state transitions
 
-3. **Update Host Program** with official proving APIs:
-```rust
-use airbender_sdk::*;
-
-fn main() {
-    let prover = AirbenderProver::new()?;
-    let proof = prover.prove(elf, input)?;
-    // ...
-}
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Once the official Airbender SDK is available:
-
-1. Update the implementation to use official APIs
-2. Add more comprehensive examples
-3. Optimize performance
-4. Improve documentation
-
-## 📄 License
+## License
 
 MIT OR Apache-2.0
 
-## 🙏 Acknowledgments
+## Links
 
-- **zkSync Team** for developing Airbender
-- **ere Project** for early Airbender integration examples
-- **RISC-V Foundation** for the RISC-V ISA specification
-
----
-
-## 🐛 Troubleshooting
-
-### Build Errors
-
-**Problem**: `target 'riscv32im-unknown-none-elf' not found`
-```bash
-rustup target add riscv32im-unknown-none-elf
-```
-
-**Problem**: Airbender SDK not found
-- The official SDK is not yet publicly released
-- Check zkSync's documentation for updates: https://docs.zksync.io/
-
-### Running Issues
-
-**Problem**: Demo shows placeholder messages
-- This is expected! The demo shows the workflow structure
-- Actual proof generation requires the official Airbender SDK
-
-## 📬 Contact & Support
-
-- [zkSync Discord](https://discord.gg/zksync)
-- [zkSync GitHub Discussions](https://github.com/matter-labs/zksync-era/discussions)
-
----
-
-**Last Updated**: November 2025
-**Status**: Reference Implementation - Awaiting Official SDK Release
-
+- [ZKsync Airbender](https://github.com/matter-labs/zksync-airbender)
+- [ZKsync](https://zksync.io/)
+- [Matter Labs](https://matter-labs.io/)
