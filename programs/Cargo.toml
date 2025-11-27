@@ -1,0 +1,19 @@
+[package]
+name = "programs"
+version = "0.3.0"
+edition = "2021"
+rust-version = "1.81"
+license = "MIT OR Apache-2.0"
+description = "Benchmark programs for zkvms"
+
+[dependencies]
+# Optional: for loading config from env
+dotenv = { version = "0.15", optional = true }
+
+# Optional: crypto operations (hash, signature)
+sha2 = { version = "0.10", default-features = false, optional = true }
+
+[features]
+default = ["std", "crypto"]
+std = ["dotenv"]
+crypto = ["sha2"]
