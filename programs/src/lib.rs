@@ -36,8 +36,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-mod program;
 mod compute;
+mod program;
 
 #[cfg(feature = "std")]
 mod host;
@@ -48,8 +48,8 @@ pub mod benchmarks {
 }
 
 // Public exports
-pub use program::{Program, ProgramInput};
 pub use compute::*;
+pub use program::{Program, ProgramInput};
 
 #[cfg(feature = "std")]
 pub use host::*;

@@ -2420,5 +2420,6 @@ name = "zkvm_programs"
 version = "0.3.0"
 dependencies = [
  "dotenv",
+ "k256",
  "sha2",
 ]

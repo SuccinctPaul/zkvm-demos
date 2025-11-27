@@ -90,7 +90,7 @@ fn main() {
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
     
     // Verify correctness
-    let expected = zkvm_programs::benchmarks::fibonacci(input.n);
+    let expected = zkvm_programs::execute_program(input.program.id(), input.n);
     if result == expected {
         println!("✅ Result matches expected value!");
         println!("BENCHMARK: success_status=success");
