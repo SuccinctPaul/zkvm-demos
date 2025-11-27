@@ -206,46 +206,15 @@ fn main() -> Result<()> {
         // Reference mode - simulate proof generation
         println!("   Running in reference mode (no WASM binary)");
 
-        // Simulate proof generation time based on input complexity
-        let simulated_cycles = estimate_cycles(input_data.program.id(), input_data.n);
-        let simulated_prove_time = std::time::Duration::from_millis(simulated_cycles / 10);
-        std::thread::sleep(simulated_prove_time);
-
-        let prove_duration = prove_start.elapsed();
-        let proof_size = 450 * 1024; // ~450KB typical Nova proof
-
-        println!(
-            "   ✓ Reference proof simulated in {:.3}s",
-            prove_duration.as_secs_f64()
-        );
-        println!(
-            "BENCHMARK: proof_time_s={:.6}",
-            prove_duration.as_secs_f64()
-        );
-        println!("BENCHMARK: proof_size_bytes={}", proof_size);
-        println!("BENCHMARK: total_cycles={}", simulated_cycles);
-
+        // TODO: Implement actual proof generation when WASM is available
+        println!("   [TODO] Proof generation not implemented (reference mode)");
+        
         // Simulate verification
         println!("\n5️⃣  Verifying proof (reference mode)...");
-        let verify_start = Instant::now();
-        std::thread::sleep(std::time::Duration::from_millis(50));
-        let verify_duration = verify_start.elapsed();
+        // TODO: Implement actual verification
+        println!("   [TODO] Verification not implemented (reference mode)");
 
-        println!(
-            "   ✓ Reference verification in {:.6}s",
-            verify_duration.as_secs_f64()
-        );
-        println!(
-            "BENCHMARK: verification_time_s={:.6}",
-            verify_duration.as_secs_f64()
-        );
-        println!(
-            "BENCHMARK: verification_time_ms={:.3}",
-            verify_duration.as_secs_f64() * 1000.0
-        );
-        println!("BENCHMARK: success_status=success");
-
-        (true, proof_size)
+        (true, 0)
     };
     println!();
 

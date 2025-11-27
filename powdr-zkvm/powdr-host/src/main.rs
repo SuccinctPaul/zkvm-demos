@@ -431,22 +431,14 @@ fn run_reference_execution(
     // Step 3: Generate proof (reference)
     println!("\n🔐 Step 3: Generating proof...");
     println!("   Note: Actual proof requires powdr-rs CLI");
-    let prove_start = Instant::now();
-    let prove_duration = prove_start.elapsed();
-    println!(
-        "BENCHMARK: proof_time_s={:.6}",
-        prove_duration.as_secs_f64()
-    );
+    // TODO: Implement actual proof generation
+    println!("   [TODO] Proof generation not implemented (reference mode)");
 
     // Step 4: Verify proof (reference)
     println!("\n✓ Step 4: Verifying proof...");
     println!("   Note: Actual verification requires powdr-rs CLI");
-    let verify_start = Instant::now();
-    let verify_duration = verify_start.elapsed();
-    println!(
-        "BENCHMARK: verification_time_s={:.6}",
-        verify_duration.as_secs_f64()
-    );
+    // TODO: Implement actual verification
+    println!("   [TODO] Verification not implemented (reference mode)");
 
     // Verify correctness
     let expected = execute_program(input.program.id(), input.n);

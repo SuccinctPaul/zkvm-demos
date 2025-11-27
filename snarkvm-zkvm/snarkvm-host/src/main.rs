@@ -398,22 +398,14 @@ fn run_reference_execution(
     // Step 3: Proof generation (reference)
     println!("\n{}", "3️⃣  Generating Varuna proof...".bright_green());
     println!("   Note: Actual proof requires Leo CLI and Aleo program");
-    let prove_start = Instant::now();
-    let prove_duration = prove_start.elapsed();
-    println!(
-        "BENCHMARK: proof_time_s={:.6}",
-        prove_duration.as_secs_f64()
-    );
+    // TODO: Implement actual proof generation
+    println!("   [TODO] Proof generation not implemented (reference mode)");
 
     // Step 4: Verification (reference)
     println!("\n{}", "4️⃣  Verifying proof...".bright_green());
     println!("   Note: Actual verification requires Leo CLI");
-    let verify_start = Instant::now();
-    let verify_duration = verify_start.elapsed();
-    println!(
-        "BENCHMARK: verification_time_s={:.6}",
-        verify_duration.as_secs_f64()
-    );
+    // TODO: Implement actual verification
+    println!("   [TODO] Verification not implemented (reference mode)");
 
     // Verify correctness
     let expected = execute_program(input.program.id(), input.n);

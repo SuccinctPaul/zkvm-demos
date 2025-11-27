@@ -136,46 +136,13 @@ fn main() -> Result<()> {
     // Note: cairo-m-prover is not yet available in the public repository
     println!("🔐 Step 3: Proof generation...");
     println!("   ℹ️  Note: cairo-m-prover is not yet publicly available");
-    let prove_start = Instant::now();
-
-    // Estimate proof metrics based on execution trace
-    let proof_size = estimate_proof_size(execution_result.cycles);
-
-    let prove_duration = prove_start.elapsed();
-
-    // Calculate proving speed estimate
-    let proving_khz = if prove_duration.as_secs_f64() > 0.0 {
-        (execution_result.cycles as f64 / prove_duration.as_secs_f64()) / 1000.0
-    } else {
-        // Estimate based on Stwo performance (~1-2 kHz)
-        1.5
-    };
-
-    println!(
-        "   Estimated proof size: {:.2} KB",
-        proof_size as f64 / 1024.0
-    );
-    println!(
-        "BENCHMARK: proof_time_s={:.6}",
-        prove_duration.as_secs_f64()
-    );
-    println!("BENCHMARK: proof_size_bytes={}", proof_size);
-    println!("BENCHMARK: vm_prove_khz={:.3}", proving_khz);
-    println!();
-
+    // TODO: Implement proof generation when prover is available
+    println!("   [TODO] Proof generation not implemented (prover unavailable)");
+    
     // Step 4: Verification (placeholder)
     println!("✓ Step 4: Verification...");
-    let verify_start = Instant::now();
-    let verify_duration = verify_start.elapsed();
-    println!(
-        "BENCHMARK: verification_time_s={:.6}",
-        verify_duration.as_secs_f64()
-    );
-    println!(
-        "BENCHMARK: verification_time_ms={:.3}",
-        verify_duration.as_secs_f64() * 1000.0
-    );
-    println!("BENCHMARK: success_status=success");
+    // TODO: Implement verification when prover is available
+    println!("   [TODO] Verification not implemented (prover unavailable)");
     println!();
 
     // Summary
@@ -190,18 +157,8 @@ fn main() -> Result<()> {
     println!("========================================");
     println!("Compile time:     {:.6}s", compile_duration.as_secs_f64());
     println!("Execution time:   {:.6}s", exec_duration.as_secs_f64());
-    println!(
-        "Prove time:       {:.6}s (estimated)",
-        prove_duration.as_secs_f64()
-    );
-    println!("Verify time:      {:.6}s", verify_duration.as_secs_f64());
     println!("Total time:       {:.6}s", total_duration.as_secs_f64());
-    println!(
-        "Proof size:       {:.2} KB (estimated)",
-        proof_size as f64 / 1024.0
-    );
     println!("Cycles:           {}", execution_result.cycles);
-    println!("Proving speed:    {:.3} kHz (estimated)", proving_khz);
     println!("========================================\n");
 
     println!("✅ Cairo-M zkVM Demo completed successfully!");

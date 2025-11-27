@@ -150,8 +150,7 @@ fn run_with_ceno(
 
     // Step 3: Proof generation
     println!("\n🔐 Step 3: Proof generation (via ceno_zkvm)...");
-    let prove_start = Instant::now();
-
+    
     // Note: We are using a mock implementation here because full integration 
     // requires configuring the complex platform and proving parameters.
     // In a real scenario, this would look like:
@@ -165,36 +164,14 @@ fn run_with_ceno(
     //     E2EOptions::default()
     // )?;
 
-    // Simulate proving time based on program complexity (GKR is fast!)
-    // For fibonacci(100), ~1500 cycles. GKR can do ~1M cycles/sec.
-    let estimated_cycles = estimate_cycles(input.program.id(), input.n);
-    let simulated_prove_time = std::time::Duration::from_millis(
-        (estimated_cycles as f64 / 1000.0) as u64 + 100 // Base overhead
-    );
-    std::thread::sleep(simulated_prove_time);
-
-    let prove_duration = prove_start.elapsed();
-    println!(
-        "BENCHMARK: proof_time_s={:.6}",
-        prove_duration.as_secs_f64()
-    );
-    
-    // Simulate proof size (GKR proofs are small)
-    let proof_size = 4096; // ~4KB
-    println!("BENCHMARK: proof_size_bytes={}", proof_size);
+    // TODO: Implement actual proof generation
+    println!("   [TODO] Proof generation not implemented (integration pending)");
 
     // Step 4: Verification
     println!("\n🔍 Step 4: Verification...");
-    let verify_start = Instant::now();
     
-    // Simulate verification
-    std::thread::sleep(std::time::Duration::from_millis(50));
-    
-    let verify_duration = verify_start.elapsed();
-    println!(
-        "BENCHMARK: verification_time_s={:.6}",
-        verify_duration.as_secs_f64()
-    );
+    // TODO: Implement actual verification
+    println!("   [TODO] Verification not implemented (integration pending)");
 
     // Verify correctness against reference implementation
     // (In reality, `run_e2e_with_checkpoint` verifies the proof internally)
@@ -269,22 +246,14 @@ fn run_reference_execution(input: &zkvm_programs::ProgramInput, total_start: Ins
     // Step 3: Proof generation (reference)
     println!("\n🔐 Step 3: Generating proof...");
     println!("   Note: Requires CENO SDK with ceno_zkvm");
-    let prove_start = Instant::now();
-    let prove_duration = prove_start.elapsed();
-    println!(
-        "BENCHMARK: proof_time_s={:.6}",
-        prove_duration.as_secs_f64()
-    );
+    // TODO: Implement actual proof generation
+    println!("   [TODO] Proof generation not implemented (reference mode)");
 
     // Step 4: Verification (reference)
     println!("\n🔍 Step 4: Verifying proof...");
     println!("   Note: Requires CENO SDK verifier");
-    let verify_start = Instant::now();
-    let verify_duration = verify_start.elapsed();
-    println!(
-        "BENCHMARK: verification_time_s={:.6}",
-        verify_duration.as_secs_f64()
-    );
+    // TODO: Implement actual verification
+    println!("   [TODO] Verification not implemented (reference mode)");
 
     // Verify correctness
     let expected = zkvm_programs::execute_program(input.program.id(), input.n);

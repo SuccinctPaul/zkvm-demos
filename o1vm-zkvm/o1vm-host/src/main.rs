@@ -162,8 +162,7 @@ fn main() -> Result<()> {
 
     // Step 3: Generate proof
     println!("3️⃣  Proof generation...");
-    let prove_start = Instant::now();
-
+    
     // Note: Full Kimchi proving integration is complex and API dependent.
     // For this demo, we simulate the interface but acknowledge it's not full ZK.
     #[cfg(feature = "proving")]
@@ -173,37 +172,16 @@ fn main() -> Result<()> {
         // let proof = prover.prove(...);
     }
 
-    let proof_result = generate_reference_proof(input.program.id(), input.n, result, cycles);
-
-    let prove_duration = prove_start.elapsed();
-    let proof_size = proof_result.len();
-
-    println!("   Proof size: {} bytes", proof_size);
-    println!(
-        "BENCHMARK: proof_time_s={:.6}",
-        prove_duration.as_secs_f64()
-    );
-    println!("BENCHMARK: proof_size_bytes={}", proof_size);
+    // TODO: Implement actual proof generation
+    println!("   [TODO] Proof generation not implemented (prover integration pending)");
     println!();
 
     // Step 4: Verify proof
     println!("4️⃣  Verifying proof...");
-    let verify_start = Instant::now();
-
-    // Verify the proof
-    let verification_result = verify_mock_proof(&proof_result, input.program.id(), input.n, result);
-
-    let verify_duration = verify_start.elapsed();
-    println!(
-        "BENCHMARK: verification_time_s={:.6}",
-        verify_duration.as_secs_f64()
-    );
-
-    if verification_result {
-        println!("   ✓ Proof verified successfully!");
-    } else {
-        println!("   ✗ Verification failed!");
-    }
+    
+    // TODO: Implement actual verification
+    println!("   [TODO] Verification not implemented");
+    println!();
 
     // Verify correctness
     let expected = execute_program(input.program.id(), input.n);
@@ -230,11 +208,8 @@ fn main() -> Result<()> {
     println!("========================================");
     println!("Compile/Load time: {:.6}s", compile_duration.as_secs_f64());
     println!("Execution time:    {:.6}s", exec_duration.as_secs_f64());
-    println!("Prove time:        {:.6}s", prove_duration.as_secs_f64());
-    println!("Verify time:       {:.6}s", verify_duration.as_secs_f64());
     println!("Total time:        {:.6}s", total_duration.as_secs_f64());
     println!("Estimated cycles:  {}", cycles);
-    println!("Proof size:        {} bytes", proof_size);
     println!("========================================\n");
 
     println!("✅ o1vm zkVM demo completed!");

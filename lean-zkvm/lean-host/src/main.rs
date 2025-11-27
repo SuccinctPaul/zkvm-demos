@@ -174,51 +174,19 @@ fn run_reference_execution(
     // Step 3: Generate proof (reference mode - SDK not available)
     // ═══════════════════════════════════════════════════════════════
     println!("🔐 Step 3: Proof generation (reference mode)...");
-    let prove_start = Instant::now();
-
-    // Estimate metrics based on leanMultisig benchmarks
-    // Note: These are estimated values, not actual measurements
-    let estimated_cycles = estimate_cycles(input.program.id(), input.n);
-
-    // Reference mode: Generate placeholder proof structure
-    // Real proving would use WHIR + SuperSpartan
-    let proof_data = generate_reference_proof(input.program.id(), input.n, result)?;
-    let proof_path = "lean_proof.bin";
-    std::fs::write(proof_path, &proof_data)?;
-
-    let prove_time = prove_start.elapsed();
-
-    // Proof size estimation (based on leanMultisig: ~450 KiB target)
-    let proof_size_bytes = 450 * 1024; // ~450 KiB estimated
-
-    println!();
-    println!("   ⚠ Reference proof generated (SDK not available)");
-    println!("   Reference file: {}", proof_path);
-    println!(
-        "BENCHMARK: proof_time_s={:.6}",
-        prove_time.as_secs_f64()
-    );
-    println!("BENCHMARK: total_cycles={}", estimated_cycles);
-    println!("BENCHMARK: proof_size_bytes={}", proof_size_bytes);
-    // Note: Not reporting vm_prove_khz for reference mode as it would be misleading
-    println!("   Estimated cycles: ~{}", estimated_cycles);
-    println!("   Expected proof size: ~{} KiB (when SDK available)", proof_size_bytes / 1024);
+    
+    // TODO: Implement proof generation when SDK is available
+    println!("   [TODO] Proof generation not implemented (SDK unavailable)");
     println!();
 
     // ═══════════════════════════════════════════════════════════════
     // Step 4: Verify proof (reference mode)
     // ═══════════════════════════════════════════════════════════════
     println!("🔍 Step 4: Verification (reference mode)...");
-    let verify_start = Instant::now();
-
-    // Reference mode: Just verify the proof structure
-    let verify_time = verify_start.elapsed();
+    
+    // TODO: Implement verification when SDK is available
+    println!("   [TODO] Verification not implemented (SDK unavailable)");
     println!();
-    println!("   ✓ Reference proof structure verified");
-    println!(
-        "BENCHMARK: verification_time_s={:.6}",
-        verify_time.as_secs_f64()
-    );
 
     // Verify correctness
     let expected = execute_program(input.program.id(), input.n);
@@ -244,7 +212,6 @@ fn run_reference_execution(
     println!("  Input:            n = {}", input.n);
     println!("  Output:           {}", result);
     println!("  Mode:             Reference (SDK not available)");
-    println!("  Expected size:    ~{} KiB (when SDK available)", proof_size_bytes / 1024);
     println!("  Security target:  ~128 bits");
     println!();
 
