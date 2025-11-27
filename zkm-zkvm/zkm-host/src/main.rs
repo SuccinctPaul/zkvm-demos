@@ -27,7 +27,7 @@ fn main() {
 
     // Execute the program
     let start_execute = std::time::Instant::now();
-    let (_output, report) = client.execute(FIBONACCI_ELF, stdin.clone()).run().unwrap();
+    let (_output, report) = client.execute(GUEST_ELF, stdin.clone()).run().unwrap();
     let duration_execute = start_execute.elapsed();
 
     // Read the output.
