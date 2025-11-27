@@ -11,4 +11,6 @@ nexus-sdk = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4"
 #nexus-sdk-macros = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
 nexus-profiler = { git = "https://github.com/nexus-xyz/nexus-zkvm.git", tag = "0.3.4", version = "0.3.4" }
 
+zkvm_programs = { path = "../../programs" }
+
 

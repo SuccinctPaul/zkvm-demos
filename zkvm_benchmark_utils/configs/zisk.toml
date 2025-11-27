@@ -16,7 +16,7 @@
 
 name = "zisk"
 version = "v0.14.0"
-enabled = true
+enabled = false
 default_mode = "core"
 
 # Test scales (program input N values)
