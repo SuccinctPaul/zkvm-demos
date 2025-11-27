@@ -326,7 +326,7 @@ pub fn popcount(n: u32) -> u32 {
 /// - Time: O(n)
 /// - Space: O(1)
 pub fn hash(n: u32) -> u32 {
-    let len = n.min(1024);
+    let len = n.clamp(1, 2048);
 
     log_info!("   [hash] SHA256 hash of {} bytes", len);
     if n > 1024 {
@@ -407,7 +407,7 @@ mod test_vectors {
 /// - Time: O(n) * ECDSA signing cost
 /// - Space: O(1)
 pub fn signature(n: u32) -> u32 {
-    let rounds = n.clamp(1, 100);
+    let rounds = n.clamp(1, 101);
 
     log_info!("   [signature] ECDSA secp256k1 signing ({} rounds)", rounds);
     if n != rounds {
