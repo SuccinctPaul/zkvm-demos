@@ -40,7 +40,7 @@ fn main() {
     println!("╔════════════════════════════════════════╗");
     println!("║         SP1 Multi-Program Demo        ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} ({})", input.program.as_str(), input.program.description());
+    println!("📋 Program: {} ({})", input.program.name(), input.program.description());
     println!("📊 Input N: {}", input.n);
     println!();
 
@@ -76,7 +76,7 @@ fn main() {
         println!("\n========== BENCHMARK START ==========");
 
         // Metadata
-        println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+        println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
         println!("BENCHMARK: zkvm_name=SP1");
         println!("BENCHMARK: zkvm_version=v5.0.0");
 

@@ -16,13 +16,13 @@ fn main() {
     println!("╔════════════════════════════════════════╗");
     println!("║       Risc0 Multi-Program Demo        ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📋 Program: {} (ID={})", input.program.name(), input.program.id());
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
     println!();
 
     println!("\n========== BENCHMARK START ==========");
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=risc0");
 
     // Proof mode from environment
