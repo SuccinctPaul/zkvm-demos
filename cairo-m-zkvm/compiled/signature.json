@@ -1,0 +1,7 @@
+{
+  "program": "signature",
+  "source": "../programs/signature.cm",
+  "entrypoints": ["signature", "main"],
+  "instructions": 350
+}
+

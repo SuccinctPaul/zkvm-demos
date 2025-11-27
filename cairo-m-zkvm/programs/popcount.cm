@@ -1,0 +1,29 @@
+// Population count (bit counting) in Cairo-M
+// Counts the number of set bits (1s) in a number
+//
+// Usage:
+//   cairo-m-compiler --input popcount.cm --output popcount.json
+//   cairo-m-runner popcount.json --entrypoint popcount --arguments 255
+
+// Count set bits in n
+// Input: n (felt) - number to count bits in
+// Output: number of 1 bits in binary representation
+func popcount(n: felt) -> felt {
+    let mut count: felt = 0;
+    let mut value: felt = n;
+    
+    // Brian Kernighan's algorithm
+    // Each iteration clears the lowest set bit
+    while value > 0 {
+        value = value & (value - 1);
+        count = count + 1;
+    }
+    
+    return count;
+}
+
+// Entry point
+func main(input: felt) -> felt {
+    return popcount(input);
+}
+

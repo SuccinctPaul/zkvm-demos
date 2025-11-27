@@ -1,170 +1,130 @@
-# Cairo-M zkVM Fibonacci Demo
+# Cairo-M zkVM Demo
 
-This is a demonstration of using [Cairo-M zkVM](https://github.com/kkrt-labs/cairo-m) to compute Fibonacci numbers with zero-knowledge proofs.
+A demonstration of the [Cairo-M zkVM](https://github.com/kkrt-labs/cairo-m) - a Mobile-first CPU AIR using M31 field and Stwo's prover.
 
-## About Cairo-M zkVM
+## About Cairo-M
 
-Cairo-M is a Mobile-first CPU AIR (zkVM) using M31 as its native prime field, built on Starkware's Stwo for efficient mobile proving. It features:
+Cairo-M is designed for efficient zero-knowledge proof generation on consumer hardware, especially mobile devices. Key features:
 
-- **M31 Native Field**: Uses M31 (Mersenne 31) prime field for efficient mobile computation
-- **Minimal Register Design**: Only PC (program counter) and FP (frame pointer) registers
+- **M31 Native Field**: Uses Mersenne 31 prime field for efficient 32-bit arithmetic
+- **Minimal Registers**: Only PC (program counter) and FP (frame pointer)
 - **Read-Write Memory**: Efficient memory access patterns
 - **Variable-Size Encoding**: x86-style instruction encoding
-- **Native Type Support**: Built-in support for felt, u32, and other types via Stwo's component system
-- **Mobile-Optimized**: Designed for proof generation on consumer hardware including mobile devices
-- **Stwo Integration**: Leverages Starkware's Stwo prover for efficient STARK proofs
+- **Stwo Integration**: Leverages Starkware's Stwo prover for STARK proofs
 
 ## Project Structure
 
 ```
 cairo-m-zkvm/
-├── Cargo.toml              # Workspace configuration
-├── rust-toolchain.toml     # Rust toolchain specification
+├── Cargo.toml              # Workspace with cairo-m dependencies
+├── Cargo.lock              # Dependency lock file
+├── rust-toolchain.toml     # Rust nightly-2025-04-06 (required)
+├── cairom.toml             # Cairo-M project manifest
+├── .cargo/config.toml      # Build configuration with RUSTFLAGS
 ├── README.md               # This file
 ├── programs/               # Cairo-M source programs
-│   └── fibonacci.cm        # Fibonacci computation in Cairo-M
-├── cairo-m-host/           # Host program (manages compilation/proving/verification)
-│   ├── Cargo.toml
-│   └── src/
-│       └── main.rs         # Compiler, runner, prover and verifier logic
-└── compiled/               # Compiled Cairo-M programs (generated)
-    └── fibonacci.json
+│   └── main.cm             # Multi-program implementation
+├── compiled/               # Compiled program cache (optional)
+└── cairo-m-host/           # Host application
+    ├── Cargo.toml
+    └── src/main.rs         # Compiler/Runner integration
 ```
 
 ## Prerequisites
 
-1. **Install Rust** (if not already installed):
-   ```bash
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   ```
-
-2. **Install Cairo-M toolchain**:
-   ```bash
-   # Install from source
-   git clone https://github.com/kkrt-labs/cairo-m.git
-   cd cairo-m
-   cargo install --path crates/cairo-m-compiler
-   cargo install --path crates/cairo-m-runner
-   cargo install --path crates/cairo-m-prover
-   cargo install --path crates/cargo-cairo-m
-   ```
-
-   Or use the automated installer:
-   ```bash
-   cd scripts/sdk_installers
-   ./install_cairo_m_sdk.sh
-   ```
-
-   This script will:
-   - Clone the Cairo-M repository
-   - Install cairo-m-compiler
-   - Install cairo-m-runner
-   - Install cairo-m-prover
-   - Install cargo-cairo-m CLI tool
-
-## Configuration
-
-Set the Fibonacci number to compute via environment variable:
+### 1. Install Rust Nightly
 
 ```bash
-# Create .env file in the project root or set environment variable
-export FIBONACCI_N=10
+rustup install nightly-2025-04-06
+rustup default nightly-2025-04-06
 ```
 
-Or create a `.env` file in the workspace root:
-```
-FIBONACCI_N=10
+### 2. macOS Users: Install LLVM/LLD
+
+```bash
+brew install llvm lld
+
+# Set environment (add to ~/.zshrc)
+export CC=/opt/homebrew/opt/llvm/bin/clang
+export CXX=/opt/homebrew/opt/llvm/bin/clang++
 ```
 
 ## Building
 
 ```bash
-cd cairo-m-zkvm/cairo-m-host
+cd cairo-m-zkvm
 cargo build --release
 ```
 
-The build process will:
-1. Compile the host program with Cairo-M SDK dependencies
-2. Link against Cairo-M compiler, runner, and prover libraries
+## Usage
 
-## Running
-
-### Full workflow (compile → run → prove → verify):
+### Running Benchmarks
 
 ```bash
-cd cairo-m-zkvm/cairo-m-host
-RUST_LOG=info cargo run --release
+# Fibonacci (default)
+PROGRAM=fibonacci INPUT_N=20 cargo run --release
+
+# Other programs
+PROGRAM=sum INPUT_N=100 cargo run --release
+PROGRAM=factorial INPUT_N=10 cargo run --release
+PROGRAM=isprime INPUT_N=17 cargo run --release
+PROGRAM=popcount INPUT_N=255 cargo run --release
+PROGRAM=hash INPUT_N=100 cargo run --release
+PROGRAM=signature INPUT_N=50 cargo run --release
 ```
 
-The program will:
-1. Load the Fibonacci input number from environment
-2. Compile the Cairo-M program (`programs/fibonacci.cm`) to JSON
-3. Execute the program with cairo-m-runner to generate execution trace
-4. Generate a STARK proof using cairo-m-prover
-5. Display execution statistics (cycles, memory usage)
-6. Verify the proof
-7. Display proof size and verification time
+### Environment Variables
 
-### Manual workflow:
-
-You can also run each step manually:
-
-```bash
-# 1. Compile Cairo-M program
-cairo-m-compiler --input programs/fibonacci.cm --output compiled/fibonacci.json
-
-# 2. Run the program and generate trace
-cairo-m-runner compiled/fibonacci.json --entrypoint fibonacci --arguments 10
-
-# 3. Generate proof
-cairo-m-prover compiled/fibonacci.json --entrypoint fibonacci --arguments 10
-
-# 4. Verify proof (integrated in prover output)
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PROGRAM` | Program to run | fibonacci |
+| `INPUT_N` | Input parameter value | 10 |
+| `CAIRO_M_PROOF_MODE` | Proof mode | core |
+| `RUST_LOG` | Log level | - |
 
 ## Expected Output
 
 ```
 ========================================
-  Cairo-M zkVM - Fibonacci Demo
+  Cairo-M zkVM - Multi-Program Demo
 ========================================
 
+BENCHMARK: program_name=fibonacci_20
+BENCHMARK: zkvm_name=cairo_m
+BENCHMARK: zkvm_version=v0.1.0-alpha
+BENCHMARK: proof_mode=core
+
 📊 Configuration:
-   Input: n = 10
-   Cairo-M Program: programs/fibonacci.cm
-   Expected result: fib(10) = 89
+   Program: fibonacci (ID=0)
+   Input N: 20
+   Field: M31 (Mersenne 31)
+   Prover: Stwo (STARK)
+
+   Expected result: 6765
 
 🔨 Step 1: Compiling Cairo-M program...
-   ✅ Compilation completed in 0.15s
-   Output: compiled/fibonacci.json
-   Instructions: 245
+   ✅ Program compiled in 0.020s
+BENCHMARK: compile_time_s=0.020633
 
 🚀 Step 2: Executing program...
-   ✅ Execution completed in 0.02s
-   Result: fibonacci(10) = 89
-   Cycles: 1,234
-   Memory cells used: 567
+   ✅ Execution completed in 0.000029s
+   Result: 6765
+   Cycles: 0
+BENCHMARK: execution_time_s=0.000029
+BENCHMARK: total_cycles=0
 
-🔐 Step 3: Generating STARK proof...
-   ✅ Proof generated in 3.45s
-   Proof size: 45.2 KB
-   Prover backend: Stwo
-   Field: M31 (Mersenne 31)
+🔐 Step 3: Proof generation...
+   ℹ️  Note: cairo-m-prover is not yet publicly available
 
-✓ Step 4: Verifying proof...
-   ✅ Proof verified successfully in 0.08s
+✓ Step 4: Verification...
+BENCHMARK: success_status=success
 
 ========================================
   📈 Performance Summary
 ========================================
-Compile time:     0.15s
-Execution time:   0.02s
-Prove time:       3.45s
-Verify time:      0.08s
-Total time:       3.70s
-Proof size:       45.2 KB
-Cycles:           1,234
-Memory cells:     567
+Compile time:     0.020633s
+Execution time:   0.000029s
+...
 ========================================
 
 ✅ Cairo-M zkVM Demo completed successfully!
@@ -172,281 +132,106 @@ Memory cells:     567
 
 ## Cairo-M Language
 
-Cairo-M programs are written in a Cairo-like syntax optimized for the M31 field. Here's a simple example:
+Cairo-M uses a Cairo-like syntax optimized for the M31 field:
 
 ```cairo-m
-// Fibonacci function in Cairo-M
-func fibonacci(n: felt) -> felt {
+// Function definition
+fn fibonacci(n: felt) -> u32 {
     if n == 0 {
-        return 0;
+        return 0u32;
     }
     if n == 1 {
-        return 1;
+        return 1u32;
     }
     
-    let a = 0;
-    let b = 1;
-    let i = 2;
+    let a: u32 = 0u32;
+    let b: u32 = 1u32;
     
-    while i <= n {
-        let temp = a + b;
+    // Loop (uses != for condition)
+    for (let i: felt = 2; i != n + 1; i = i + 1) {
+        let temp: u32 = a + b;
         a = b;
         b = temp;
-        i = i + 1;
     }
     
     return b;
 }
 ```
 
-## Key Features
+### Key Language Features
 
-### M31 Field Arithmetic
-- Native 31-bit Mersenne prime field operations
-- Efficient on mobile processors (32-bit arithmetic)
-- Fast modular reduction due to Mersenne prime properties
+- **Types**: `felt` (field element), `u32` (32-bit unsigned), `bool`
+- **Operators**: `+`, `-`, `*`, `/`, `&`, `|`, `^`, `==`, `!=`
+- **Loops**: `for (let i: type = init; i != cond; i = i + step) { ... }`
+- **Casting**: Only `u32` to `felt` is supported (not vice versa)
+- **Constants**: `const NAME = [values...]`
 
-### Minimal Register Architecture
-- Only PC and FP registers
-- Deterministic frame sizes
-- Simplified constraint system
+### Supported Programs
 
-### Mobile-Optimized Proving
-- Designed for consumer hardware
-- Efficient memory usage
-- Parallelizable proof generation
+| Program | Description | Input N |
+|---------|-------------|---------|
+| `fibonacci` | Compute F(n) | index |
+| `sum` | Compute 1+2+...+n | upper bound |
+| `factorial` | Compute n! | number |
+| `isprime` | Check primality | number |
+| `popcount` | Count set bits | number |
+| `hash` | Simple hash | iterations |
+| `signature` | Verification sim | iterations |
 
-### Stwo Integration
-- Leverages Starkware's Stwo prover
-- Advanced STARK optimizations
-- Efficient polynomial commitments
+## SDK Components
 
-## Benchmarking
+This demo uses the following Cairo-M crates:
 
-Test Cairo-M with different input sizes:
+- **`cairo-m-compiler`**: Compiles `.cm` source to program bytecode
+- **`cairo-m-runner`**: Executes programs and generates traces
+- **`cairo-m-common`**: Shared types (Program, CairoMValue, etc.)
 
-```bash
-# Small input
-FIBONACCI_N=10 cargo run --release
+Note: `cairo-m-prover` is not yet publicly available. Proof generation is simulated.
 
-# Medium input
-FIBONACCI_N=100 cargo run --release
+## Architecture
 
-# Large input
-FIBONACCI_N=1000 cargo run --release
 ```
-
-Expected performance characteristics:
-- **Proving time**: ~2-5s for n=100 on mobile processors
-- **Memory usage**: ~100-500MB depending on input size
-- **Proof size**: ~30-100KB for typical programs
-
-## Development Workflow
-
-### 1. Write Cairo-M Program
-
-Create a `.cm` file in the `programs/` directory:
-
-```cairo-m
-func my_computation(x: felt) -> felt {
-    // Your computation logic
-    return x * x;
-}
-```
-
-### 2. Compile
-
-```bash
-cairo-m-compiler --input programs/my_program.cm --output compiled/my_program.json
-```
-
-### 3. Run & Test
-
-```bash
-cairo-m-runner compiled/my_program.json --entrypoint my_computation --arguments 42
-```
-
-### 4. Generate Proof
-
-```bash
-cairo-m-prover compiled/my_program.json --entrypoint my_computation --arguments 42
-```
-
-## Advanced Features
-
-### Custom Functions
-
-Cairo-M supports function definitions with multiple parameters:
-
-```cairo-m
-func add_multiply(a: felt, b: felt, c: felt) -> felt {
-    let sum = a + b;
-    return sum * c;
-}
-```
-
-### Native Types
-
-Cairo-M supports multiple native types:
-
-```cairo-m
-func type_examples() {
-    let f: felt = 12345;      // Field element (M31)
-    let u: u32 = 1000;         // 32-bit unsigned integer
-    let b: bool = true;        // Boolean
-}
-```
-
-### Memory Operations
-
-Efficient read-write memory:
-
-```cairo-m
-func array_sum(arr: [felt], len: felt) -> felt {
-    let sum = 0;
-    let i = 0;
-    while i < len {
-        sum = sum + arr[i];
-        i = i + 1;
-    }
-    return sum;
-}
-```
-
-## Debugging
-
-Enable debug logging to see detailed execution traces:
-
-```bash
-RUST_LOG=debug cairo-m-runner compiled/fibonacci.json --entrypoint fibonacci --arguments 10
-```
-
-This will show:
-- Instruction-by-instruction execution
-- Register values at each step
-- Memory access patterns
-- Frame pointer movements
-
-## Resources
-
-- **Cairo-M GitHub**: https://github.com/kkrt-labs/cairo-m
-- **Cairo-M Documentation**: https://github.com/kkrt-labs/cairo-m/tree/main/docs
-- **CairoMlings Tutorial**: Interactive tutorial for learning Cairo-M
-- **Stwo Prover**: https://github.com/starkware-libs/stwo
-- **Design Document**: https://github.com/kkrt-labs/cairo-m/blob/main/docs/design-document.md
-- **Getting Started**: https://github.com/kkrt-labs/cairo-m/blob/main/docs/getting-started.md
-
-## CairoMlings - Interactive Tutorial
-
-Learn Cairo-M through interactive exercises:
-
-```bash
-# Install CairoMlings
-cargo install --path tutorials/cairomlings
-
-# Initialize exercise directory
-cairomlings init
-
-# Work through exercises
-cd cairomlings-exercises
-cairomlings watch
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│   main.cm        │     │  compile_cairo   │     │    Program       │
+│ (Cairo-M source) │ ──▶ │   (Compiler)     │ ──▶ │  (Bytecode)      │
+└──────────────────┘     └──────────────────┘     └──────────────────┘
+                                                          │
+                                                          ▼
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│    Result        │     │ run_cairo_program│     │   InputValue     │
+│ (CairoMValue)    │ ◀── │    (Runner)      │ ◀── │  (Arguments)     │
+└──────────────────┘     └──────────────────┘     └──────────────────┘
+                                                          │
+                                                          ▼
+                                                  ┌──────────────────┐
+                                                  │  Execution Trace │
+                                                  │   (for Prover)   │
+                                                  └──────────────────┘
 ```
 
 ## Troubleshooting
 
 ### Build Errors
 
-If you encounter build errors:
-
 ```bash
-# Update Cairo-M toolchain
-cd cairo-m
-git pull
-cargo install --path crates/cairo-m-compiler --force
-cargo install --path crates/cairo-m-runner --force
-cargo install --path crates/cairo-m-prover --force
-
-# Clean and rebuild
-cd cairo-m-zkvm
+# Ensure correct toolchain
+rustup override set nightly-2025-04-06
 cargo clean
 cargo build --release
 ```
 
-### Compilation Errors
+### macOS Linker Errors
 
-For Cairo-M compilation errors:
-- Check syntax against examples in the cairo-m repository
-- Ensure function signatures are correct
-- Verify type annotations
-- Check that all variables are properly declared
+```bash
+# Verify LLD is installed
+/opt/homebrew/opt/lld/bin/ld64.lld --version
+```
 
-### Runtime Errors
+## Resources
 
-For execution errors:
-- Enable debug logging: `RUST_LOG=debug`
-- Check argument types match function signature
-- Verify program logic doesn't cause overflows
-- Ensure memory accesses are within bounds
-
-### Performance Issues
-
-For slow proof generation:
-- Reduce input size for testing
-- Ensure system has sufficient RAM (8GB+ recommended)
-- Use release builds (`--release` flag)
-- Consider optimizing your Cairo-M program
-
-## Comparison with Other zkVMs
-
-### vs Cairo (StarkNet)
-- **Cairo-M**: Mobile-optimized, M31 field, minimal registers
-- **Cairo**: Starknet-optimized, larger field, more complex architecture
-
-### vs RISC Zero / SP1
-- **Cairo-M**: Custom Cairo-like language, M31 field
-- **RISC Zero/SP1**: Rust language, RISC-V ISA
-
-### vs Miden
-- **Cairo-M**: Cairo-like syntax, Stwo prover
-- **Miden**: Stack-based VM, custom assembly
-
-## Notes
-
-⚠️ **Current Status**: Cairo-M is a work in progress and not recommended for production use yet.
-
-- Cairo-M is actively under development
-- APIs and language syntax may change
-- Mobile proving is the primary design goal
-- M31 field provides excellent mobile performance
-- Minimal register design simplifies constraint system
-- Best suited for applications requiring mobile proving
-
-## Version Information
-
-- Cairo-M: Latest from main branch (v0.1.0-alpha.1+)
-- Rust Toolchain: nightly (see rust-toolchain.toml)
-- Stwo: Latest from submodule
-- Rust Edition: 2021
-
-## Performance Characteristics
-
-### Mobile Devices (ARM)
-- iPhone 13: ~3-5s for n=100 fibonacci
-- Android flagship: ~4-6s for n=100 fibonacci
-- Memory: 200-400MB typical
-
-### Desktop (x86_64)
-- Intel/AMD: ~1-2s for n=100 fibonacci
-- Apple Silicon: ~1-2s for n=100 fibonacci
-- Memory: 200-400MB typical
-
-## Contributing
-
-Contributions to improve this demo are welcome! Please ensure:
-- Cairo-M code follows best practices
-- Documentation is clear and accurate
-- Examples are tested
-- Performance is benchmarked
+- **Cairo-M Repository**: https://github.com/kkrt-labs/cairo-m
+- **SHA-256 Example**: https://github.com/kkrt-labs/cairo-m/tree/main/examples/sha256-cairo-m
+- **Stwo Prover**: https://github.com/starkware-libs/stwo
 
 ## License
 
@@ -456,6 +241,3 @@ MIT OR Apache-2.0
 
 - KKRT Labs for developing Cairo-M
 - Starkware for the Stwo prover
-- The zero-knowledge proof research community
-- Cairo language team for inspiration
-

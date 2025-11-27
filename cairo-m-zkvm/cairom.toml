@@ -1,0 +1,5 @@
+# Cairo-M project manifest file
+name = "cairo-m-zkvm"
+version = "0.1.0"
+entry_point = "main.cm"
+
