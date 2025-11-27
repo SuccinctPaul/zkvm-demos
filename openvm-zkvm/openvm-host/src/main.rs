@@ -15,7 +15,7 @@ fn main() -> anyhow::Result<()> {
     println!("╔════════════════════════════════════════╗");
     println!("║       OpenVM Multi-Program Demo       ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📋 Program: {} (ID={})", input.program.name(), input.program.id());
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
 
@@ -92,7 +92,7 @@ fn main() -> anyhow::Result<()> {
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
 
     println!("\n============ Summary ============");
-    println!("Program: {}", input.program.as_str());
+    println!("Program: {}", input.program.name());
     println!("Input N: {}", input.n);
     println!("Output: {}", result);
     println!("Total cycles: {}", execution_report.total_cycles());
@@ -101,7 +101,7 @@ fn main() -> anyhow::Result<()> {
     println!("=================================\n");
 
     // Output BENCHMARK metadata
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=openvm");
     println!("BENCHMARK: zkvm_version=v0.1.0");
     println!("BENCHMARK: proof_mode=core");

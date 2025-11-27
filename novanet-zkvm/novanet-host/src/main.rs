@@ -73,13 +73,13 @@ fn main() -> Result<()> {
     let input_data = load_program_input();
     
     // Output BENCHMARK metadata early
-    println!("BENCHMARK: program_name={}_{}", input_data.program.as_str(), input_data.n);
+    println!("BENCHMARK: program_name={}_{}", input_data.program.name(), input_data.n);
     println!("BENCHMARK: zkvm_name=novanet");
     println!("BENCHMARK: zkvm_version={}", NOVANET_VERSION);
     println!("BENCHMARK: proof_mode=core");
     
     println!("📊 Input: Program={} (ID={}) N={}\n", 
-             input_data.program.as_str(), input_data.program.id(), input_data.n);
+             input_data.program.name(), input_data.program.id(), input_data.n);
 
     let total_start = Instant::now();
 

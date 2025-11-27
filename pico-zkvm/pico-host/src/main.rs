@@ -12,13 +12,13 @@ fn main() -> anyhow::Result<()> {
     println!("╔════════════════════════════════════════╗");
     println!("║        Pico Multi-Program Demo        ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📋 Program: {} (ID={})", input.program.name(), input.program.id());
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
 
     // Benchmark header
     println!("\n========== BENCHMARK START ==========");
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=pico");
     println!("BENCHMARK: zkvm_version=v1.1.6");
 
@@ -88,7 +88,7 @@ fn main() -> anyhow::Result<()> {
         println!("BENCHMARK: output_result={}", result);
 
         println!("\n============ Summary ============");
-        println!("Program: {}", input.program.as_str());
+        println!("Program: {}", input.program.name());
         println!("Output: {}", result);
         println!("Proof size: {} bytes", proof_size);
         println!("Prove time: {:.2}s", prove_duration.as_secs_f64());

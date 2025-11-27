@@ -16,13 +16,13 @@ fn main() -> anyhow::Result<()> {
     let input = load_program_input();
     
     // Output BENCHMARK metadata early
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=valida");
     println!("BENCHMARK: zkvm_version={}", VALIDA_VERSION);
     println!("BENCHMARK: proof_mode=core");
     
     println!("=== Valida zkVM Multi-Program Demo ===");
-    println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("Program: {} (ID={})", input.program.name(), input.program.id());
     println!("Input N: {}\n", input.n);
     
     let total_start = Instant::now();

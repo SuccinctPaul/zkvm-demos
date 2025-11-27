@@ -19,7 +19,7 @@ fn main() -> Result<()> {
     let input = load_program_input();
     
     // Output BENCHMARK format logs for parsing
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=cairo_m");
     println!("BENCHMARK: zkvm_version={}", CAIRO_M_VERSION);
     
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     println!("BENCHMARK: proof_mode={}", proof_mode);
 
     println!("📊 Configuration:");
-    println!("   Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("   Program: {} (ID={})", input.program.name(), input.program.id());
     println!("   Input N: {}", input.n);
     println!("   Cairo-M Program: {}", PROGRAM_SOURCE);
 

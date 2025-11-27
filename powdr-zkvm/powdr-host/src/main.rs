@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     let input = load_program_input();
     
     // Output BENCHMARK format logs for parsing (early)
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=powdr");
     println!("BENCHMARK: zkvm_version={}", POWDR_VERSION);
     
@@ -34,7 +34,7 @@ fn main() -> Result<()> {
     println!("BENCHMARK: proof_mode={}", proof_mode);
     
     println!("📊 Configuration:");
-    println!("   Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("   Program: {} (ID={})", input.program.name(), input.program.id());
     println!("   Input: n = {}", input.n);
     
     let total_start = Instant::now();

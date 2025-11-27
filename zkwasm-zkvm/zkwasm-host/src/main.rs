@@ -66,7 +66,7 @@ fn main() -> Result<()> {
         Commands::Verify => verify()?,
         Commands::Run { k } => {
             println!("Running complete zkWasm demo...\n");
-            println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
+            println!("Program: {} (ID={})", input.program.name(), input.program.id());
             println!("Input N: {}", input.n);
             
             let mut timings = BenchmarkTimings::default();
@@ -99,7 +99,7 @@ fn main() -> Result<()> {
             
             // Output BENCHMARK metrics in standard format
             println!("\n--- BENCHMARK METRICS ---");
-            println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+            println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
             println!("BENCHMARK: zkvm_name=zkwasm");
             println!("BENCHMARK: zkvm_version=v0.1.0");
             println!("BENCHMARK: proof_mode=core");

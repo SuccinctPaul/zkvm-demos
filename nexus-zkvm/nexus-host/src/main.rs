@@ -17,13 +17,13 @@ fn main() {
     println!("╔════════════════════════════════════════╗");
     println!("║       Nexus Multi-Program Demo        ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📋 Program: {} (ID={})", input.program.name(), input.program.id());
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
 
     // Benchmark header
     println!("\n========== BENCHMARK START ==========");
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=nexus");
     println!("BENCHMARK: zkvm_version=v3.0.0");
     
@@ -100,7 +100,7 @@ fn main() {
     
     println!("\n========== BENCHMARK END ==========");
     println!("\n============ Summary ============");
-    println!("Program: {}", input.program.as_str());
+    println!("Program: {}", input.program.name());
     println!("Input: n = {}", input.n);
     println!("Proof size: {} bytes", proof_size);
     println!("=================================\n");

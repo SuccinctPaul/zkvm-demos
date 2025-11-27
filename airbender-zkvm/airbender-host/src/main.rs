@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     let input = load_program_input();
     
     // Output BENCHMARK format logs for parsing
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=airbender");
     println!("BENCHMARK: zkvm_version={}", AIRBENDER_VERSION);
     
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     println!("BENCHMARK: proof_mode={}", proof_mode);
     
     println!("📊 Input: Computing {} (ID={}) with n={}\n", 
-        input.program.as_str(), input.program.id(), input.n);
+        input.program.name(), input.program.id(), input.n);
 
     // Compute expected result (for verification)
     let expected_result = execute_program(input.program.id(), input.n);
@@ -128,7 +128,7 @@ fn main() -> Result<()> {
     println!("╔═══════════════════════════════════════════════════════════╗");
     println!("║ Execution Summary                                         ║");
     println!("╚═══════════════════════════════════════════════════════════╝");
-    println!("Program:            {}", input.program.as_str());
+    println!("Program:            {}", input.program.name());
     println!("Input:              n = {}", input.n);
     println!("Output:             {}", expected_result);
     println!("Compilation time:   {:.2}s", compile_duration.as_secs_f64());

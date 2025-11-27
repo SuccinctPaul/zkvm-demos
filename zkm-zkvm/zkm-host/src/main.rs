@@ -17,7 +17,7 @@ fn main() {
     println!("╔════════════════════════════════════════╗");
     println!("║        ZKM Multi-Program Demo         ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📋 Program: {} (ID={})", input.program.name(), input.program.id());
     println!("📊 Input N: {}", input.n);
     println!();
 
@@ -86,7 +86,7 @@ fn main() {
     let verify_duration = verify_start.elapsed();
     println!("✨ Successfully verified proof!");
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=zkm");
     println!("BENCHMARK: zkvm_version=v0.1.0");
     println!("BENCHMARK: success_status=success");

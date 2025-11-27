@@ -8,7 +8,7 @@ pub fn main() {
     println!("╔════════════════════════════════════════╗");
     println!("║       Jolt Multi-Program Demo         ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📋 Program: {} (ID={})", input.program.name(), input.program.id());
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
     println!();
@@ -93,7 +93,7 @@ pub fn main() {
         println!("========================================");
         
         // Output BENCHMARK metrics
-        println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+        println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
         println!("BENCHMARK: zkvm_name=jolt");
         println!("BENCHMARK: zkvm_version=v1.0.0");
         println!("BENCHMARK: proof_mode=core");

@@ -29,13 +29,13 @@ fn main() {
     let input = load_program_input();
     
     // Output BENCHMARK metadata early
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=ceno");
     println!("BENCHMARK: zkvm_version={}", CENO_VERSION);
     println!("BENCHMARK: proof_mode=core");
     
     println!("📊 Input: Program={} (ID={}) N={}\n", 
-             input.program.as_str(), input.program.id(), input.n);
+             input.program.name(), input.program.id(), input.n);
     
     let total_start = Instant::now();
     
