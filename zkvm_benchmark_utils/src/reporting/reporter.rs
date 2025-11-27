@@ -208,8 +208,12 @@ impl BenchmarkReporter {
                 .get(&(zkvm.clone(), program.clone(), scale))
                 .unwrap_or(&false);
 
-            // Ensure derived metrics (like KHZ) are up-to-date after aggregation
-            metrics.update_derived_metrics();
+            // Calculate derived metrics (like KHZ) without re-populating from custom_metrics.
+            // IMPORTANT: Use calculate_derived_only() instead of update_derived_metrics()
+            // because the struct fields have been correctly merged from different modes,
+            // and we don't want populate_from_custom_metrics() to overwrite them with
+            // values from the merged custom_metrics map.
+            metrics.calculate_derived_only();
 
             // Set success in summary
             metrics.summary.success = *success;

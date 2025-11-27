@@ -581,10 +581,18 @@ impl UnifiedMetrics {
     }
 
     /// Update derived metrics based on raw values
+    /// Note: This calls populate_from_custom_metrics() first, which may overwrite
+    /// manually set struct fields. Use calculate_derived_only() after merging.
     pub fn update_derived_metrics(&mut self) {
         // Ensure fields are populated first
         self.populate_from_custom_metrics();
+        // Then calculate derived values
+        self.calculate_derived_only();
+    }
 
+    /// Calculate derived metrics (KHZ, throughput) without re-populating from custom_metrics.
+    /// Use this after merging multiple metrics to avoid overwriting correctly merged fields.
+    pub fn calculate_derived_only(&mut self) {
         // Calculate total_time_s if not set
         if self.summary.total_time_s == 0.0 {
             let exec_time = self.execution.duration_s.unwrap_or(0.0);
