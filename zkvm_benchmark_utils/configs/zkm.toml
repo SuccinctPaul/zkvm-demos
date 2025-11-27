@@ -4,7 +4,7 @@
 # ZKM is a MIPS/RISC-V zkVM with Groth16/Plonk support
 
 name = "zkm"
-version = "v0.1.0"
+version = "v1.2.1"
 enabled = true
 default_mode = "groth16"
 test_scales = [10, 20]

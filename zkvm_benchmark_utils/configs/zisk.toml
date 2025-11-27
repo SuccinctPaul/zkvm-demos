@@ -15,7 +15,7 @@
 # and uses Docker on macOS for proof generation.
 
 name = "zisk"
-version = "v0.14.0"
+version = "v0.10.0"
 enabled = false
 default_mode = "core"
 

@@ -3,7 +3,7 @@
 # ================================================================
 
 name = "risc0"
-version = "v1.0.0"
+version = "v3.0.3"
 enabled = true
 default_mode = "groth16"
 

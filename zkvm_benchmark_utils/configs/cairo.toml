@@ -14,7 +14,7 @@
 # If cairo-prove is not installed, falls back to execution-only mode.
 
 name = "cairo"
-version = "v2.8.0"
+version = "v2.8.5"
 enabled = true
 default_mode = "core"
 test_scales = [10, 20]

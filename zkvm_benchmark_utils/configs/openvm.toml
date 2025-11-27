@@ -4,7 +4,7 @@
 # OpenVM is a RISC-V based zkVM with modular architecture
 
 name = "open_vm"
-version = "v0.1.0"
+version = "v1.4.0"
 enabled = false
 default_mode = "core"
 test_scales = [10, 20]

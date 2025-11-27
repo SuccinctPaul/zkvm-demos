@@ -4,7 +4,7 @@
 # Miden VM uses its own assembly language (MASM) and STARK proofs
 
 name = "miden"
-version = "v0.10.0"
+version = "v0.11.0"
 enabled = true
 default_mode = "core"
 test_scales = [10, 20]

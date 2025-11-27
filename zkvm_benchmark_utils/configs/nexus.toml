@@ -3,7 +3,7 @@
 # ================================================================
 
 name = "nexus"
-version = "v3.0.0"
+version = "v0.3.4"
 enabled = true
 default_mode = "core"
 

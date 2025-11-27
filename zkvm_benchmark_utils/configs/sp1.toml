@@ -3,7 +3,7 @@
 # ================================================================
 
 name = "sp1"
-version = "v5.0.0"
+version = "v5.2.2"
 enabled = true
 default_mode = "groth16"
 
