@@ -18,12 +18,12 @@ fn main() -> Result<()> {
     let input = load_program_input();
     
     // Output BENCHMARK metadata early
-    println!("BENCHMARK: program_name={}_{}", input.program.as_str(), input.n);
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=miden");
     println!("BENCHMARK: zkvm_version={}", MIDEN_VERSION);
     println!("BENCHMARK: proof_mode=core");
     
-    println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("Program: {} (ID={})", input.program.name(), input.program.id());
     println!("Input N: {}\n", input.n);
 
     // Track total time

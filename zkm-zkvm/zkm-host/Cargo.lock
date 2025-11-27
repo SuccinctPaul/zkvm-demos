@@ -4955,14 +4955,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "programs"
-version = "0.3.0"
-dependencies = [
- "dotenv",
- "sha2",
-]
-
-[[package]]
 name = "proptest"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8000,9 +7992,9 @@ name = "zkm-host"
 version = "0.1.0"
 dependencies = [
  "dotenv",
- "programs",
  "zkm-build",
  "zkm-sdk",
+ "zkvm_programs",
 ]
 
 [[package]]
@@ -8307,6 +8299,15 @@ dependencies = [
  "sha2",
  "zkm-lib",
  "zkm-primitives",
+]
+
+[[package]]
+name = "zkvm_programs"
+version = "0.3.0"
+dependencies = [
+ "dotenv",
+ "k256",
+ "sha2",
 ]
 
 [[package]]
