@@ -16,7 +16,7 @@
 
 name = "zisk"
 version = "v0.10.0"
-enabled = false
+enabled = false  # Requires cargo-zisk (Linux) or Docker (macOS); run_benchmark.sh handles this
 default_mode = "core"
 
 # Test scales (program input N values)

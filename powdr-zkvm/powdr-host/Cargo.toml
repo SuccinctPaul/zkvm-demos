@@ -14,8 +14,10 @@ log = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-# Note: Powdr SDK dependencies are used via CLI
-# The powdr-rs CLI provides all proving functionality
-# Install with: cargo install powdr-cli
+# Powdr SDK
+powdr = { version = "0.1.0" }
+powdr-number = { version = "0.1.0" }
+powdr-backend = { version = "0.1.0" }
+powdr-pipeline = { version = "0.1.0" }
 
 [build-dependencies]

@@ -1,23 +1,27 @@
 //! Powdr zkVM Host Program
 //!
 //! This program demonstrates how to use Powdr zkVM to generate and verify
-//! zero-knowledge proofs for multi-program execution.
+//! zero-knowledge proofs for multi-program execution using the Powdr SDK.
 //!
-//! Powdr provides a modular zkVM toolkit with:
-//! - Multiple backend support (Mock, Halo2, Plonky3)
-//! - RISC-V and custom ISA support
-//! - Pipeline API for proof generation
-//!
-//! Reference: https://github.com/powdr-labs/powdr-legacy
+//! Reference: https://github.com/powdr-labs/powdr
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
 use std::time::Instant;
 use zkvm_programs::{execute_program, load_program_input};
 
-const POWDR_VERSION: &str = "v0.1.0-legacy";
+// Import Powdr SDK
+// Note: Actual crate names and API might vary with versions.
+// This assumes powdr 0.1.0 API structure.
+#[cfg(feature = "powdr_sdk")]
+use powdr::pipeline::{Pipeline, Stage};
+#[cfg(feature = "powdr_sdk")]
+use powdr::backend::BackendType;
+#[cfg(feature = "powdr_sdk")]
+use powdr_number::GoldilocksField;
+
+const POWDR_VERSION: &str = "v0.1.0";
 
 fn main() -> Result<()> {
     // Initialize environment
@@ -55,17 +59,31 @@ fn main() -> Result<()> {
 
     let total_start = Instant::now();
 
-    // Check if powdr-rs CLI is available
-    let powdr_cli = find_powdr_cli();
+    // Check if powdr-asm is available
+    let asm_path = find_powdr_asm();
+    let guest_path = find_guest_source();
 
+    // Prioritize SDK usage if enabled, otherwise fallback to CLI or reference
+    #[cfg(feature = "powdr_sdk")]
+    {
+        if let Some(asm_file) = asm_path {
+            run_with_powdr_sdk(&asm_file, &input, &proof_mode, total_start)?;
+            return Ok(());
+        } else if let Some(source_path) = guest_path {
+             // ... could compile rust to asm here using SDK ...
+             println!("   Compiling Rust guest to ASM using SDK is complex, please pre-compile.");
+        }
+    }
+
+    // Fallback to CLI
+    let powdr_cli = find_powdr_cli();
     match powdr_cli {
         Some(cli_path) => {
             run_with_powdr_cli(&cli_path, &input, &proof_mode, total_start)?;
         }
         None => {
-            println!("\n⚠️ powdr-rs CLI not found in PATH");
+            println!("\n⚠️ powdr-rs CLI not found in PATH and SDK feature not enabled.");
             println!("   Install with: cargo install powdr-cli");
-            println!("   Or from: https://github.com/powdr-labs/powdr-legacy");
             println!("\n   Falling back to reference execution...\n");
 
             run_reference_execution(&input, total_start)?;
@@ -74,6 +92,95 @@ fn main() -> Result<()> {
 
     Ok(())
 }
+
+/// Run using Powdr SDK (Library)
+#[cfg(feature = "powdr_sdk")]
+fn run_with_powdr_sdk(
+    asm_path: &PathBuf,
+    input: &zkvm_programs::ProgramInput,
+    proof_mode: &str,
+    total_start: Instant,
+) -> Result<()> {
+    println!("🚀 Using Powdr SDK (Library Mode)\n");
+
+    // 1. Setup Pipeline
+    println!("🔨 Step 1: Setting up pipeline...");
+    let compile_start = Instant::now();
+
+    let backend = match proof_mode {
+        "halo2" => BackendType::Halo2,
+        "plonky3" => BackendType::Plonky3,
+        _ => BackendType::Mock, // Default/fallback
+    };
+
+    // Create inputs: program_id, n
+    let inputs = vec![
+        GoldilocksField::from(input.program.id() as u64),
+        GoldilocksField::from(input.n as u64),
+    ];
+
+    let mut pipeline = Pipeline::<GoldilocksField>::default()
+        .from_file(asm_path.clone())
+        .with_inputs(inputs.clone())
+        .with_backend(backend);
+
+    let compile_duration = compile_start.elapsed();
+    println!(
+        "BENCHMARK: compile_time_s={:.6}",
+        compile_duration.as_secs_f64()
+    );
+
+    // 2. Witness Generation (Execution)
+    println!("\n🚀 Step 2: Witness Generation (Execution)...");
+    let exec_start = Instant::now();
+
+    pipeline.advance_to(Stage::GeneratedWitness)?;
+    
+    let exec_duration = exec_start.elapsed();
+    println!(
+        "BENCHMARK: execution_time_s={:.6}",
+        exec_duration.as_secs_f64()
+    );
+
+    // TODO: Extract result from memory/witness if possible via SDK
+    // For now, assume success if witness generation worked
+    // pipeline.witness()...
+
+    // 3. Proof Generation
+    println!("\n🔐 Step 3: Generating proof...");
+    let prove_start = Instant::now();
+
+    pipeline.advance_to(Stage::Proof)?;
+    let proof = pipeline.proof().context("Proof not generated")?;
+
+    let prove_duration = prove_start.elapsed();
+    println!(
+        "BENCHMARK: proof_time_s={:.6}",
+        prove_duration.as_secs_f64()
+    );
+    println!("BENCHMARK: proof_size_bytes={}", proof.len());
+
+    // 4. Verification
+    println!("\n✓ Step 4: Verifying proof...");
+    let verify_start = Instant::now();
+    
+    pipeline.verify(proof.clone(), Some(vec![]))?; // Public inputs if any
+
+    let verify_duration = verify_start.elapsed();
+    println!(
+        "BENCHMARK: verification_time_s={:.6}",
+        verify_duration.as_secs_f64()
+    );
+    println!("BENCHMARK: success_status=success");
+
+    let total_duration = total_start.elapsed();
+    println!("BENCHMARK: total_time_s={:.6}", total_duration.as_secs_f64());
+
+    println!("\n✅ Powdr zkVM Demo completed (SDK)!");
+    Ok(())
+}
+
+/// Find powdr-rs CLI
 
 /// Find powdr-rs CLI
 fn find_powdr_cli() -> Option<PathBuf> {

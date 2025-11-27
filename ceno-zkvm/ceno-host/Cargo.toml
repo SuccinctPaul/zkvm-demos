@@ -11,6 +11,7 @@ path = "src/main.rs"
 # CENO SDK from Scroll
 ceno_host = { workspace = true }
 ceno_emul = { workspace = true }
+ceno_zkvm = { workspace = true }
 
 # Common utilities
 zkvm_programs = { path = "../../programs" }
