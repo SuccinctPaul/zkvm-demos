@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 zkvm_programs.workspace = true
 anyhow.workspace = true
 colored.workspace = true
-snarkvm.workspace = true
-snarkvm-circuit.workspace = true
-snarkvm-console.workspace = true
 
+# Note: snarkVM SDK functionality is accessed via Leo CLI
+# The Leo CLI provides Varuna proof generation and verification
+# Install with: cargo install leo-lang

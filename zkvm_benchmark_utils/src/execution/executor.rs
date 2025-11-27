@@ -32,6 +32,34 @@ fn strip_ansi_codes(text: &str) -> String {
     re.replace_all(text, "").to_string()
 }
 
+/// Check if log content contains failure patterns (panic, crash, etc.)
+fn detect_failure_in_log(log_content: &str) -> Option<String> {
+    // Common failure patterns in zkVM benchmark logs
+    let failure_patterns = [
+        ("panicked at", "Program panicked"),
+        ("thread 'main' panicked", "Main thread panicked"),
+        ("Verification failed", "Verification failed"),
+        ("Error:", "Error encountered"),
+        ("FATAL ERROR", "Fatal error"),
+        ("could not open elf file", "ELF file not found"),
+        ("failed to compile", "Compilation failed"),
+        ("stack overflow", "Stack overflow"),
+    ];
+
+    for (pattern, description) in failure_patterns {
+        if log_content.contains(pattern) {
+            return Some(description.to_string());
+        }
+    }
+
+    // Also check for exit status pattern in stderr
+    if log_content.contains("exit code: 1") || log_content.contains("exited with status: 1") {
+        return Some("Non-zero exit code".to_string());
+    }
+
+    None
+}
+
 /// Benchmark Executor
 pub struct BenchmarkExecutor {
     config: Arc<BenchmarkConfig>,
@@ -328,7 +356,19 @@ impl BenchmarkExecutor {
             Err(e) => (None, Some(e.to_string())),
         };
 
-        let success = metrics.is_some();
+        // Check for failure patterns in the log content
+        let log_failure = detect_failure_in_log(&cleaned_log);
+        
+        // Determine success: must have metrics AND no failure patterns in log
+        let success = if let Some(failure_reason) = &log_failure {
+            warn!("  ⚠️  Detected failure in log: {}", failure_reason);
+            false
+        } else {
+            metrics.is_some()
+        };
+        
+        // If we detected a failure, ensure error is set
+        let error = error.or_else(|| log_failure);
 
         Ok(ExecutionResult {
             test_run: test_run.clone(),

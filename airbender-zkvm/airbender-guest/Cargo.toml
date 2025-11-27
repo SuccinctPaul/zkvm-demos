@@ -13,9 +13,9 @@ path = "src/main.rs"
 # https://github.com/matter-labs/zksync-airbender
 airbender_riscv_common.workspace = true
 
-# Local program logic (no_std compatible)
-# Note: Guest programs don't use zkvm_programs directly
-# They implement the computation inline for RISC-V
+# Common library for benchmarks (no_std)
+# Uses execute_program(program_id, n) for multi-program support
+zkvm_programs = { path = "../../programs", default-features = false }
 
 [features]
 default = []

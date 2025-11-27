@@ -10,17 +10,12 @@ zkvm_programs = { workspace = true }
 dotenv = { workspace = true }
 anyhow = { workspace = true }
 env_logger = { workspace = true }
-log = "0.4"
+log = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 
-# Powdr dependencies
-# Note: These will be available once Powdr SDK is published
-# For now, this is a placeholder implementation
-# powdr-backend = { git = "https://github.com/powdr-labs/powdr", branch = "main" }
-# powdr-pipeline = { git = "https://github.com/powdr-labs/powdr", branch = "main" }
-
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+# Note: Powdr SDK dependencies are used via CLI
+# The powdr-rs CLI provides all proving functionality
+# Install with: cargo install powdr-cli
 
 [build-dependencies]
-# powdr-build = { git = "https://github.com/powdr-labs/powdr", branch = "main" }
-

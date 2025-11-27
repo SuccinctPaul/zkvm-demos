@@ -34,7 +34,7 @@ debug
 
 **/*.data
 **/*.bin
-
+**/*.srs
 
 # bench results
 zkvm_benchmark_utils/benchmark-results/parsed-metrics/

@@ -33,7 +33,7 @@ RUST_LOG = "debug"
 
 [parsed_metrics]
 # BENCHMARK format logs (primary)
-raw_program_name = 'BENCHMARK: program_name=(\w+)'
+raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
@@ -41,10 +41,12 @@ raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
 raw_preprocess_time_s = 'BENCHMARK: preprocess_time_s=([\d.]+)'
 raw_build_time_s = 'BENCHMARK: build_time_s=([\d.]+)'
 raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
 raw_output_result = 'BENCHMARK: output_result=(\d+)'
 raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
 raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
+raw_error_reason = 'BENCHMARK: error_reason=(\w+)'
 
 # Legacy format fallback
 legacy_compile_time = 'Compile time:\s+([\d.]+)s'
@@ -52,10 +54,13 @@ legacy_preprocess_time = 'Preprocess time:\s+([\d.]+)s'
 legacy_build_time = 'Build time:\s+([\d.]+)s'
 legacy_prove_time = 'Prove time:\s+([\d.]+)s'
 legacy_verify_time = 'Verify time:\s+([\d.]+)s'
+legacy_total_prove_time = 'Total prove time:\s+([\d.]+)s'
 
 [metric_mapping]
+# Map raw keys to standard keys
 "compilation_time_s" = "raw_compile_time_s"
 "vm_prove_time_s" = "raw_proof_time_s"
+"total_prove_time_s" = "raw_total_prove_time_s"
 "verification_time_s" = "raw_verification_time_s"
 "success_status" = "raw_success_status"
 "total_time_s" = "raw_total_time_s"
