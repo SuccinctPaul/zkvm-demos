@@ -6,7 +6,7 @@
 
 name = "cairo_m"
 version = "v0.1.0-dev"
-enabled = true
+enabled = false
 default_mode = "core"
 
 # Test scales (program input N values)
