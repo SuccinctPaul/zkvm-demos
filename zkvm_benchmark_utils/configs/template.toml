@@ -16,11 +16,11 @@ test_scales = [10, 20]
 # 如果未配置 programs，将使用 test_scales 作为 Fibonacci 的参数
 [[programs]]
 name = "fibonacci"
-scales = [10, 20]
+scales = [50, 100]
 
 [[programs]]
 name = "hash"
-scales = [100, 500, 1000]
+scales = [500, 1000]
 
 [[programs]]
 name = "sig"

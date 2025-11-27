@@ -30,11 +30,11 @@ repeat_count = 1
 # 程序配置
 [[programs]]
 name = "fibonacci"
-scales = [10, 20]
+scales = [50, 100]
 
 [[programs]]
 name = "hash"
-scales = [100, 500, 1000]
+scales = [500, 1000]
 
 [[programs]]
 name = "sig"
