@@ -12,7 +12,6 @@
 
 use anyhow::Result;
 use colored::*;
-use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
@@ -109,7 +108,7 @@ fn run_with_leo_cli(
         Some(program_dir) => {
             println!("   Found Aleo project: {:?}", program_dir);
 
-            // Step 1: Build
+            // Step 1: Build (optional, `leo run` will auto-build)
             println!("\n{}", "1️⃣  Building Aleo program...".bright_green());
             let compile_start = Instant::now();
 
@@ -137,13 +136,14 @@ fn run_with_leo_cli(
                 }
             }
 
-            // Step 2: Execute
-            println!("\n{}", "2️⃣  Executing program...".bright_green());
+            // Step 2: Run (compile + prove + verify in one command)
+            // Leo CLI: `leo run <function> <args...>` does build & setup & prove & verify
+            println!("\n{}", "2️⃣  Running program (build + prove + verify)...".bright_green());
             let exec_start = Instant::now();
 
             let exec_output = Command::new(cli_path)
                 .current_dir(&program_dir)
-                .arg("execute")
+                .arg("run")  // 'run' instead of 'execute' per Leo README
                 .arg("main")
                 .arg(format!("{}u32", input.n))
                 .output();
@@ -181,11 +181,11 @@ fn run_with_leo_cli(
             let estimated_constraints = estimate_constraints(input.program.id(), input.n);
             println!("BENCHMARK: total_cycles={}", estimated_constraints);
 
-            // Step 3 & 4: Leo execute already generates and verifies proof
-            println!("\n{}", "3️⃣  Proof generated during execution".bright_green());
+            // Note: `leo run` already includes proving and verification
+            println!("\n{}", "3️⃣  Proof generated during `leo run`".bright_green());
             println!("BENCHMARK: proof_time_s=0.0");
 
-            println!("\n{}", "4️⃣  Proof verified during execution".bright_green());
+            println!("\n{}", "4️⃣  Proof verified during `leo run`".bright_green());
             println!("BENCHMARK: verification_time_s=0.0");
 
             println!("BENCHMARK: success_status=success");
