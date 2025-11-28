@@ -4,7 +4,7 @@
 # ZKM is a MIPS/RISC-V zkVM with Groth16/Plonk support
 
 name = "zkm"
-version = "v0.3.0" 
+version = "v0.3.0"
 enabled = true
 default_mode = "groth16"
 test_scales = [10, 20]
@@ -53,6 +53,7 @@ raw_stage1_vm_prove_time_s = 'BENCHMARK: stage1_vm_prove_time_s=([\d.]+)'
 raw_stage2_recursive_time_s = 'BENCHMARK: stage2_recursive_time_s=([\d.]+)'
 raw_total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
 raw_final_proof_size_bytes = 'BENCHMARK: final_proof_size_bytes=(\d+)'
+raw_vm_circuit_chunk_count = 'BENCHMARK: vm_circuit_chunk_count=(\d+)'
 
 # Legacy / Alternative format fallback
 legacy_instruction_count = 'total_instruction_count=(\d+)'
@@ -89,6 +90,7 @@ groth16_prover_time_ms = 'prover done.*took=([\d.]+)'
 groth16_generation_time_s = 'Generating proof took ([\d.]+)s'
 groth16_verifier_time_ms = 'verifier done.*took=([\d.]+)'
 wrap_groth16_total_time_s = 'wrap_groth16_bn254: close time\.busy=([\d.]+)s'
+raw_snark_type = 'prover done.*backend=(\w+)'
 
 # Detailed Timing (Generic)
 prove_shards_time_s = 'prove_shards: close time\.busy=([\d.]+)s'
@@ -105,22 +107,24 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 "execution_time_s" = "raw_execute_time_s"
 
 # VM Circuit
-"vm_prove_time_s" = "raw_stage1_vm_prove_time_s"
+"vm_prove_time_s" = "core_proof_total_time_s"
+"vm_chunk_count" = "raw_vm_circuit_chunk_count"
 "vm_prove_proof_size_bytes" = "raw_vm_core_proof_size_bytes"
 
 # Aggressive / Recursion
-# Mapping the wrap phase total time as the aggressive prove time, 
+# Mapping the wrap phase total time as the aggressive prove time,
 # as it seems to be the dominant recursion step in ZKM logs.
-"aggressive_prove_time_s" = "raw_stage2_recursive_time_s"
+"aggressive_prove_time_s" = "compress_total_time_s"
 "aggressive_proof_size_bytes" = "raw_compressed_proof_size_bytes"
-
-# Verification
-"verification_time_s" = "raw_verification_time_s"
-"success_status" = "raw_success_status"
 
 # Groth16 / SNARK
 "snark_proof_size_bytes" = "raw_groth16_proof_size_bytes"
 "snark_setup_time_s" = "groth16_r1cs_reading_time_s"
-"snark_witness_time_s" = "groth16_witness_generation_time_ms" 
+"snark_witness_time_s" = "groth16_witness_generation_time_ms"
 "snark_constraint_count" = "groth16_constraint_count"
 "snark_proof_time_s" = "raw_total_prove_time_s"
+"snark_type" = "raw_snark_type"
+
+# Verification
+"verification_time_s" = "raw_verification_time_s"
+"success_status" = "raw_success_status"

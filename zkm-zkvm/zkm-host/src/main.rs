@@ -1,4 +1,4 @@
-use zkm_sdk::{include_elf, ProverClient, ZKMProofKind, ZKMStdin};
+use zkm_sdk::{include_elf, ProverClient, ZKMProof, ZKMProofKind, ZKMStdin};
 use zkvm_programs::load_program_input;
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
@@ -84,9 +84,18 @@ fn main() {
                 .expect("Core proof generation failed");
             let duration = start.elapsed();
 
+            let chunk_count = match &proof.proof {
+                ZKMProof::Core(core_proofs) => core_proofs.len(),
+                _ => 0,
+            };
+
             println!(
                 "BENCHMARK: stage1_vm_prove_time_s={:.6}",
                 duration.as_secs_f64()
+            );
+            println!(
+                "BENCHMARK: vm_circuit_chunk_count={}",
+                chunk_count
             );
             println!(
                 "BENCHMARK: vm_core_proof_size_bytes={}",
