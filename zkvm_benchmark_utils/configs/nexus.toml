@@ -57,7 +57,6 @@ RUST_LOG = "debug"
 # ================================================================
 raw_program_name = 'BENCHMARK: program_name=(\w+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w.]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 
 # ================================================================
@@ -101,7 +100,7 @@ fallback_summary_proof_size = 'Proof size: (\d+) bytes'
 # 1. Execution Phase
 # ====================
 "instruction_count" = "raw_instruction_count"
-"compilation_time_s" = "raw_compile_time_s"
+"execution_time_s" = "raw_compile_time_s"
 
 # ====================
 # 2. VM Circuit Phase (Core/Stwo Proving)

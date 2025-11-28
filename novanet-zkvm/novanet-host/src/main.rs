@@ -109,6 +109,11 @@ fn main() -> Result<()> {
 
     // Try to find the WASM file for the program
     let wasm_path = get_wasm_path(input_data.program.id());
+    {
+        // novanet-host working directory
+        let cwd = std::env::current_dir()?;
+        println!("Current dir:: {}", cwd.display());
+    }
 
     let wasm_result = if wasm_path.exists() {
         println!("   Found WASM at: {:?}", wasm_path);
@@ -203,20 +208,8 @@ fn main() -> Result<()> {
             }
         }
     } else {
-        // Reference mode - simulate proof generation
-        println!("   Running in reference mode (no WASM binary)");
-
-        // TODO: Implement actual proof generation when WASM is available
-        println!("   [TODO] Proof generation not implemented (reference mode)");
-
-        // Simulate verification
-        println!("\n5️⃣  Verifying proof (reference mode)...");
-        // TODO: Implement actual verification
-        println!("   [TODO] Verification not implemented (reference mode)");
-
-        (true, 0)
+        panic!("WASM file not found, path: {:?}", wasm_path);
     };
-    println!();
 
     // Total time
     let total_duration = total_start.elapsed();
@@ -251,17 +244,31 @@ fn main() -> Result<()> {
 
 /// Get the WASM file path for a program
 fn get_wasm_path(program_id: u32) -> PathBuf {
-    let wasm_dir = PathBuf::from("wasm");
-    match program_id {
-        0 => wasm_dir.join("fib.wat"),
-        1 => wasm_dir.join("sum.wat"),
-        2 => wasm_dir.join("factorial.wat"),
-        3 => wasm_dir.join("isprime.wat"),
-        4 => wasm_dir.join("popcount.wat"),
-        5 => wasm_dir.join("hash.wat"),
-        6 => wasm_dir.join("signature.wat"),
-        _ => wasm_dir.join("main.wat"),
+    let filename = match program_id {
+        0 => "fib.wat",
+        1 => "sum.wat",
+        2 => "factorial.wat",
+        3 => "isprime.wat",
+        4 => "popcount.wat",
+        5 => "hash.wat",
+        6 => "signature.wat",
+        _ => "main.wat",
+    };
+
+    let possible_paths = [
+        PathBuf::from("wasm"),    // If running from novanet-zkvm root
+        PathBuf::from("../wasm"), // If running from novanet-host
+    ];
+
+    for base_dir in possible_paths {
+        let path = base_dir.join(filename);
+        if path.exists() {
+            return path;
+        }
     }
+
+    // Default fallback if not found
+    PathBuf::from("../wasm").join(filename)
 }
 
 /// Get the function name for a program
@@ -281,12 +288,12 @@ fn get_function_name(program_id: u32) -> String {
 /// Estimate execution cycles based on program type and input
 fn estimate_cycles(program_id: u32, n: u32) -> u64 {
     match program_id {
-        0 => (n as u64) * 150 + 500,           // Fibonacci
-        1 => (n as u64) * 50 + 200,            // Sum
-        2 => (n as u64) * 100 + 300,           // Factorial
-        3 => (n as u64).isqrt() * 200 + 1000,  // IsPrime
-        4 => 32 * 30 + 200,                    // Popcount
-        5 | 6 => (n as u64) * 1000 + 10000,    // Hash/Signature
+        0 => (n as u64) * 150 + 500,          // Fibonacci
+        1 => (n as u64) * 50 + 200,           // Sum
+        2 => (n as u64) * 100 + 300,          // Factorial
+        3 => (n as u64).isqrt() * 200 + 1000, // IsPrime
+        4 => 32 * 30 + 200,                   // Popcount
+        5 | 6 => (n as u64) * 1000 + 10000,   // Hash/Signature
         _ => (n as u64) * 100 + 1000,
     }
 }

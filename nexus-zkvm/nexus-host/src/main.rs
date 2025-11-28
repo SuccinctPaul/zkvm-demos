@@ -25,8 +25,7 @@ fn main() {
     println!("\n========== BENCHMARK START ==========");
     println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=nexus");
-    println!("BENCHMARK: zkvm_version=v3.0.0");
-    
+
     // Nexus only supports core/stwo proving mode
     let proof_mode = std::env::var("NEXUS_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
     println!("BENCHMARK: proof_mode={}", proof_mode);

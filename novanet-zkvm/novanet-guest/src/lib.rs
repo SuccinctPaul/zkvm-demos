@@ -1,5 +1,5 @@
 //! Novanet zkVM Guest Program - Multi-Program Support
-//! 
+//!
 //! This guest program executes dispatched algorithms
 //! in a zero-knowledge proof environment using Novanet zkVM.
 

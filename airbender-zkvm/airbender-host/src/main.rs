@@ -237,8 +237,7 @@ fn extract_public_values_and_vk_hash_chain(proof: &ProgramProof) -> Result<(Vec<
         .flat_map(|value| value.value.to_le_bytes())
         .collect();
 
-    let vk_chain_hash: VkHashChain =
-        array::from_fn(|i| proof.register_final_values[18 + i].value);
+    let vk_chain_hash: VkHashChain = array::from_fn(|i| proof.register_final_values[18 + i].value);
 
     Ok((public_values, vk_chain_hash))
 }
@@ -315,11 +314,7 @@ fn main() -> Result<()> {
 }
 
 /// Run with full SDK using pre-compiled guest binary
-fn run_with_sdk(
-    bin_path: &str,
-    input: &zkvm_programs::ProgramInput,
-    use_gpu: bool,
-) -> Result<()> {
+fn run_with_sdk(bin_path: &str, input: &zkvm_programs::ProgramInput, use_gpu: bool) -> Result<()> {
     println!("🚀 Running with Airbender SDK\n");
 
     // Load guest binary
@@ -353,7 +348,10 @@ fn run_with_sdk(
     let (public_values, cycles) = sdk.execute(&input_bytes)?;
     let exec_duration = exec_start.elapsed();
 
-    println!("   ✓ Execution completed in {:.6}s", exec_duration.as_secs_f64());
+    println!(
+        "   ✓ Execution completed in {:.6}s",
+        exec_duration.as_secs_f64()
+    );
     println!("   Cycles: {}", cycles);
     println!(
         "BENCHMARK: execution_time_s={:.6}",
@@ -373,7 +371,10 @@ fn run_with_sdk(
     let (_public_values, proof) = sdk.prove(&input_bytes)?;
     let prove_duration = prove_start.elapsed();
 
-    println!("   ✓ Proof generated in {:.6}s", prove_duration.as_secs_f64());
+    println!(
+        "   ✓ Proof generated in {:.6}s",
+        prove_duration.as_secs_f64()
+    );
     println!(
         "BENCHMARK: proof_time_s={:.6}",
         prove_duration.as_secs_f64()
@@ -385,7 +386,10 @@ fn run_with_sdk(
     let _verified_values = sdk.verify(&proof)?;
     let verify_duration = verify_start.elapsed();
 
-    println!("   ✓ Proof verified in {:.6}s", verify_duration.as_secs_f64());
+    println!(
+        "   ✓ Proof verified in {:.6}s",
+        verify_duration.as_secs_f64()
+    );
     println!(
         "BENCHMARK: verification_time_s={:.6}",
         verify_duration.as_secs_f64()
@@ -415,7 +419,10 @@ fn run_native_fallback(input: &zkvm_programs::ProgramInput) -> Result<()> {
     let result = execute_program(input.program.id(), input.n);
     let exec_duration = exec_start.elapsed();
 
-    println!("   ✓ Execution completed in {:.6}s", exec_duration.as_secs_f64());
+    println!(
+        "   ✓ Execution completed in {:.6}s",
+        exec_duration.as_secs_f64()
+    );
     println!("   Result: {}", result);
     println!(
         "BENCHMARK: execution_time_s={:.6}",
