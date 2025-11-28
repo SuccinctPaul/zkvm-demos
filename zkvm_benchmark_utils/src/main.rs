@@ -24,6 +24,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Run benchmarks (Full Pipeline: Execute -> Parse -> Report)
+    /// Example: `cargo run --release -- run --zkvms sp1`
     Run {
         /// Root output directory (default: benchmark-results)
         #[arg(short, long)]
@@ -33,10 +34,6 @@ enum Commands {
         #[arg(long)]
         zkvms: Option<String>,
 
-        /// Test scales/parameters (comma-separated, e.g., "10,20,100"). Overrides config values
-        #[arg(long)]
-        scales: Option<String>,
-
         /// Report formats to generate (csv,json,markdown,console). Default: all
         #[arg(long)]
         report_formats: Option<String>,
@@ -44,6 +41,7 @@ enum Commands {
 
     /// Phase 1: Execute benchmarks (Executes zkVMs and saves raw logs)
     /// Note: Execution is strictly sequential to ensure accurate benchmarking.
+    /// Example: `cargo run --release -- execute --zkvms sp1`
     Execute {
         /// Root output directory (logs saved to output/raw-logs)
         #[arg(short, long)]
@@ -52,14 +50,11 @@ enum Commands {
         /// zkVMs to run (comma-separated)
         #[arg(long)]
         zkvms: Option<String>,
-
-        /// Test scales/parameters (comma-separated)
-        #[arg(long)]
-        scales: Option<String>,
     },
 
     /// Phase 2: Parse raw logs (Parses logs from raw-logs directory -> output/parsed-metrics)
     /// Note: Parsing is parallelized for performance.
+    /// Example: `cargo run --release -- parse` (uses default directories)
     Parse {
         /// Root output directory (metrics saved to output/parsed-metrics)
         #[arg(short, long)]
@@ -72,6 +67,7 @@ enum Commands {
 
     /// Phase 3: Generate reports (Generates reports from parsed-metrics directory -> output/reports)
     /// Note: Metrics loading is parallelized.
+    /// Example: `cargo run --release -- report --report-formats csv`
     Report {
         /// Root output directory (reports saved to output/reports)
         #[arg(short, long)]
@@ -98,17 +94,15 @@ async fn main() -> anyhow::Result<()> {
         Commands::Run {
             output,
             zkvms,
-            scales,
             report_formats,
         } => {
-            run_benchmarks(output, zkvms, scales, report_formats).await?;
+            run_benchmarks(output, zkvms, report_formats).await?;
         }
         Commands::Execute {
             output,
             zkvms,
-            scales,
         } => {
-            execute_benchmarks(output, zkvms, scales).await?;
+            execute_benchmarks(output, zkvms).await?;
         }
         Commands::Parse {
             output,
@@ -131,7 +125,6 @@ async fn main() -> anyhow::Result<()> {
 fn setup_benchmark_config(
     output: Option<PathBuf>,
     zkvms_filter: Option<String>,
-    scales_filter: Option<String>,
 ) -> anyhow::Result<BenchmarkConfig> {
     // Determine which zkVMs to run
     let zkvm_names: Vec<String> = if let Some(zkvms) = zkvms_filter {
@@ -148,13 +141,6 @@ fn setup_benchmark_config(
 
     info!("📦 Selected zkVMs: {}", zkvm_names.join(", "));
 
-    // Parse scale filter if specified
-    let scale_values: Option<Vec<u32>> = scales_filter.map(|s| {
-        s.split(',')
-            .filter_map(|x| x.trim().parse::<u32>().ok())
-            .collect()
-    });
-
     // Load zkVM configurations
     info!("📖 Loading zkVM configurations...");
     let mut zkvms = HashMap::new();
@@ -162,15 +148,7 @@ fn setup_benchmark_config(
 
     for zkvm_name in &zkvm_names {
         info!("  📄 Loading config for: {}", zkvm_name);
-        let mut zkvm_config = ZkVmConfig::from_name(zkvm_name)?;
-
-        if let Some(ref scales) = scale_values {
-            let mut programs = zkvm_config.get_programs();
-            for prog in &mut programs {
-                prog.scales = scales.clone();
-            }
-            zkvm_config.programs = Some(programs);
-        }
+        let zkvm_config = ZkVmConfig::from_name(zkvm_name)?;
 
         if let Some(ref config_scales) = zkvm_config.test_scales {
             test_scales = config_scales.clone();
@@ -212,14 +190,13 @@ fn setup_benchmark_config(
 async fn run_benchmarks(
     output: Option<PathBuf>,
     zkvms_filter: Option<String>,
-    scales_filter: Option<String>,
     report_formats: Option<String>,
 ) -> anyhow::Result<()> {
     info!("═══════════════════════════════════════════════════════════");
     info!("🚀 zkVM Benchmark Framework - Starting Execution");
     info!("═══════════════════════════════════════════════════════════");
 
-    let config = setup_benchmark_config(output, zkvms_filter, scales_filter)?;
+    let config = setup_benchmark_config(output, zkvms_filter)?;
 
     info!("═══════════════════════════════════════════════════════════");
     info!("⚙️  Initializing Benchmark Executor");
@@ -318,13 +295,12 @@ async fn run_benchmarks(
 async fn execute_benchmarks(
     output: Option<PathBuf>,
     zkvms_filter: Option<String>,
-    scales_filter: Option<String>,
 ) -> anyhow::Result<()> {
     info!("═══════════════════════════════════════════════════════════");
     info!("🚀 zkVM Benchmark - Phase 1: Execution Only");
     info!("═══════════════════════════════════════════════════════════");
 
-    let config = setup_benchmark_config(output, zkvms_filter, scales_filter)?;
+    let config = setup_benchmark_config(output, zkvms_filter)?;
     let paths = config.get_paths();
     let executor = BenchmarkExecutor::new(config)?;
 
@@ -368,7 +344,7 @@ async fn parse_logs(output: Option<PathBuf>, raw_logs_dir: Option<PathBuf>) -> a
     // If a log belongs to a disabled zkvm, we might miss it if we filter.
     // So we load all enabled zkvms.
 
-    let config = setup_benchmark_config(output, None, None)?;
+    let config = setup_benchmark_config(output, None)?;
     let paths = config.get_paths();
     let executor = BenchmarkExecutor::new(config)?;
 
