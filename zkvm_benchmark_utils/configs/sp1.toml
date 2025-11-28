@@ -7,28 +7,28 @@ version = "v5.2.2"
 enabled = true
 default_mode = "groth16"
 
-# 测试规模（Fibonacci N 值）
-# 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）
+# Test Scales (Fibonacci N value)
+# Note: If programs are configured, test_scales will be ignored (kept for backward compatibility)
 test_scales = [10, 20]
 
-# 证明模式
+# Prove Modes
 prove_modes = ["core", "compressed", "groth16"]
 
-# SP1 项目路径
+# SP1 Project Path
 working_dir = "../sp1-zkvm/sp1-host"
 
-# 构建和运行命令
+# Build and Run Commands
 build_command = "cargo build --release"
 run_command = "cargo run --release -- --prove"
 
-# 超时设置（秒）
+# Timeout Settings (seconds)
 timeout_seconds = 3600
 
-# 重复次数
+# Repeat Count
 repeat_count = 1
 
-# 程序配置（推荐使用此方式配置多个程序）
-# 注意：必须放在所有其他必需字段之后，否则 TOML 解析器会提前结束
+# Program Configuration (Recommended way to configure multiple programs)
+# Note: Must be placed after all other required fields, otherwise TOML parser might end early
 [[programs]]
 name = "fibonacci"
 scales = [50, 100]
@@ -42,18 +42,18 @@ name = "sig"
 scales = [1, 10, 50]
 
 # ----------------------------------------------------------------
-# 环境变量
+# Environment Variables
 # ----------------------------------------------------------------
 [env_vars]
 RUSTFLAGS = "-C target-cpu=native"
 RUST_LOG = "debug"
 
 # ----------------------------------------------------------------
-# 解析规则 (Parsed Metrics)
+# Parsing Rules (Parsed Metrics)
 # ----------------------------------------------------------------
 [parsed_metrics]
-# Raw 提取 (Extract)
-# 这里我们使用 raw_ 前缀来区分原始数据和标准数据
+# Raw Extraction
+# We use the raw_ prefix to distinguish between raw data and standard data
 raw_total_cycles = '(?:BENCHMARK: |execution report \(totals\): )total_cycles=(\d+)'
 raw_total_instruction_count = '(?:BENCHMARK: |execution report \(totals\): )total_instruction_count=(\d+)'
 raw_total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
@@ -64,7 +64,7 @@ raw_success_status = '(?:BENCHMARK: success_status=|success_status=)(\w+)'
 raw_execution_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
 raw_snark_type = 'prover done.*backend=(\w+)'
 
-# 其他指标保持原样提取，稍后在 metric_mapping 中决定是否标准化
+# Other metrics extracted as is, decided later in metric_mapping whether to standardize
 gas = 'gas: (\d+)'
 total_syscall_cycles = 'total_syscall_cycles=(\d+)'
 touched_memory_addresses = 'touched_memory_addresses=(\d+)'
@@ -74,11 +74,11 @@ compressed_proof_size_bytes = 'BENCHMARK: compressed_proof_size_bytes=(\d+)'
 groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
 
 # ================================================================
-# P1 证明阶段指标 (Proving Phase Metrics)
+# P1 Proving Phase Metrics
 # ================================================================
 
-# Core Proof 阶段
-# 兼容多种日志格式
+# Core Proof Phase
+# Compatible with multiple log formats
 core_proof_total_time_s = 'prove_core:phase 2 prover: close time\.busy=([\d.]+)s'
 phase2_trace_generation_time_ms = 'phase 2 trace generation:.*close time\.busy=([\d.]+)ms'
 main_traces_generation_time_ms = 'generate main traces:.*close time\.busy=([\d.]+)ms'
@@ -89,7 +89,7 @@ core_permutation_generation_time_ms = 'phase 2 prover:batch:opening:generate per
 core_quotient_compute_time_ms = 'phase 2 prover:batch:opening:compute quotient values:.*close time\.busy=([\d.]+)ms'
 core_multi_batch_opening_time_s = 'phase 2 prover:batch:opening:open multi batches:.*close time\.busy=([\d.]+)s'
 
-# Compress 阶段
+# Compress Phase
 compress_total_time_s = 'compress: close time\.busy=([\d.]+)s'
 compress_generate_records_time_ms = 'compress:generate records and traces:.*close time\.busy=([\d.]+)ms'
 compress_setup_time_ms = 'compress:prove:batch:Setup compress program:setup machine:.*close time\.busy=([\d.]+)ms'
@@ -99,7 +99,7 @@ compress_quotient_compute_time_ms = 'compress:prove:batch:open:compute quotient 
 compress_opening_time_s = 'compress:prove:batch:open:.*close time\.busy=([\d.]+)s time\.idle=[\d.]+ns$'
 compress_merkle_tree_build_time_ms = 'compress:prove:batch:commit:build merkle tree:.*close time\.busy=([\d.]+)ms'
 
-# Shrink 阶段
+# Shrink Phase
 shrink_total_time_s = 'shrink:prove_shards: close time\.busy=([\d.]+)s'
 shrink_program_build_time_ms = 'shrink:build shrink program:.*close time\.busy=([\d.]+)ms'
 shrink_program_compile_time_ms = 'shrink:compile shrink program:.*close time\.busy=([\d.]+)ms'
@@ -109,7 +109,7 @@ shrink_merkle_tree_build_time_ms = 'shrink:prove_shards:build merkle tree:.*clos
 shrink_permutation_time_ms = 'shrink:prove_shards:generate permutation traces:.*close time\.busy=([\d.]+)ms'
 shrink_quotient_compute_time_ms = 'shrink:prove_shards:compute quotient values:.*close time\.busy=([\d.]+)ms'
 
-# Shrink 事件计数
+# Shrink Event Counts
 shrink_total_events = 'shrink: total events: (\d+)'
 shrink_base_alu_events = 'shrink:   base_alu_events: (\d+)'
 shrink_batch_fri_events = 'shrink:   batch_fri_events: (\d+)'
@@ -120,8 +120,8 @@ shrink_poseidon2_events = 'shrink:   poseidon2_events: (\d+)'
 shrink_select_events = 'shrink:   select_events: (\d+)'
 shrink_exp_reverse_bits_len_events = 'shrink:   exp_reverse_bits_len_events: (\d+)'
 
-# Wrap BN254 阶段
-# 匹配示例:
+# Wrap BN254 Phase
+# Match Example:
 wrap_total_time_s = 'wrap_bn254: wrap proving time: ([\d.]+)s'
 wrap_program_build_time_ms = 'wrap_bn254:build compress program:.*close time\.busy=([\d.]+)ms'
 wrap_program_compile_time_ms = 'wrap_bn254:compile compress program:.*close time\.busy=([\d.]+)ms'
@@ -131,7 +131,7 @@ wrap_verify_time_ms = 'wrap_bn254:verify:.*close time\.busy=([\d.]+)ms'
 wrap_merkle_tree_build_time_s = 'wrap_bn254:prove_shards:build merkle tree:.*close time\.busy=([\d.]+)s'
 wrap_permutation_time_ms = 'wrap_bn254:prove_shards:generate permutation traces:.*close time\.busy=([\d.]+)ms'
 
-# Wrap BN254 事件计数
+# Wrap BN254 Event Counts
 wrap_total_events = 'wrap_bn254: total events: (\d+)'
 wrap_base_alu_events = 'wrap_bn254:   base_alu_events: (\d+)'
 wrap_ext_alu_events = 'wrap_bn254:   ext_alu_events: (\d+)'
@@ -141,7 +141,7 @@ wrap_poseidon2_events = 'wrap_bn254:   poseidon2_events: (\d+)'
 wrap_select_events = 'wrap_bn254:   select_events: (\d+)'
 
 # ================================================================
-# P1 Groth16 阶段指标 (Groth16 Phase Metrics)
+# P1 Groth16 Phase Metrics
 # ================================================================
 # removed duplicate groth16_proof_size_bytes here
 groth16_r1cs_reading_time_s = 'Reading R1CS took ([\d.]+)s'
@@ -156,27 +156,27 @@ groth16_verifier_time_ms = 'verifier done.*took=([\d.]+)'
 groth16_total_time_s = 'wrap_groth16_bn254:.*close time\.busy=([\d.]+)s'
 
 # ================================================================
-# P2 验证指标 (Verification Metrics)
+# P2 Verification Metrics
 # ================================================================
 on_chain_gas_estimate = 'BENCHMARK: on_chain_gas_estimate=(\d+)'
 
 # ================================================================
-# P2 性能效率指标 (Performance Metrics)
+# P2 Performance Metrics
 # ================================================================
 # vm circuit(core proof) khz
 vm_prove_khz = 'khz=([\d.]+)'
 
 # ================================================================
-# P2 初始化指标 (Initialization Metrics)
+# P2 Initialization Metrics
 # ================================================================
 prover_initialization_time_s = 'initialize prover:.*close time\.busy=([\d.]+)s'
 compress_program_build_total_time_ms = 'initialize prover:build compress program:.*close time\.busy=([\d.]+)ms'
 compress_program_compile_total_time_ms = 'initialize prover:compile compress program:.*close time\.busy=([\d.]+)ms'
 
 # ================================================================
-# P3 指令统计 (Instruction Statistics)
+# P3 Instruction Statistics
 # ================================================================
-# RISC-V 基础指令
+# RISC-V Basic Instructions
 opcode_add = 'execution report.*\n.*(\d+) add'
 opcode_sub = 'execution report.*\n.*(\d+) sub'
 opcode_mul = 'execution report.*\n.*(\d+) mul'
@@ -187,7 +187,7 @@ opcode_sll = 'execution report.*\n.*(\d+) sll'
 opcode_srl = 'execution report.*\n.*(\d+) srl'
 opcode_sra = 'execution report.*\n.*(\d+) sra'
 
-# 内存访问指令
+# Memory Access Instructions
 opcode_lw = 'execution report.*\n.*(\d+) lw'
 opcode_sw = 'execution report.*\n.*(\d+) sw'
 opcode_lb = 'execution report.*\n.*(\d+) lb'
@@ -197,7 +197,7 @@ opcode_lh = 'execution report.*\n.*(\d+) lh'
 opcode_lhu = 'execution report.*\n.*(\d+) lhu'
 opcode_sh = 'execution report.*\n.*(\d+) sh'
 
-# 分支和跳转指令
+# Branch and Jump Instructions
 opcode_beq = 'execution report.*\n.*(\d+) beq'
 opcode_bne = 'execution report.*\n.*(\d+) bne'
 opcode_blt = 'execution report.*\n.*(\d+) blt'
@@ -207,14 +207,14 @@ opcode_bgeu = 'execution report.*\n.*(\d+) bgeu'
 opcode_jal = 'execution report.*\n.*(\d+) jal'
 opcode_jalr = 'execution report.*\n.*(\d+) jalr'
 
-# 其他指令
+# Other Instructions
 opcode_lui = 'execution report.*\n.*(\d+) lui'
 opcode_auipc = 'execution report.*\n.*(\d+) auipc'
 opcode_ecall = 'execution report.*\n.*(\d+) ecall'
 opcode_sltu = 'execution report.*\n.*(\d+) sltu'
 
 # ================================================================
-# P3 系统调用统计 (Syscall Statistics)
+# P3 Syscall Statistics
 # ================================================================
 syscall_commit = 'syscall counts.*\n.*(\d+) commit$'
 syscall_commit_deferred_proofs = 'syscall counts.*\n.*(\d+) commit_deferred_proofs'
@@ -237,11 +237,11 @@ syscall_bls12381_decompress = 'syscall counts.*\n.*(\d+) bls12381_decompress'
 syscall_uint256_mul = 'syscall counts.*\n.*(\d+) uint256_mul'
 
 # ================================================================
-# P3 芯片资源统计 (Chip Resource Statistics)
+# P3 Chip Resource Statistics
 # ================================================================
-# 格式: "Chip Name | Main Cols = X | Pre Cols = Y | Perm Cols = Z | Rows = R | Cells = C"
+# Format: "Chip Name | Main Cols = X | Pre Cols = Y | Perm Cols = Z | Rows = R | Cells = C"
 
-# Core 阶段芯片统计
+# Core Phase Chip Stats
 chip_cpu_rows = 'phase 2 prover.*Cpu.*Rows = (\d+)'
 chip_cpu_cells = 'phase 2 prover.*Cpu.*Cells = (\d+)'
 chip_program_rows = 'phase 2 prover.*Program.*Rows = (\d+)'
@@ -255,7 +255,7 @@ chip_memory_global_init_cells = 'phase 2 prover.*MemoryGlobalInit.*Cells = (\d+)
 chip_memory_global_finalize_rows = 'phase 2 prover.*MemoryGlobalFinalize.*Rows = (\d+)'
 chip_memory_global_finalize_cells = 'phase 2 prover.*MemoryGlobalFinalize.*Cells = (\d+)'
 
-# Compress 阶段芯片统计
+# Compress Phase Chip Stats
 chip_compress_batch_fri_rows = 'compress:prove:batch:open.*BatchFRI.*Rows = (\d+)'
 chip_compress_batch_fri_cells = 'compress:prove:batch:open.*BatchFRI.*Cells = (\d+)'
 chip_compress_memory_var_rows = 'compress:prove:batch:open.*MemoryVar.*Rows = (\d+)'
@@ -268,26 +268,26 @@ chip_compress_ext_alu_rows = 'compress:prove:batch:open.*ExtAlu.*Rows = (\d+)'
 chip_compress_ext_alu_cells = 'compress:prove:batch:open.*ExtAlu.*Cells = (\d+)'
 
 # ================================================================
-# P3 Merkle Tree 维度信息 (Merkle Tree Dimensions)
+# P3 Merkle Tree Dimensions
 # ================================================================
-# 提取 Merkle Tree 的维度信息，例如 "dimensions="[14x1048576, 11x131072]""
+# Extract Merkle Tree dimensions, e.g., "dimensions="[14x1048576, 11x131072]""
 core_merkle_dimensions = 'phase 2 prover:batch:commit:build merkle tree:.*dimensions="([^"]+)"'
 compress_merkle_dimensions = 'compress:prove:batch:commit:build merkle tree:.*dimensions="([^"]+)"'
 shrink_merkle_dimensions = 'shrink:prove_shards:build merkle tree:.*dimensions="([^"]+)"'
 wrap_merkle_dimensions = 'wrap_bn254:prove_shards:build merkle tree:.*dimensions="([^"]+)"'
 
 # ================================================================
-# P3 内存优化提示 (Memory Optimization Hints)
+# P3 Memory Optimization Hints
 # ================================================================
-# 记录可以优化的行数
+# Record number of lines that can be optimized
 rows_reduction_hint_count = '(fixed log2 rows can be potentially reduced.*)'
 
 # ----------------------------------------------------------------
-# 指标映射 (Metric Mapping)
+# Metric Mapping
 # ----------------------------------------------------------------
 [metric_mapping]
-# 映射规则: Standard Key = Raw Key (Transform)
-# 这些标准 Key 将会被框架识别并用于衍生计算 (Derivation) 和 统一报告 (Unified Reporting)
+# Mapping Rules: Standard Key = Raw Key (Transform)
+# These Standard Keys will be recognized by the framework and used for Derivation and Unified Reporting
 
 # ====================
 # 1. Execution Phase
@@ -315,7 +315,7 @@ rows_reduction_hint_count = '(fixed log2 rows can be potentially reduced.*)'
 # ====================
 "snark_proof_time_s" = "groth16_generation_time_s"
 "snark_proof_size_bytes" = "groth16_proof_size_bytes"
-"snark_setup_time_s" = "groth16_r1cs_reading_time_s" # 近似映射
+"snark_setup_time_s" = "groth16_r1cs_reading_time_s" # Approximate mapping
 "snark_constraint_count" = "groth16_constraint_count"
 "snark_type" = "raw_snark_type"
 
@@ -325,4 +325,3 @@ rows_reduction_hint_count = '(fixed log2 rows can be potentially reduced.*)'
 "verification_time_s" = "raw_verification_time_s"
 "on_chain_gas_estimate" = "raw_on_chain_gas_estimate"
 "success_status" = "raw_success_status"
-
