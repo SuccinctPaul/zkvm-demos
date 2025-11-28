@@ -44,7 +44,10 @@ raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
-raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+# raw_proof_size_bytes removed in favor of specific keys
+raw_vm_core_proof_size_bytes = 'BENCHMARK: vm_core_proof_size_bytes=(\d+)'
+raw_compressed_proof_size_bytes = 'BENCHMARK: compressed_proof_size_bytes=(\d+)'
+raw_groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
 raw_execute_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
 
 # Legacy / Alternative format fallback
@@ -99,18 +102,20 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 
 # VM Circuit
 "vm_prove_time_s" = "core_proof_total_time_s"
+"vm_prove_proof_size_bytes" = "raw_vm_core_proof_size_bytes"
 
 # Aggressive / Recursion
 # Mapping the wrap phase total time as the aggressive prove time, 
 # as it seems to be the dominant recursion step in ZKM logs.
 "aggressive_prove_time_s" = "wrap_bn254_total_time_s"
+"aggressive_proof_size_bytes" = "raw_compressed_proof_size_bytes"
 
 # Verification
 "verification_time_s" = "raw_verification_time_s"
 "success_status" = "raw_success_status"
 
 # Groth16 / SNARK
-"snark_proof_size_bytes" = "raw_proof_size_bytes"
+"snark_proof_size_bytes" = "raw_groth16_proof_size_bytes"
 "snark_setup_time_s" = "groth16_r1cs_reading_time_s"
 "snark_witness_time_s" = "groth16_witness_generation_time_ms" 
 "snark_constraint_count" = "groth16_constraint_count"

@@ -60,7 +60,16 @@ fn main() {
 
     // Generate the proof
     println!("🔐 Generating proof...");
-    let proof_mode = ZKMProofKind::Groth16;
+    let proof_mode_env = std::env::var("PROOF_MODE").unwrap_or_else(|_| "groth16".to_string());
+    let proof_mode = match proof_mode_env.to_lowercase().as_str() {
+        "core" => ZKMProofKind::Core,
+        "compressed" => ZKMProofKind::Compressed,
+        "plonk" => ZKMProofKind::Plonk,
+        "groth16" => ZKMProofKind::Groth16,
+        "compress_to_groth16" => ZKMProofKind::CompressToGroth16,
+        _ => ZKMProofKind::Groth16,
+    };
+
     let prover = match proof_mode {
         ZKMProofKind::Core => client.prove(&pk, stdin).core(),
         ZKMProofKind::Compressed => client.prove(&pk, stdin).compressed(),
@@ -76,7 +85,18 @@ fn main() {
         proof_mode,
         proof.bytes().len()
     );
-    println!("BENCHMARK: proof_size_bytes={}", proof.bytes().len());
+    match proof_mode {
+        ZKMProofKind::Core => println!("BENCHMARK: vm_core_proof_size_bytes={}", proof.bytes().len()),
+        ZKMProofKind::Compressed => println!(
+            "BENCHMARK: compressed_proof_size_bytes={}",
+            proof.bytes().len()
+        ),
+        ZKMProofKind::Groth16 | ZKMProofKind::CompressToGroth16 => println!(
+            "BENCHMARK: groth16_proof_size_bytes={}",
+            proof.bytes().len()
+        ),
+        _ => println!("BENCHMARK: proof_size_bytes={}", proof.bytes().len()),
+    }
     println!("BENCHMARK: proof_mode={:?}", proof_mode);
 
     // Verify the proof.
