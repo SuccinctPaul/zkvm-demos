@@ -24,25 +24,6 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Run benchmarks (Full Pipeline: Execute -> Parse -> Report)
-    Benchmark {
-        /// Root output directory (default: benchmark-results)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-
-        /// zkVMs to run (comma-separated). If not specified, runs all enabled zkVMs from configs/
-        #[arg(long)]
-        zkvms: Option<String>,
-
-        /// Test scales/parameters (comma-separated, e.g., "10,20,100"). Overrides config values
-        #[arg(long)]
-        scales: Option<String>,
-
-        /// Report formats to generate (csv,json,markdown,console). Default: all
-        #[arg(long)]
-        report_formats: Option<String>,
-    },
-
-    /// Legacy Run command (Alias for Benchmark)
     Run {
         /// Root output directory (default: benchmark-results)
         #[arg(short, long)]
@@ -114,21 +95,12 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Benchmark {
-            output,
-            zkvms,
-            scales,
-            report_formats,
-        } => {
-            run_benchmarks(output, zkvms, scales, report_formats).await?;
-        }
         Commands::Run {
             output,
             zkvms,
             scales,
             report_formats,
         } => {
-            // Legacy support
             run_benchmarks(output, zkvms, scales, report_formats).await?;
         }
         Commands::Execute {
