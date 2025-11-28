@@ -25,18 +25,22 @@ use zkvm_programs::{execute_program, load_program_input};
 
 const CAIRO_M_VERSION: &str = "v0.1.0-alpha";
 
-/// Source directory for Cairo-M programs
-const PROGRAMS_DIR: &str = "../programs";
-
 /// Compiled program cache - shared across runs
 static COMPILED_PROGRAM: Lazy<Result<Program, String>> = Lazy::new(|| {
-    let source_path = format!("{}/main.cm", PROGRAMS_DIR);
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_path = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project path");
+    let programs_dir = project_path.join("programs");
+
+    // TODO:
+    let source_path = programs_dir.join("main.cm");
     let source = fs::read_to_string(&source_path)
-        .map_err(|e| format!("Failed to read source file {}: {}", source_path, e))?;
+        .map_err(|e| format!("Failed to read source file {}: {}", source_path.display(), e))?;
 
     let compiled_output = compile_cairo(
         source,
-        format!("{}/", PROGRAMS_DIR),
+        format!("{}/", programs_dir.display()),
         CompilerOptions::default(),
     )
     .map_err(|e| format!("Failed to compile Cairo-M program: {:?}", e))?;

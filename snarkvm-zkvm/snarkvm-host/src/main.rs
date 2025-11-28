@@ -332,8 +332,13 @@ fn run_with_leo_cli(
 
 /// Find Aleo program directory
 fn find_aleo_program() -> Option<PathBuf> {
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
     let paths = vec![
-        PathBuf::from("../programs"),
+        project_root.join("programs"),
         PathBuf::from("programs"),
         PathBuf::from("."),
     ];

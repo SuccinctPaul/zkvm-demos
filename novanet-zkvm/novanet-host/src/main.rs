@@ -255,20 +255,12 @@ fn get_wasm_path(program_id: u32) -> PathBuf {
         _ => "main.wat",
     };
 
-    let possible_paths = [
-        PathBuf::from("wasm"),    // If running from novanet-zkvm root
-        PathBuf::from("../wasm"), // If running from novanet-host
-    ];
-
-    for base_dir in possible_paths {
-        let path = base_dir.join(filename);
-        if path.exists() {
-            return path;
-        }
-    }
-
-    // Default fallback if not found
-    PathBuf::from("../wasm").join(filename)
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_path = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project path");
+    let wasm_dir = project_path.join("wasm");
+    wasm_dir.join(filename)
 }
 
 /// Get the function name for a program

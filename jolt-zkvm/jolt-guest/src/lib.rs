@@ -9,7 +9,7 @@ use zkvm_programs::execute_program as common_execute;
 /// - fibonacci(50): ~65536 is sufficient
 /// - hash(1000): may need more trace length
 /// - signature: needs even more due to ECDSA operations
-#[jolt::provable(memory_size = 10240, max_trace_length = 1048576)]
+#[jolt::provable(memory_size = 10485760, max_trace_length = 16777216)]
 fn execute_program(id: u32, n: u32) -> u32 {
     common_execute(id, n)
 }

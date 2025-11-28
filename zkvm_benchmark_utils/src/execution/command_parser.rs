@@ -1,37 +1,37 @@
-///! 优化的命令解析模块
+///! Optimized command parsing module
 ///!
-///! 提供安全、高效的命令行解析，支持：
-///! - 引号和转义字符
-///! - 命令缓存
-///! - 安全验证
-///! - 环境变量展开
+///! Provides safe, efficient command line parsing, supporting:
+///! - Quotes and escape characters
+///! - Command caching
+///! - Security validation
+///! - Environment variable expansion
 use crate::core::error::{BenchmarkError, Result};
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// 解析后的命令结构
+/// Parsed command structure
 #[derive(Debug, Clone)]
 pub struct ParsedCommand {
     pub program: String,
     pub args: Vec<String>,
 }
 
-/// 命令缓存，使用 Arc 减少克隆开销
+/// Command cache, using Arc to reduce cloning overhead
 type CommandCache = HashMap<String, Arc<ParsedCommand>>;
 
-/// 全局命令缓存
+/// Global command cache
 static COMMAND_CACHE: Lazy<RwLock<CommandCache>> = Lazy::new(|| RwLock::new(HashMap::new()));
 
-/// 命令解析器
+/// Command parser
 pub struct CommandParser {
     enable_cache: bool,
     security_check: bool,
 }
 
 impl CommandParser {
-    /// 创建新的命令解析器
+    /// Create a new command parser
     pub fn new() -> Self {
         Self {
             enable_cache: true,
@@ -39,7 +39,7 @@ impl CommandParser {
         }
     }
 
-    /// 创建不带安全检查的解析器（用于测试）
+    /// Create a parser without security checks (for testing)
     pub fn new_unchecked() -> Self {
         Self {
             enable_cache: true,
@@ -47,7 +47,7 @@ impl CommandParser {
         }
     }
 
-    /// 解析命令字符串
+    /// Parse command string
     ///
     /// # Examples
     ///
@@ -60,12 +60,12 @@ impl CommandParser {
     /// assert_eq!(cmd.args, vec!["run", "--bin", "test"]);
     /// ```
     pub fn parse(&self, command: &str) -> Result<Arc<ParsedCommand>> {
-        // 安全检查
+        // Security check
         if self.security_check {
             self.validate_security(command)?;
         }
 
-        // 尝试从缓存读取
+        // Try to read from cache
         if self.enable_cache {
             let cache = COMMAND_CACHE.read();
             if let Some(parsed) = cache.get(command) {
@@ -73,10 +73,10 @@ impl CommandParser {
             }
         }
 
-        // 解析命令
+        // Parse command
         let parsed = self.parse_command_parts(command)?;
 
-        // 写入缓存
+        // Write to cache
         if self.enable_cache {
             let mut cache = COMMAND_CACHE.write();
             cache.insert(command.to_string(), Arc::clone(&parsed));
@@ -85,10 +85,10 @@ impl CommandParser {
         Ok(parsed)
     }
 
-    /// 实际解析命令字符串
+    /// Actually parse command string
     fn parse_command_parts(&self, command: &str) -> Result<Arc<ParsedCommand>> {
-        // 使用 shell_words crate 处理引号和转义
-        // 如果 shell_words 不可用，使用简化版本
+        // Use shell_words crate to handle quotes and escapes
+        // If shell_words is not available, use simplified version
         let parts = self.split_command(command)?;
 
         if parts.is_empty() {
@@ -101,12 +101,12 @@ impl CommandParser {
         }))
     }
 
-    /// 分割命令字符串（简化版本）
+    /// Split command string (simplified version)
     ///
-    /// 支持：
-    /// - 单引号和双引号
-    /// - 转义字符
-    /// - 空格分隔
+    /// Supports:
+    /// - Single and double quotes
+    /// - Escape characters
+    /// - Space separation
     fn split_command(&self, command: &str) -> Result<Vec<String>> {
         let mut parts = Vec::new();
         let mut current = String::new();
@@ -164,9 +164,9 @@ impl CommandParser {
         Ok(parts)
     }
 
-    /// 验证命令安全性
+    /// Validate command security
     fn validate_security(&self, command: &str) -> Result<()> {
-        // 检查危险字符
+        // Check for dangerous characters
         const DANGEROUS_CHARS: &[char] = &['$', '`', '|', '&', ';', '\n', '\r'];
 
         for dangerous_char in DANGEROUS_CHARS {
@@ -178,7 +178,7 @@ impl CommandParser {
             }
         }
 
-        // 检查路径遍历
+        // Check for path traversal
         if command.contains("..") {
             return Err(BenchmarkError::Execution(format!(
                 "Path traversal detected in command: {}",
@@ -189,13 +189,13 @@ impl CommandParser {
         Ok(())
     }
 
-    /// 清空缓存（用于测试）
+    /// Clear cache (for testing)
     pub fn clear_cache() {
         let mut cache = COMMAND_CACHE.write();
         cache.clear();
     }
 
-    /// 获取缓存大小（用于监控）
+    /// Get cache size (for monitoring)
     pub fn cache_size() -> usize {
         let cache = COMMAND_CACHE.read();
         cache.len()
@@ -286,29 +286,29 @@ mod tests {
     #[ignore] // This test depends on global state and should run sequentially
               // Run with: cargo test -- --test-threads=1
     fn test_cache_functionality() {
-        // 注意：这个测试依赖全局状态，应该串行运行
-        // 使用：cargo test -- --test-threads=1
+        // Note: This test depends on global state and should run sequentially
+        // Run with: cargo test -- --test-threads=1
 
         CommandParser::clear_cache();
         let parser = CommandParser::new_unchecked();
 
-        // 使用唯一的命令来避免冲突
+        // Use a unique command to avoid conflicts
         let unique_cmd = format!("cargo build --test-unique-{}", std::process::id());
 
-        // 第一次解析
+        // First parse
         let cmd1 = parser.parse(&unique_cmd).unwrap();
         let size_after_first = CommandParser::cache_size();
 
-        // 第二次解析相同命令，应该从缓存返回
+        // Second parse of the same command, should return from cache
         let cmd2 = parser.parse(&unique_cmd).unwrap();
         let size_after_second = CommandParser::cache_size();
 
-        // 应该返回相同的 Arc 指针（缓存命中）
+        // Should return the same Arc pointer (cache hit)
         assert!(Arc::ptr_eq(&cmd1, &cmd2));
-        // 缓存大小不应该变化
+        // Cache size should not change
         assert_eq!(size_after_first, size_after_second);
 
-        // 验证解析结果正确
+        // Verify parse result is correct
         assert_eq!(cmd1.program, "cargo");
         assert!(cmd1.args.contains(&"build".to_string()));
     }

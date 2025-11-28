@@ -97,11 +97,14 @@ fn run_with_valida_cli(
     println!("🔨 Step 1: Loading guest binary...");
     let compile_start = Instant::now();
 
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
     let guest_paths = vec![
-        PathBuf::from("../valida-guest/target/valida-unknown-baremetal-gnu/release/valida-guest"),
-        PathBuf::from("valida-guest/target/valida-unknown-baremetal-gnu/release/valida-guest"),
-        PathBuf::from("../valida-guest/guest.bin"),
-        PathBuf::from("valida-guest/guest.bin"),
+        project_root.join("valida-guest/target/valida-unknown-baremetal-gnu/release/valida-guest"),
+        project_root.join("valida-guest/guest.bin"),
     ];
 
     let guest_binary = guest_paths.iter().find(|p| p.exists());
