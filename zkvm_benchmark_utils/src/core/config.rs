@@ -5,18 +5,49 @@ use crate::core::metrics::{ProofMode, ZkVmName};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+/// Helper struct to manage output paths
+pub struct BenchmarkPaths {
+    pub root: PathBuf,
+    pub raw_logs: PathBuf,
+    pub parsed_metrics: PathBuf,
+    pub reports: PathBuf,
+}
+
+impl Default for BenchmarkPaths {
+    fn default() -> Self {
+        Self::new("benchmark-results")
+    }
+}
+
+impl BenchmarkPaths {
+    pub fn new<P: AsRef<Path>>(root: P) -> Self {
+        let root = root.as_ref().to_path_buf();
+        Self {
+            raw_logs: root.join("raw-logs"),
+            parsed_metrics: root.join("parsed-metrics"),
+            reports: root.join("reports"),
+            root,
+        }
+    }
+}
 
 /// Main benchmark configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkConfig {
-    // TODO: here should be input of the program. Tmp only use Fibonacci, so test scales are Fibonacci numbers.
+    // TODO: here should be input of the program.
     pub test_scales: Vec<u32>,
     pub zkvms: HashMap<String, ZkVmConfig>,
+    #[serde(default = "default_output_dir")]
     pub output_dir: String,
     pub timeout_seconds: Option<u64>,
     // TOOD: remove
     pub repeat_count: Option<u32>,
+}
+
+fn default_output_dir() -> String {
+    "benchmark-results".to_string()
 }
 
 /// Configuration for a single zkVM
@@ -215,6 +246,16 @@ impl BenchmarkConfig {
             .iter()
             .filter(|(_, config)| config.enabled)
             .collect()
+    }
+
+    /// Get default paths
+    pub fn default_paths() -> BenchmarkPaths {
+        BenchmarkPaths::default()
+    }
+
+    /// Get paths based on output_dir
+    pub fn get_paths(&self) -> BenchmarkPaths {
+        BenchmarkPaths::new(&self.output_dir)
     }
 
     /// Get default configuration

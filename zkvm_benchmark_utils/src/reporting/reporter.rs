@@ -194,6 +194,24 @@ impl BenchmarkReporter {
                             entry.resources.avg_cpu_usage_percent = Some(stats.avg_cpu_percent);
                         }
                     }
+                } else {
+                     // Fallback: use values from metrics (which might have been populated from resource_stats during parsing)
+                     if matches!(mode, ProofMode::Groth16 | ProofMode::Plonk) {
+                        if metrics.resources.peak_memory_mb.is_some() {
+                            entry.resources.peak_memory_mb = metrics.resources.peak_memory_mb;
+                            entry.resources.avg_cpu_usage_percent = metrics.resources.avg_cpu_usage_percent;
+                        }
+                     } else if entry.resources.peak_memory_mb.is_none() {
+                         entry.resources.peak_memory_mb = metrics.resources.peak_memory_mb;
+                         entry.resources.avg_cpu_usage_percent = metrics.resources.avg_cpu_usage_percent;
+                     } else {
+                         let current = entry.resources.peak_memory_mb.unwrap_or(0.0);
+                         let new = metrics.resources.peak_memory_mb.unwrap_or(0.0);
+                         if new > current {
+                             entry.resources.peak_memory_mb = metrics.resources.peak_memory_mb;
+                             entry.resources.avg_cpu_usage_percent = metrics.resources.avg_cpu_usage_percent;
+                         }
+                     }
                 }
 
                 // 7. Success (Logical AND)

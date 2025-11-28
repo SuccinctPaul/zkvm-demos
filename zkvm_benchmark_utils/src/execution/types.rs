@@ -1,5 +1,6 @@
 use crate::core::metrics::{ProgramName, ProofMode, UnifiedMetrics, ZkVmName};
 use crate::execution::resource_monitor::ResourceStats;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
 pub struct TestRun {
@@ -18,4 +19,11 @@ pub struct ExecutionResult {
     pub success: bool,
     pub error: Option<String>,
     pub resource_stats: Option<ResourceStats>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ExecutionMetadata {
+    pub test_run: TestRun,
+    pub log_path: PathBuf,
+    pub resource_path: Option<PathBuf>,
 }
