@@ -61,8 +61,8 @@ pub fn execute_program(program_id: felt252, n: felt252) -> felt252 {
 /// Main function demonstrating the dispatcher
 fn main() -> felt252 {
     // In a real zkVM execution, these inputs would come from the prover arguments
-    let program_id: felt252 = 6; // Run Fibonacci
-    let n: felt252 = 1;
+    let program_id: felt252 = 0; // Run Fibonacci
+    let n: felt252 = 10;
     
     execute_program(program_id, n)
 }
