@@ -5,20 +5,12 @@
 # Default output directory
 OUTPUT_DIR ?= benchmark-results
 
-# Optional: programs filter (e.g., "fibonacci,hash")
-PROGRAMS ?=
-
-# Optional: scales filter (e.g., "10,20,100")
-SCALES ?=
-
 # Build arguments
 CARGO_RUN = cargo run --release --bin zkvm-benchmark --
 
-# Build the base command with optional filters (always outputs CSV)
+# Build the base command (always outputs CSV)
 define BENCH_CMD
-$(CARGO_RUN) run --output $(OUTPUT_DIR) --report-formats csv \
-	$(if $(PROGRAMS),--programs $(PROGRAMS)) \
-	$(if $(SCALES),--scales $(SCALES))
+$(CARGO_RUN) run --output $(OUTPUT_DIR) --report-formats csv
 endef
 
 # ============================================================================
@@ -27,11 +19,10 @@ endef
 
 .PHONY: help
 help: ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1m╔══════════════════════════════════════════════════════════════════╗\033[0m\n\033[1m║           zkVM Benchmark Makefile                                ║\033[0m\n\033[1m╚══════════════════════════════════════════════════════════════════╝\033[0m\n\nUsage:\n  make \033[36m<target>\033[0m [OPTIONS]\n\nOptions:\n  OUTPUT_DIR=<path>       Output directory (default: benchmark-results)\n  PROGRAMS=<list>         Programs to run (comma-separated)\n  SCALES=<list>           Scales to test (comma-separated)\n\nNote: All benchmarks output CSV format.\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1m╔══════════════════════════════════════════════════════════════════╗\033[0m\n\033[1m║           zkVM Benchmark Makefile                                ║\033[0m\n\033[1m╚══════════════════════════════════════════════════════════════════╝\033[0m\n\nUsage:\n  make \033[36m<target>\033[0m [OPTIONS]\n\nOptions:\n  OUTPUT_DIR=<path>       Output directory (default: benchmark-results)\n\nNote: All benchmarks output CSV format. Scales and programs are defined in config files.\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "Examples:"
 	@echo "  make bench_sp1"
-	@echo "  make bench_risc0 PROGRAMS=fibonacci SCALES=10,20"
 	@echo "  make bench_all OUTPUT_DIR=./results"
 	@echo ""
 
@@ -141,8 +132,8 @@ bench_wasm_based: ## Run WebAssembly based zkVMs
 bench_custom_vm: ## Run custom VM architectures
 	$(BENCH_CMD) --zkvms miden,cairo,cairom,valida,snarkvm,airbender,o1vm
 
-bench_fast: ## Quick benchmarks (sp1,risc0,jolt with scale=10)
-	$(BENCH_CMD) --zkvms sp1,risc0,jolt --scales 10
+bench_fast: ## Quick benchmarks (sp1,risc0,jolt)
+	$(BENCH_CMD) --zkvms sp1,risc0,jolt
 
 # ============================================================================
 ##@ Utilities
