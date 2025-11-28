@@ -4,7 +4,7 @@
 # o1vm is a MIPS-based zkVM using Kimchi proof system from o1Labs
 
 name = "o1vm"
-version = "v0.1.0-dev"
+version = "v0.1.0"
 enabled = false
 default_mode = "core"
 test_scales = [10, 20]

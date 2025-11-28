@@ -36,3 +36,6 @@ opt-level = 3
 [profile.release]
 debug = 1
 lto = true
+
+[patch."https://github.com/HorizenLabs/poseidon2.git"]
+zkhash = { git = "https://github.com/AntoineFONDEUR/poseidon2.git", branch = "poseidon2-M31" }

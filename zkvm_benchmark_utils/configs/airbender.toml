@@ -5,7 +5,7 @@
 # Note: This is a reference implementation; official SDK pending
 
 name = "airbender"
-version = "v0.1.0-dev"
+version = "v0.5.0"
 enabled = true
 default_mode = "core"
 

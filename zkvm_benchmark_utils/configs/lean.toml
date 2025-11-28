@@ -5,7 +5,7 @@
 # Note: This is a reference implementation
 
 name = "lean"
-version = "v0.1.0-dev"
+version = "v0.1.0"
 enabled = false
 default_mode = "core"
 

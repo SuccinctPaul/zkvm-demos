@@ -4,7 +4,7 @@
 # Novanet is a Nova-based folding scheme zkVM
 
 name = "novanet"
-version = "v0.1.0-dev"
+version = "v0.1.0"
 enabled = true
 default_mode = "core"
 test_scales = [10, 20]

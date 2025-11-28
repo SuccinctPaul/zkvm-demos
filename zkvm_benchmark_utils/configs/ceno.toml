@@ -8,7 +8,7 @@
 # Paper: https://eprint.iacr.org/2024/387
 
 name = "ceno"
-version = "v0.1.0-scroll"
+version = "v0.1.0"
 enabled = false
 default_mode = "core"
 test_scales = [10, 20]
