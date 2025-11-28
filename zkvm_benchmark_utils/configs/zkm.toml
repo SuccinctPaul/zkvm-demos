@@ -4,7 +4,7 @@
 # ZKM is a MIPS/RISC-V zkVM with Groth16/Plonk support
 
 name = "zkm"
-version = "v1.2.1"
+version = "v0.3.0" 
 enabled = true
 default_mode = "groth16"
 test_scales = [10, 20]
@@ -38,26 +38,65 @@ RUST_LOG = "debug"
 
 [parsed_metrics]
 # BENCHMARK format logs (primary)
-raw_program_name = 'BENCHMARK: program_name=(\w+)'
+raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
 raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
-raw_total_instruction_count = 'BENCHMARK: total_instruction_count=(\d+)'
-raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
-raw_execute_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
-raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+raw_execute_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
 
-# Legacy format fallback
+# Legacy / Alternative format fallback
 legacy_instruction_count = 'total_instruction_count=(\d+)'
 legacy_cycles = 'total_cycles=(\d+)'
 legacy_proof_size = 'proof size: (\d+) Bytes'
 
+# ================================================================
+# ZKM Trace & Proof Metrics
+# ================================================================
+
+# Wrap Phase (Recursion / Aggregation)
+wrap_bn254_time_s = 'wrap_bn254: wrap proving time: ([\d.]+)s'
+wrap_bn254_total_events = 'wrap_bn254: total events: (\d+)'
+wrap_bn254_merkle_build_time_s = 'wrap_bn254:prove_shards:open multi batches:build merkle tree: close time\.busy=([\d.]+)s'
+
+# Groth16 Phase
+groth16_r1cs_reading_time_s = 'Reading R1CS took ([\d.]+)s'
+groth16_proving_key_reading_time_s = 'Reading proving key took ([\d.]+)s'
+groth16_witness_reading_time_ms = 'Reading witness file took ([\d.]+)ms'
+groth16_witness_generation_time_ms = 'Generating witness took ([\d.]+)ms'
+groth16_constraint_count = 'nbConstraints=(\d+)'
+groth16_solver_time_ms = 'constraint system solver done.*took=([\d.]+)'
+groth16_prover_time_ms = 'prover done.*took=([\d.]+)'
+groth16_generation_time_s = 'Generating proof took ([\d.]+)s'
+groth16_verifier_time_ms = 'verifier done.*took=([\d.]+)'
+wrap_groth16_total_time_s = 'wrap_groth16_bn254: close time\.busy=([\d.]+)s'
+
+# Detailed Timing (similar to SP1 patterns)
+prove_shards_time_s = 'wrap_bn254:prove_shards: close time\.busy=([\d.]+)s'
+compute_quotient_time_ms = 'compute quotient values: close time\.busy=([\d.]+)ms'
+open_multi_batches_time_s = 'open multi batches: close time\.busy=([\d.]+)s'
+
+# Dimensions
+merkle_dimensions = 'dimensions="([^"]+)"'
+
 [metric_mapping]
-"instruction_count" = "raw_total_instruction_count"
-"total_cycles" = "raw_total_cycles"
+# Execution
+"instruction_count" = "legacy_instruction_count"
+"total_cycles" = "legacy_cycles"
 "execution_time_s" = "raw_execute_time_s"
-"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+
+# Verification
 "verification_time_s" = "raw_verification_time_s"
 "success_status" = "raw_success_status"
+
+# Groth16 / SNARK
+"snark_proof_size_bytes" = "raw_proof_size_bytes"
+"snark_setup_time_s" = "groth16_r1cs_reading_time_s"
+"snark_witness_time_s" = "groth16_witness_generation_time_ms" # Note: unit conversion needed if strictly s, but currently mapping preserves value
+"snark_constraint_count" = "groth16_constraint_count"
+"snark_proof_time_s" = "groth16_generation_time_s"
+
+# Aggregation / Recursion
+"aggressive_prove_time_s" = "wrap_bn254_time_s"
