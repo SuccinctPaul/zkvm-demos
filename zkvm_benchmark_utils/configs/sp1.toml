@@ -62,6 +62,8 @@ raw_verification_time_s = '(?:BENCHMARK: verification_time_s=|Verification Phase
 raw_on_chain_gas_estimate = 'BENCHMARK: on_chain_gas_estimate=(\d+)'
 raw_success_status = '(?:BENCHMARK: success_status=|success_status=)(\w+)'
 raw_execution_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
+raw_stage1_vm_prove_time_s = 'BENCHMARK: stage1_vm_prove_time_s=([\d.]+)'
+raw_stage2_recursive_time_s = 'BENCHMARK: stage2_recursive_time_s=([\d.]+)'
 raw_snark_type = 'prover done.*backend=(\w+)'
 
 # Other metrics extracted as is, decided later in metric_mapping whether to standardize
