@@ -5,7 +5,6 @@
 name = "sp1"
 version = "v5.2.2"
 enabled = true
-default_mode = "groth16"
 
 # Test Scales (Fibonacci N value)
 # Note: If programs are configured, test_scales will be ignored (kept for backward compatibility)

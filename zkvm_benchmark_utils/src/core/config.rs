@@ -25,7 +25,6 @@ pub struct ZkVmConfig {
     pub name: Option<ZkVmName>,
     pub version: Option<String>,
     pub enabled: bool,
-    pub default_mode: ProofMode,
     pub prove_modes: Vec<ProofMode>,
     /// Programs to test. If None or empty, defaults to [Fibonacci]
     pub programs: Option<Vec<ProgramConfig>>,
@@ -240,7 +239,6 @@ impl BenchmarkConfig {
                 name: Some(ZkVmName::Sp1),
                 version: Some("v4.0.0".to_string()),
                 enabled: true,
-                default_mode: ProofMode::Groth16,
                 prove_modes: vec![ProofMode::Core, ProofMode::Compressed, ProofMode::Groth16],
                 programs: Some(vec![ProgramConfig {
                     name: "fibonacci".to_string(),

@@ -5,7 +5,6 @@
 name = "risc0"
 version = "v3.0.3"
 enabled = true
-default_mode = "groth16"
 
 # 测试规模（程序输入 N 值）
 # 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）

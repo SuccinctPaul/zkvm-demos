@@ -685,7 +685,6 @@ mod tests {
             name: Some(ZkVmName::Sp1),
             version: None,
             enabled: true,
-            default_mode: ProofMode::Groth16,
             prove_modes: vec![ProofMode::Groth16],
             programs: None,
             test_scales: None,

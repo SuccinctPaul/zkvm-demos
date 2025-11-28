@@ -7,7 +7,6 @@
 name = "pico"
 version = "v1.1.6"
 enabled = true
-default_mode = "core"
 
 # 测试规模（程序输入 N 值）
 # 注意：如果配置了 programs，test_scales 将被忽略（向后兼容保留）

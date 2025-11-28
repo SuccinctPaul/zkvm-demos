@@ -6,7 +6,6 @@
 name = "valida"
 version = "v1.0.0"
 enabled = true  # Requires valida CLI; falls back to reference execution if missing
-default_mode = "core"
 test_scales = [10, 20]
 prove_modes = ["core"]
 

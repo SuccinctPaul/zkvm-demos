@@ -6,7 +6,6 @@
 name = "zkm"
 version = "v0.3.0"
 enabled = true
-default_mode = "groth16"
 test_scales = [10, 20]
 prove_modes = ["core", "compressed", "groth16"]
 

@@ -6,7 +6,6 @@
 name = "miden"
 version = "v0.11.0"
 enabled = true
-default_mode = "core"
 test_scales = [10, 20]
 prove_modes = ["core"]
 

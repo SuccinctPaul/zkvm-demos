@@ -7,7 +7,6 @@
 name = "powdr"
 version = "v0.1.0"
 enabled = true  # SDK support added; falls back to CLI/Reference if needed
-default_mode = "core"
 
 # Test scales (program input N values)
 test_scales = [10, 20]
