@@ -9,4 +9,5 @@ license = "MIT OR Apache-2.0"
 jolt-sdk = { git = "https://github.com/a16z/jolt", tag = "v0.3.0-alpha", features = ["host"] }
 guest = { package = "jolt-guest", path = "../jolt-guest" }
 zkvm_programs.workspace = true
+ark-serialize = { git = "https://github.com/a16z/arkworks-algebra", branch = "feat/fewer-reductions" }
 

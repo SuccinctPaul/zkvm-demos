@@ -20,7 +20,7 @@ prove_modes = ["core"]
 working_dir = "../airbender-zkvm"
 
 # Build and run commands
-build_command = "cargo build --release -p airbender-host"
+build_command = "./build_all.sh"
 run_command = "./target/release/airbender-host"
 
 # Timeout settings (seconds)
@@ -48,6 +48,7 @@ scales = [1, 10, 50]
 [env_vars]
 RUSTFLAGS = "-C target-cpu=native"
 RUST_LOG = "debug"
+AIRBENDER_GUEST_BIN = "target/riscv32im-unknown-none-elf/release/airbender-guest"
 # Note: AIRBENDER_PROOF_MODE is injected by the runner
 
 # ----------------------------------------------------------------
@@ -119,6 +120,7 @@ legacy_verification_time = 'Proof verification completed in ([\d.]+)s'
 "execution_time_s" = "raw_execution_time_s"
 "total_cycles" = "raw_total_cycles"
 "instruction_count" = "raw_instruction_count"
+"output_result" = "raw_output_result"
 
 # ====================
 # 3. Proving Phase
@@ -139,4 +141,3 @@ legacy_verification_time = 'Proof verification completed in ([\d.]+)s'
 # ====================
 "success_status" = "raw_success_status"
 "total_time_s" = "raw_total_time_s"
-

@@ -19,7 +19,7 @@ pub fn main() {
 
     let target_dir = "/tmp/jolt-guest-targets";
     let mut program = guest::compile_execute_program(target_dir);
-    println!("   ℹ️  Program info: {:?}", program);
+    // println!("   ℹ️  Program info: {:?}", program);
 
     let compile_duration = compile_start.elapsed();
     println!(
@@ -60,7 +60,7 @@ pub fn main() {
     let (output, proof, _commitments) = prove_exec(input.program.id(), input.n);
 
     let proof_size_bytes = {
-        use jolt_sdk::CanonicalSerialize;
+        use ark_serialize::CanonicalSerialize;
         let mut bytes = Vec::new();
         proof.serialize_compressed(&mut bytes).expect("Failed to serialize proof");
         bytes.len()

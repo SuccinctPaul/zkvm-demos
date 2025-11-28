@@ -72,9 +72,3 @@ unsafe fn workload() -> ! {
 fn main() -> ! {
     unsafe { workload() }
 }
-
-// Panic handler for no_std
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
