@@ -191,32 +191,29 @@ impl BenchmarkExecutor {
             let programs = zkvm_config.get_programs();
             let repeat_count = self.config.repeat_count.unwrap_or(1);
 
-            // Use only the highest priority proof mode
-            // Priority: Groth16 > Plonk > Compressed > Core
-            let highest_mode = ProofMode::highest_from(&zkvm_config.prove_modes);
-            info!(
-                "  📌 {} using highest proof mode: {} (from {:?})",
-                zkvm_name, highest_mode, zkvm_config.prove_modes
-            );
+            // Iterate over ALL configured prove modes
+            for mode in &zkvm_config.prove_modes {
+                info!("  📌 {} queueing tasks for mode: {}", zkvm_name, mode);
 
-            for program_config in &programs {
-                // Parse program name
-                let program_name = program_config
-                    .name
-                    .parse::<ProgramName>()
-                    .unwrap_or_else(|_| ProgramName::Custom(program_config.name.clone()));
+                for program_config in &programs {
+                    // Parse program name
+                    let program_name = program_config
+                        .name
+                        .parse::<ProgramName>()
+                        .unwrap_or_else(|_| ProgramName::Custom(program_config.name.clone()));
 
-                for scale in &program_config.scales {
-                    for repeat in 1..=repeat_count {
-                        let test_run = TestRun {
-                            zkvm_name: zkvm_name_enum.clone(),
-                            program_name: program_name.clone(),
-                            mode: highest_mode.clone(),
-                            scale: *scale,
-                            repeat,
-                        };
+                    for scale in &program_config.scales {
+                        for repeat in 1..=repeat_count {
+                            let test_run = TestRun {
+                                zkvm_name: zkvm_name_enum.clone(),
+                                program_name: program_name.clone(),
+                                mode: mode.clone(),
+                                scale: *scale,
+                                repeat,
+                            };
 
-                        tasks.push(((*zkvm_name).clone(), (*zkvm_config).clone(), test_run));
+                            tasks.push(((*zkvm_name).clone(), (*zkvm_config).clone(), test_run));
+                        }
                     }
                 }
             }
