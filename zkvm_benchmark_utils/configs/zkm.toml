@@ -56,12 +56,22 @@ legacy_proof_size = 'proof size: (\d+) Bytes'
 # ZKM Trace & Proof Metrics
 # ================================================================
 
-# Wrap Phase (Recursion / Aggregation)
-wrap_bn254_time_s = 'wrap_bn254: wrap proving time: ([\d.]+)s'
+# Core Phase (VM Execution & Trace Generation)
+core_proof_total_time_s = 'prove_core:phase 2 prover: close time\.busy=([\d.]+)s'
+
+# Compress Phase (Recursion Layer 1)
+compress_total_time_s = 'compress: close time\.busy=([\d.]+)s'
+
+# Shrink Phase (Recursion Layer 2)
+shrink_total_time_s = 'shrink: close time\.busy=([\d.]+)s'
+
+# Wrap Phase (Recursion Layer 3 / Aggregation)
+wrap_bn254_proving_time_s = 'wrap_bn254: wrap proving time: ([\d.]+)s'
+wrap_bn254_total_time_s = 'wrap_bn254: close time\.busy=([\d.]+)s'
 wrap_bn254_total_events = 'wrap_bn254: total events: (\d+)'
 wrap_bn254_merkle_build_time_s = 'wrap_bn254:prove_shards:open multi batches:build merkle tree: close time\.busy=([\d.]+)s'
 
-# Groth16 Phase
+# Groth16 Phase (Final SNARK)
 groth16_r1cs_reading_time_s = 'Reading R1CS took ([\d.]+)s'
 groth16_proving_key_reading_time_s = 'Reading proving key took ([\d.]+)s'
 groth16_witness_reading_time_ms = 'Reading witness file took ([\d.]+)ms'
@@ -73,8 +83,8 @@ groth16_generation_time_s = 'Generating proof took ([\d.]+)s'
 groth16_verifier_time_ms = 'verifier done.*took=([\d.]+)'
 wrap_groth16_total_time_s = 'wrap_groth16_bn254: close time\.busy=([\d.]+)s'
 
-# Detailed Timing (similar to SP1 patterns)
-prove_shards_time_s = 'wrap_bn254:prove_shards: close time\.busy=([\d.]+)s'
+# Detailed Timing (Generic)
+prove_shards_time_s = 'prove_shards: close time\.busy=([\d.]+)s'
 compute_quotient_time_ms = 'compute quotient values: close time\.busy=([\d.]+)ms'
 open_multi_batches_time_s = 'open multi batches: close time\.busy=([\d.]+)s'
 
@@ -87,6 +97,14 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 "total_cycles" = "legacy_cycles"
 "execution_time_s" = "raw_execute_time_s"
 
+# VM Circuit
+"vm_prove_time_s" = "core_proof_total_time_s"
+
+# Aggressive / Recursion
+# Mapping the wrap phase total time as the aggressive prove time, 
+# as it seems to be the dominant recursion step in ZKM logs.
+"aggressive_prove_time_s" = "wrap_bn254_total_time_s"
+
 # Verification
 "verification_time_s" = "raw_verification_time_s"
 "success_status" = "raw_success_status"
@@ -94,9 +112,6 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 # Groth16 / SNARK
 "snark_proof_size_bytes" = "raw_proof_size_bytes"
 "snark_setup_time_s" = "groth16_r1cs_reading_time_s"
-"snark_witness_time_s" = "groth16_witness_generation_time_ms" # Note: unit conversion needed if strictly s, but currently mapping preserves value
+"snark_witness_time_s" = "groth16_witness_generation_time_ms" 
 "snark_constraint_count" = "groth16_constraint_count"
 "snark_proof_time_s" = "groth16_generation_time_s"
-
-# Aggregation / Recursion
-"aggressive_prove_time_s" = "wrap_bn254_time_s"

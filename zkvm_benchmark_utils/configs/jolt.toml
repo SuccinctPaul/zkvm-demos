@@ -53,6 +53,9 @@ raw_build_time_s = '(?:BENCHMARK: build_time_s=|✓ Build completed in )([\d.]+)
 # Matches "BENCHMARK: proof_time_s=1.44" OR "   ✓ Proof generated in 1.44s"
 raw_proof_time_s = '(?:BENCHMARK: proof_time_s=|✓ Proof generated in )([\d.]+)'
 
+# Matches "BENCHMARK: proof_size_bytes=12345"
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
 # Matches "BENCHMARK: total_prove_time_s=3.29" OR "Total prove time: 3.29s"
 raw_total_prove_time_s = '(?:BENCHMARK: total_prove_time_s=|Total prove time:\s+)([\d.]+)'
 
@@ -80,6 +83,7 @@ legacy_total_prove_time = 'Total prove time:\s+([\d.]+)s'
 "preprocess_time_s" = "raw_preprocess_time_s"
 "build_time_s" = "raw_build_time_s"
 "vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
 "total_prove_time_s" = "raw_total_prove_time_s"
 "verification_time_s" = "raw_verification_time_s"
 "success_status" = "raw_success_status"

@@ -19,6 +19,7 @@ pub fn main() {
 
     let target_dir = "/tmp/jolt-guest-targets";
     let mut program = guest::compile_execute_program(target_dir);
+    println!("   ℹ️  Program info: {:?}", program);
 
     let compile_duration = compile_start.elapsed();
     println!(
@@ -58,11 +59,19 @@ pub fn main() {
 
     let (output, proof, _commitments) = prove_exec(input.program.id(), input.n);
 
+    let proof_size_bytes = {
+        use jolt_sdk::CanonicalSerialize;
+        let mut bytes = Vec::new();
+        proof.serialize_compressed(&mut bytes).expect("Failed to serialize proof");
+        bytes.len()
+    };
+
     let prove_duration = prove_start.elapsed();
     println!(
         "   ✓ Proof generated in {:.2}s",
         prove_duration.as_secs_f64()
     );
+    println!("   ✓ Proof size: {} bytes", proof_size_bytes);
     println!("   ✓ Result: {}\n", output);
 
     // Calculate total prove time (preprocessing + build + prove)
@@ -105,6 +114,7 @@ pub fn main() {
     println!("BENCHMARK: preprocess_time_s={:.6}", preprocess_duration.as_secs_f64());
     println!("BENCHMARK: build_time_s={:.6}", build_duration.as_secs_f64());
     println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_size_bytes={}", proof_size_bytes);
     println!("BENCHMARK: total_prove_time_s={:.6}", total_prove_time.as_secs_f64());
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
     println!("BENCHMARK: total_time_s={:.6}", total_time.as_secs_f64());
