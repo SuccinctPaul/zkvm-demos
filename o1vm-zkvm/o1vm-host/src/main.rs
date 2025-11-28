@@ -81,7 +81,13 @@ fn main() -> Result<()> {
     println!("1️⃣  Loading MIPS binary...");
     let compile_start = Instant::now();
 
-    let elf_path = Path::new("../o1vm-guest/main.elf");
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
+    let elf_path_buf = project_root.join("o1vm-guest/main.elf");
+    let elf_path = elf_path_buf.as_path();
     let state_result = if elf_path.exists() {
         // Load actual MIPS ELF if available
         println!("   Found MIPS ELF at: {:?}", elf_path);
@@ -99,7 +105,8 @@ fn main() -> Result<()> {
         }
     } else {
         // Try to find pre-built state.json
-        let state_path = Path::new("../o1vm-guest/state.json");
+        let state_path_buf = project_root.join("o1vm-guest/state.json");
+        let state_path = state_path_buf.as_path();
         if state_path.exists() {
             println!("   Found state.json at: {:?}", state_path);
             match load_state_json(state_path) {

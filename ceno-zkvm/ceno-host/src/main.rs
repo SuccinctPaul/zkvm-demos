@@ -56,11 +56,15 @@ fn main() {
     println!("🔨 Step 1: Loading guest ELF binary...");
     let load_start = Instant::now();
 
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
     // Try to find pre-built ELF
     let elf_paths = vec![
-        PathBuf::from("../ceno-guest/target/riscv32im-ceno-zkvm-elf/release/ceno-guest"),
-        PathBuf::from("ceno-guest/target/riscv32im-ceno-zkvm-elf/release/ceno-guest"),
-        PathBuf::from("target/riscv32im-ceno-zkvm-elf/release/ceno-guest"),
+        project_root.join("ceno-guest/target/riscv32im-ceno-zkvm-elf/release/ceno-guest"),
+        project_root.join("target/riscv32im-ceno-zkvm-elf/release/ceno-guest"),
     ];
 
     let elf_result = elf_paths.iter().find_map(|path| {
@@ -199,10 +203,14 @@ fn run_with_ceno(
 
 /// Find CENO CLI
 fn find_ceno_cli() -> Option<PathBuf> {
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
     // Try to find ceno e2e binary
     let paths = vec![
-        PathBuf::from("target/release/e2e"),
-        PathBuf::from("../target/release/e2e"),
+        project_root.join("target/release/e2e"),
     ];
 
     paths.into_iter().find(|p| p.exists())

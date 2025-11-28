@@ -358,10 +358,14 @@ fn run_with_powdr_cli(
 
 /// Find pre-compiled powdr-asm file
 fn find_powdr_asm() -> Option<PathBuf> {
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
     let paths = vec![
-        PathBuf::from("../powdr-guest/target/powdr-asm/guest.asm"),
-        PathBuf::from("powdr-guest/target/powdr-asm/guest.asm"),
-        PathBuf::from("output/guest.asm"),
+        project_root.join("powdr-guest/target/powdr-asm/guest.asm"),
+        project_root.join("output/guest.asm"),
         PathBuf::from("guest.asm"),
     ];
 
@@ -370,9 +374,13 @@ fn find_powdr_asm() -> Option<PathBuf> {
 
 /// Find guest source for compilation
 fn find_guest_source() -> Option<PathBuf> {
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
     let paths = vec![
-        PathBuf::from("../powdr-guest"),
-        PathBuf::from("powdr-guest"),
+        project_root.join("powdr-guest"),
     ];
 
     paths.into_iter().find(|p| p.join("Cargo.toml").exists())

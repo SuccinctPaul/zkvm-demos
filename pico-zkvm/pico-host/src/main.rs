@@ -31,17 +31,20 @@ fn main() -> anyhow::Result<()> {
 
     // Load the guest program ELF
     // Try multiple possible ELF locations
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
     let elf_paths = vec![
-        "../pico-guest/elf/riscv32im-pico-zkvm-elf",
-        "../pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest",
-        "pico-guest/elf/riscv32im-pico-zkvm-elf",
-        "pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest",
+        project_root.join("pico-guest/elf/riscv32im-pico-zkvm-elf"),
+        project_root.join("pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest"),
     ];
 
     let mut elf = None;
     for path in &elf_paths {
         if let Ok(data) = std::fs::read(path) {
-            println!("Loaded ELF from: {}", path);
+            println!("Loaded ELF from: {:?}", path);
             elf = Some(data);
             break;
         }
