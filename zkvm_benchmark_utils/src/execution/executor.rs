@@ -553,7 +553,7 @@ impl BenchmarkExecutor {
         // Clear toolchain environment variables to allow directory-specific rust-toolchain.toml to work
         cmd.env_remove("RUSTUP_TOOLCHAIN");
         cmd.env_remove("RUSTC");
-        
+
         cmd.envs(env_vars);
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
