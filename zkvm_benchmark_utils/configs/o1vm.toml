@@ -23,7 +23,7 @@ scales = [50, 100]
 
 [[programs]]
 name = "hash"
-scales = [500, 1000]
+scales = [500]
 
 [[programs]]
 name = "sig"

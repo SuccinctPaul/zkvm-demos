@@ -36,7 +36,7 @@ scales = [50, 100]
 
 [[programs]]
 name = "hash"
-scales = [500, 1000]
+scales = [500]
 
 [[programs]]
 name = "sig"
@@ -48,7 +48,7 @@ scales = [1, 10, 50]
 [env_vars]
 RUSTFLAGS = "-C target-cpu=native"
 RUST_LOG = "debug"
-AIRBENDER_GUEST_BIN = "target/riscv32im-unknown-none-elf/release/airbender-guest"
+AIRBENDER_GUEST_BIN = "target/riscv32im-unknown-none-elf/release/airbender-guest.bin"
 # Note: AIRBENDER_PROOF_MODE is injected by the runner
 
 # ----------------------------------------------------------------
