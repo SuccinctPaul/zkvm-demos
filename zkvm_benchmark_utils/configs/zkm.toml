@@ -49,6 +49,10 @@ raw_vm_core_proof_size_bytes = 'BENCHMARK: vm_core_proof_size_bytes=(\d+)'
 raw_compressed_proof_size_bytes = 'BENCHMARK: compressed_proof_size_bytes=(\d+)'
 raw_groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
 raw_execute_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
+raw_stage1_vm_prove_time_s = 'BENCHMARK: stage1_vm_prove_time_s=([\d.]+)'
+raw_stage2_recursive_time_s = 'BENCHMARK: stage2_recursive_time_s=([\d.]+)'
+raw_total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
+raw_final_proof_size_bytes = 'BENCHMARK: final_proof_size_bytes=(\d+)'
 
 # Legacy / Alternative format fallback
 legacy_instruction_count = 'total_instruction_count=(\d+)'
@@ -101,13 +105,13 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 "execution_time_s" = "raw_execute_time_s"
 
 # VM Circuit
-"vm_prove_time_s" = "core_proof_total_time_s"
+"vm_prove_time_s" = "raw_stage1_vm_prove_time_s"
 "vm_prove_proof_size_bytes" = "raw_vm_core_proof_size_bytes"
 
 # Aggressive / Recursion
 # Mapping the wrap phase total time as the aggressive prove time, 
 # as it seems to be the dominant recursion step in ZKM logs.
-"aggressive_prove_time_s" = "wrap_bn254_total_time_s"
+"aggressive_prove_time_s" = "raw_stage2_recursive_time_s"
 "aggressive_proof_size_bytes" = "raw_compressed_proof_size_bytes"
 
 # Verification
@@ -119,4 +123,4 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 "snark_setup_time_s" = "groth16_r1cs_reading_time_s"
 "snark_witness_time_s" = "groth16_witness_generation_time_ms" 
 "snark_constraint_count" = "groth16_constraint_count"
-"snark_proof_time_s" = "groth16_generation_time_s"
+"snark_proof_time_s" = "raw_total_prove_time_s"

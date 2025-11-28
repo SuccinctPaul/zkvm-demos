@@ -10,7 +10,6 @@
 //! ```
 
 
-use clap::Parser;
 use sp1_sdk::{include_elf, ProverClient, SP1Proof, SP1ProofMode, SP1Stdin};
 use std::time::Instant;
 

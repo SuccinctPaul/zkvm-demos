@@ -5573,7 +5573,6 @@ name = "sp1-host"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "clap",
  "dotenv",
  "once_cell",
  "serde_json",
