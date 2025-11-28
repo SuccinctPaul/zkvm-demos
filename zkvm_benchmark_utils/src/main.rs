@@ -25,7 +25,7 @@ struct Cli {
 enum Commands {
     /// Run benchmarks (Full Pipeline: Execute -> Parse -> Report)
     Benchmark {
-        /// Output directory (overrides config)
+        /// Root output directory (default: benchmark-results)
         #[arg(short, long)]
         output: Option<PathBuf>,
 
@@ -44,7 +44,7 @@ enum Commands {
 
     /// Legacy Run command (Alias for Benchmark)
     Run {
-        /// Output directory (overrides config)
+        /// Root output directory (default: benchmark-results)
         #[arg(short, long)]
         output: Option<PathBuf>,
 
@@ -62,8 +62,9 @@ enum Commands {
     },
 
     /// Phase 1: Execute benchmarks (Executes zkVMs and saves raw logs)
+    /// Note: Execution is strictly sequential to ensure accurate benchmarking.
     Execute {
-        /// Output directory (overrides config)
+        /// Root output directory (logs saved to output/raw-logs)
         #[arg(short, long)]
         output: Option<PathBuf>,
 
@@ -77,8 +78,9 @@ enum Commands {
     },
 
     /// Phase 2: Parse raw logs (Parses logs from raw-logs directory -> output/parsed-metrics)
+    /// Note: Parsing is parallelized for performance.
     Parse {
-        /// Output directory for parsed-metrics (overrides config)
+        /// Root output directory (metrics saved to output/parsed-metrics)
         #[arg(short, long)]
         output: Option<PathBuf>,
 
@@ -88,8 +90,9 @@ enum Commands {
     },
 
     /// Phase 3: Generate reports (Generates reports from parsed-metrics directory -> output/reports)
+    /// Note: Metrics loading is parallelized.
     Report {
-        /// Output directory for reports (overrides config)
+        /// Root output directory (reports saved to output/reports)
         #[arg(short, long)]
         output: Option<PathBuf>,
 
