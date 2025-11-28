@@ -9,7 +9,7 @@
 
 name = "ceno"
 version = "v0.1.0-scroll"
-enabled = false  # Requires ceno_zkvm crate for real proving; only reference execution available
+enabled = false
 default_mode = "core"
 test_scales = [10, 20]
 prove_modes = ["core"]
