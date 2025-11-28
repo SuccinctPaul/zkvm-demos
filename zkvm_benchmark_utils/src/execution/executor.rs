@@ -19,6 +19,7 @@ use std::time::Duration;
 
 use chrono;
 use log::{error, info, warn};
+use rayon::prelude::*;
 use regex::Regex;
 use tokio::process::Command;
 use tokio::time::timeout;
@@ -176,7 +177,7 @@ impl BenchmarkExecutor {
     /// Execute all benchmarks (Phase 1 only)
     pub async fn execute_all_only(&self) -> Result<Vec<ExecutionMetadata>> {
         info!("🚀 Starting benchmark execution (Phase 1: Execute & Save Logs)");
-        
+
         let enabled_zkvms = self.config.enabled_zkvms();
         if enabled_zkvms.is_empty() {
             return Err(BenchmarkError::Config("No enabled zkVMs found".to_string()));
@@ -188,7 +189,7 @@ impl BenchmarkExecutor {
         let mut results = Vec::new();
 
         for (zkvm_name, zkvm_config, test_run) in test_tasks {
-             info!(
+            info!(
                 "▶ Running: {} mode={} scale={} repeat={}/{}",
                 test_run.zkvm_name,
                 test_run.mode,
@@ -197,13 +198,16 @@ impl BenchmarkExecutor {
                 self.config.repeat_count.unwrap_or(1)
             );
 
-            match self.execute_task_only(&zkvm_name, &zkvm_config, &test_run).await {
+            match self
+                .execute_task_only(&zkvm_name, &zkvm_config, &test_run)
+                .await
+            {
                 Ok((metadata, _, _)) => {
                     info!("✓ Completed execution: {}", metadata.log_path.display());
                     results.push(metadata);
                 }
                 Err(e) => {
-                     error!(
+                    error!(
                         "✗ Execution Error: {} {} scale={}: {}",
                         zkvm_name, test_run.mode, test_run.scale, e
                     );
@@ -215,128 +219,150 @@ impl BenchmarkExecutor {
     }
 
     /// Parse all logs in raw-logs directory (Phase 2 only)
-    pub fn parse_all_logs(&self, custom_raw_logs_dir: Option<PathBuf>) -> Result<Vec<ExecutionResult>> {
+    pub fn parse_all_logs(
+        &self,
+        custom_raw_logs_dir: Option<PathBuf>,
+    ) -> Result<Vec<ExecutionResult>> {
         info!("🔍 Starting log parsing (Phase 2: Parse Logs -> Metrics)");
-        
+
         let paths = self.config.get_paths();
         let raw_logs_dir = if let Some(dir) = custom_raw_logs_dir {
             dir
         } else {
-             paths.raw_logs
+            paths.raw_logs
         };
 
         if !raw_logs_dir.exists() {
-             return Err(BenchmarkError::Config(format!("raw-logs directory not found: {}", raw_logs_dir.display())));
+            return Err(BenchmarkError::Config(format!(
+                "raw-logs directory not found: {}",
+                raw_logs_dir.display()
+            )));
         }
 
         info!("📖 Reading raw logs from: {}", raw_logs_dir.display());
 
-        let mut results = Vec::new();
-        
+        // Collect all potential log files first
+        let log_entries: Vec<PathBuf> = fs::read_dir(&raw_logs_dir)?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| path.extension().and_then(|s| s.to_str()) == Some("log"))
+            .collect();
+
+        info!(
+            "⚡ Processing {} log files in parallel...",
+            log_entries.len()
+        );
+
         // Regex to parse filename: timestamp_zkvm_mode_program_scale.log
+        // Compile regex once (though Regex::new is somewhat expensive, we can use lazy_static or just create it here)
         let filename_re = Regex::new(r"^(\d{8}-\d{6})_([^_]+)_([^_]+)_([^_]+)_(.+)\.log$").unwrap();
 
-        for entry in fs::read_dir(&raw_logs_dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            
-            if path.extension().and_then(|s| s.to_str()) == Some("log") {
-                let filename = path.file_name().and_then(|s| s.to_str()).unwrap_or_default();
-                
-                if let Some(caps) = filename_re.captures(filename) {
-                    let _timestamp = &caps[1];
-                    let zkvm_str = &caps[2];
-                    let mode_str = &caps[3];
-                    let program_str = &caps[4];
-                    let scale_str = &caps[5];
+        // Use rayon for parallel processing
+        let results: Vec<ExecutionResult> = log_entries
+            .par_iter()
+            .filter_map(|path| {
+                let filename = path
+                    .file_name()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or_default();
 
-                    // Reconstruct TestRun context (best effort)
-                    let zkvm_name_enum = match zkvm_str.parse::<ZkVmName>() {
-                        Ok(z) => z,
-                        Err(_) => {
-                            warn!("Unknown zkVM name in filename: {}", zkvm_str);
-                            continue;
-                        }
-                    };
+                let caps = filename_re.captures(filename)?;
+                let _timestamp = &caps[1];
+                let zkvm_str = &caps[2];
+                let mode_str = &caps[3];
+                let program_str = &caps[4];
+                let scale_str = &caps[5];
 
-                    // Find config
-                    let zkvm_config = match self.config.zkvms.get(zkvm_str) {
-                        Some(c) => c,
-                        None => {
-                             warn!("Config not found for zkVM: {}", zkvm_str);
-                             continue;
-                        }
-                    };
-
-                    let mode = mode_str.parse::<ProofMode>().unwrap_or(ProofMode::Groth16); // Fallback?
-                    
-                    let program_name = program_str.parse::<ProgramName>()
-                        .unwrap_or_else(|_| ProgramName::Custom(program_str.to_string()));
-                    
-                    let scale = scale_str.parse::<u32>().unwrap_or(0);
-
-                    // Look for resource file (in the same directory as log file)
-                    let base_name = path.file_stem().and_then(|s| s.to_str()).unwrap();
-                    let resource_path = raw_logs_dir.join(format!("{}_resource.json", base_name));
-                    
-                    let resource_stats = if resource_path.exists() {
-                        match fs::read_to_string(&resource_path) {
-                            Ok(content) => serde_json::from_str::<ResourceStats>(&content).ok(),
-                            Err(_) => None
-                        }
-                    } else {
-                        None
-                    };
-
-                    let log_content = fs::read_to_string(&path)?;
-                    
-                    // Parse
-                    let metrics_result = self.process_log(
-                        &log_content,
-                        &zkvm_name_enum,
-                        zkvm_config,
-                        &mode,
-                        &program_name,
-                        scale_str,
-                        resource_stats.as_ref()
-                    );
-
-                    // Save metrics if successful
-                    if let Ok(Some(ref m)) = metrics_result {
-                        let metrics_filename = format!("{}.json", base_name);
-                        let metrics_path = paths.parsed_metrics.join(&metrics_filename);
-                         if let Ok(metrics_json) = serde_json::to_string_pretty(m) {
-                            let _ = fs::write(&metrics_path, metrics_json);
-                            info!("  💾 Metrics saved: {}", metrics_path.display());
-                        }
+                // Reconstruct TestRun context (best effort)
+                let zkvm_name_enum = match zkvm_str.parse::<ZkVmName>() {
+                    Ok(z) => z,
+                    Err(_) => {
+                        // warn!("Unknown zkVM name in filename: {}", zkvm_str); // Cannot warn easily in parallel iterator without mutex on stdout? log crate handles it but might interleave.
+                        return None;
                     }
+                };
 
-                    let (metrics, error) = match metrics_result {
-                        Ok(m) => (m, None),
-                        Err(e) => (None, Some(e.to_string())),
-                    };
-                    
-                     // Basic check for success based on metrics presence
-                    let success = metrics.is_some(); 
+                // Find config
+                let zkvm_config = match self.config.zkvms.get(zkvm_str) {
+                    Some(c) => c,
+                    None => {
+                        // warn!("Config not found for zkVM: {}", zkvm_str);
+                        return None;
+                    }
+                };
 
-                    results.push(ExecutionResult {
-                        test_run: TestRun {
-                            zkvm_name: zkvm_name_enum,
-                            program_name,
-                            mode,
-                            scale,
-                            repeat: 1, // Unknown from filename, assume 1
-                        },
-                        metrics,
-                        log_content: String::new(), // Don't load full content into memory for results list
-                        success,
-                        error,
-                        resource_stats,
-                    });
+                let mode = mode_str.parse::<ProofMode>().unwrap_or(ProofMode::Groth16); // Fallback?
+
+                let program_name = program_str
+                    .parse::<ProgramName>()
+                    .unwrap_or_else(|_| ProgramName::Custom(program_str.to_string()));
+
+                let scale = scale_str.parse::<u32>().unwrap_or(0);
+
+                // Look for resource file (in the same directory as log file)
+                let base_name = path.file_stem().and_then(|s| s.to_str()).unwrap();
+                let resource_path = raw_logs_dir.join(format!("{}_resource.json", base_name));
+
+                let resource_stats = if resource_path.exists() {
+                    match fs::read_to_string(&resource_path) {
+                        Ok(content) => serde_json::from_str::<ResourceStats>(&content).ok(),
+                        Err(_) => None,
+                    }
+                } else {
+                    None
+                };
+
+                let log_content = match fs::read_to_string(&path) {
+                    Ok(c) => c,
+                    Err(_) => return None,
+                };
+
+                // Parse
+                let metrics_result = self.process_log(
+                    &log_content,
+                    &zkvm_name_enum,
+                    zkvm_config,
+                    &mode,
+                    &program_name,
+                    scale_str,
+                    resource_stats.as_ref(),
+                );
+
+                // Save metrics if successful
+                if let Ok(Some(ref m)) = metrics_result {
+                    let metrics_filename = format!("{}.json", base_name);
+                    let metrics_path = paths.parsed_metrics.join(&metrics_filename);
+                    if let Ok(metrics_json) = serde_json::to_string_pretty(m) {
+                        let _ = fs::write(&metrics_path, metrics_json);
+                        // info!("  💾 Metrics saved: {}", metrics_path.display()); // Avoid spamming info logs in parallel
+                    }
                 }
-            }
-        }
-        
+
+                let (metrics, error) = match metrics_result {
+                    Ok(m) => (m, None),
+                    Err(e) => (None, Some(e.to_string())),
+                };
+
+                // Basic check for success based on metrics presence
+                let success = metrics.is_some();
+
+                Some(ExecutionResult {
+                    test_run: TestRun {
+                        zkvm_name: zkvm_name_enum,
+                        program_name,
+                        mode,
+                        scale,
+                        repeat: 1, // Unknown from filename, assume 1
+                    },
+                    metrics,
+                    log_content: String::new(), // Don't load full content into memory for results list
+                    success,
+                    error,
+                    resource_stats,
+                })
+            })
+            .collect();
+
         info!("✅ Parsed {} logs", results.len());
         Ok(results)
     }
@@ -362,10 +388,7 @@ impl BenchmarkExecutor {
 
             // Iterate over ALL configured prove modes
             for mode in &zkvm_config.prove_modes {
-                info!(
-                    "  📌 {} queueing tasks for mode: {}",
-                    zkvm_name, mode
-                );
+                info!("  📌 {} queueing tasks for mode: {}", zkvm_name, mode);
 
                 for program_config in &programs {
                     // Parse program name
@@ -402,7 +425,10 @@ impl BenchmarkExecutor {
         test_run: &TestRun,
     ) -> Result<ExecutionResult> {
         // Phase 1: Execute
-        let (metadata, log_content, resource_stats) = match self.execute_task_only(zkvm_name, zkvm_config, test_run).await {
+        let (metadata, log_content, resource_stats) = match self
+            .execute_task_only(zkvm_name, zkvm_config, test_run)
+            .await
+        {
             Ok(res) => res,
             Err(e) => {
                 // If execution failed (e.g. build error propagated as Err), create a failed result
@@ -422,7 +448,7 @@ impl BenchmarkExecutor {
         // Phase 2: Parse
         // Use the log content we just got
         let cleaned_log = strip_ansi_codes(&log_content);
-        
+
         let metrics_result = self.process_log(
             &cleaned_log,
             &test_run.zkvm_name,
@@ -437,10 +463,14 @@ impl BenchmarkExecutor {
         // We should ensure process_log logic matches.
         // In my new parse_all_logs, I manually save.
         // In run_single_task, I should also save to maintain behavior.
-        
+
         let paths = self.config.get_paths();
         if let Ok(Some(ref m)) = metrics_result {
-            let base_name = metadata.log_path.file_stem().and_then(|s| s.to_str()).unwrap();
+            let base_name = metadata
+                .log_path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap();
             let metrics_filename = format!("{}.json", base_name);
             let metrics_path = paths.parsed_metrics.join(&metrics_filename);
             if let Ok(metrics_json) = serde_json::to_string_pretty(m) {
@@ -565,15 +595,15 @@ impl BenchmarkExecutor {
         // Save resource stats
         let mut resource_path = None;
         if let Some(ref stats) = resource_stats {
-             let base_name = log_path.file_stem().and_then(|s| s.to_str()).unwrap();
-             if let Ok(path) = self.save_resource_stats(stats, base_name) {
-                 resource_path = Some(path);
-             }
+            let base_name = log_path.file_stem().and_then(|s| s.to_str()).unwrap();
+            if let Ok(path) = self.save_resource_stats(stats, base_name) {
+                resource_path = Some(path);
+            }
         }
 
         Ok((
             ExecutionMetadata {
-            test_run: test_run.clone(),
+                test_run: test_run.clone(),
                 log_path,
                 resource_path,
             },

@@ -2,14 +2,15 @@
 
 use clap::{Parser, Subcommand};
 use log::{error, info, warn};
+use rayon::prelude::*;
+use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
-use std::fs;
 
 use std::collections::HashMap;
 use zkvm_benchmark_utils::{
-    BenchmarkConfig, BenchmarkExecutor, BenchmarkReporter, ReportFormat, ZkVmConfig,
-    ExecutionResult, TestRun, UnifiedMetrics,
+    BenchmarkConfig, BenchmarkExecutor, BenchmarkReporter, ExecutionResult, ReportFormat, TestRun,
+    UnifiedMetrics, ZkVmConfig,
 };
 
 #[derive(Parser)]
@@ -124,7 +125,7 @@ async fn main() -> anyhow::Result<()> {
             scales,
             report_formats,
         } => {
-             // Legacy support
+            // Legacy support
             run_benchmarks(output, zkvms, scales, report_formats).await?;
         }
         Commands::Execute {
@@ -134,7 +135,10 @@ async fn main() -> anyhow::Result<()> {
         } => {
             execute_benchmarks(output, zkvms, scales).await?;
         }
-        Commands::Parse { output, raw_logs_dir } => {
+        Commands::Parse {
+            output,
+            raw_logs_dir,
+        } => {
             parse_logs(output, raw_logs_dir).await?;
         }
         Commands::Report {
@@ -212,10 +216,10 @@ fn setup_benchmark_config(
     let output_dir = if let Some(p) = output {
         p.to_string_lossy().to_string()
     } else {
-         // Load default from a config file if we had a global one, but we don't.
-         // However, BenchmarkConfig has a default output_dir, but we are constructing it here.
-         // Let's use the same default as BenchmarkConfig::default().
-         "benchmark-results".to_string()
+        // Load default from a config file if we had a global one, but we don't.
+        // However, BenchmarkConfig has a default output_dir, but we are constructing it here.
+        // Let's use the same default as BenchmarkConfig::default().
+        "benchmark-results".to_string()
     };
 
     info!("📁 Output directory: {}", output_dir);
@@ -252,16 +256,15 @@ async fn run_benchmarks(
     info!("═══════════════════════════════════════════════════════════");
 
     let start_time = std::time::Instant::now();
-    let results = tokio::time::timeout(
-        Duration::from_secs(7200),
-        executor.run_all(),
-    )
-    .await;
+    let results = tokio::time::timeout(Duration::from_secs(7200), executor.run_all()).await;
 
     let results = match results {
         Ok(Ok(r)) => {
             let elapsed = start_time.elapsed();
-            info!("⏱️  Total execution time: {:.2} seconds", elapsed.as_secs_f64());
+            info!(
+                "⏱️  Total execution time: {:.2} seconds",
+                elapsed.as_secs_f64()
+            );
             r
         }
         Ok(Err(e)) => {
@@ -288,7 +291,10 @@ async fn run_benchmarks(
     if failed > 0 {
         warn!("  ❌ Failed: {}", failed);
     }
-    info!("  📁 Results directory: {}", executor.output_dir().display());
+    info!(
+        "  📁 Results directory: {}",
+        executor.output_dir().display()
+    );
 
     info!("═══════════════════════════════════════════════════════════");
     info!("📝 Generating Reports");
@@ -348,17 +354,20 @@ async fn execute_benchmarks(
     let executor = BenchmarkExecutor::new(config)?;
 
     let start_time = std::time::Instant::now();
-    let results = tokio::time::timeout(
-        Duration::from_secs(7200),
-        executor.execute_all_only(),
-    )
-    .await;
+    let results =
+        tokio::time::timeout(Duration::from_secs(7200), executor.execute_all_only()).await;
 
     match results {
         Ok(Ok(r)) => {
-            info!("✅ Execution completed. Logs saved to: {}", paths.raw_logs.display());
-             info!("⏱️  Total time: {:.2} seconds", start_time.elapsed().as_secs_f64());
-             info!("Total tasks executed: {}", r.len());
+            info!(
+                "✅ Execution completed. Logs saved to: {}",
+                paths.raw_logs.display()
+            );
+            info!(
+                "⏱️  Total time: {:.2} seconds",
+                start_time.elapsed().as_secs_f64()
+            );
+            info!("Total tasks executed: {}", r.len());
         }
         Ok(Err(e)) => {
             error!("❌ Execution failed: {}", e);
@@ -374,7 +383,7 @@ async fn execute_benchmarks(
 }
 
 async fn parse_logs(output: Option<PathBuf>, raw_logs_dir: Option<PathBuf>) -> anyhow::Result<()> {
-     info!("═══════════════════════════════════════════════════════════");
+    info!("═══════════════════════════════════════════════════════════");
     info!("🚀 zkVM Benchmark - Phase 2: Log Parsing");
     info!("═══════════════════════════════════════════════════════════");
 
@@ -383,19 +392,22 @@ async fn parse_logs(output: Option<PathBuf>, raw_logs_dir: Option<PathBuf>) -> a
     // We don't filter zkvms here, we just load all enabled ones to get their regexes.
     // If a log belongs to a disabled zkvm, we might miss it if we filter.
     // So we load all enabled zkvms.
-    
+
     let config = setup_benchmark_config(output, None, None)?;
     let paths = config.get_paths();
     let executor = BenchmarkExecutor::new(config)?;
 
     match executor.parse_all_logs(raw_logs_dir) {
         Ok(results) => {
-             info!("✅ Parsing completed. Metrics saved to: {}", paths.parsed_metrics.display());
-             info!("Parsed {} logs", results.len());
+            info!(
+                "✅ Parsing completed. Metrics saved to: {}",
+                paths.parsed_metrics.display()
+            );
+            info!("Parsed {} logs", results.len());
         }
         Err(e) => {
-             error!("❌ Parsing failed: {}", e);
-             std::process::exit(1);
+            error!("❌ Parsing failed: {}", e);
+            std::process::exit(1);
         }
     }
 
@@ -414,7 +426,7 @@ async fn generate_reports_only(
     let output_dir = output
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_else(|| "benchmark-results".to_string());
-    
+
     // We construct a config just to get the paths logic, but passing empty filters
     let config = BenchmarkConfig {
         test_scales: vec![],
@@ -424,7 +436,7 @@ async fn generate_reports_only(
         repeat_count: None,
     };
     let paths = config.get_paths();
-    
+
     let metrics_dir = if let Some(dir) = parsed_metrics_dir {
         dir
     } else {
@@ -432,47 +444,51 @@ async fn generate_reports_only(
     };
 
     if !metrics_dir.exists() {
-        anyhow::bail!("parsed-metrics directory not found: {}", metrics_dir.display());
+        anyhow::bail!(
+            "parsed-metrics directory not found: {}",
+            metrics_dir.display()
+        );
     }
 
-    let mut results = Vec::new();
+    let entries: Vec<PathBuf> = fs::read_dir(metrics_dir)?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .collect();
 
-    info!("📖 Reading metrics from: {}", metrics_dir.display());
+    info!("📖 Reading {} metrics files in parallel...", entries.len());
 
-    for entry in fs::read_dir(metrics_dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) == Some("json") {
-             let content = fs::read_to_string(&path)?;
-             match serde_json::from_str::<UnifiedMetrics>(&content) {
-                 Ok(metrics) => {
-                     // Reconstruct ExecutionResult
-                     // We need zkvm_name enum etc.
-                     // metrics.metadata has it.
-                     
-                     let success = metrics.summary.success; // Default success from summary
-                     
-                     results.push(ExecutionResult {
-                         test_run: TestRun {
-                             zkvm_name: metrics.metadata.zkvm_name.clone(),
-                             program_name: metrics.metadata.program_name.clone(),
-                             mode: metrics.metadata.mode.clone().unwrap_or(zkvm_benchmark_utils::core::metrics::ProofMode::Groth16),
-                             scale: metrics.metadata.scale.unwrap_or(0),
-                             repeat: 1,
-                         },
-                         metrics: Some(metrics),
-                         log_content: String::new(),
-                         success,
-                         error: None,
-                         resource_stats: None, // We don't need resource stats for reporting as they are already in metrics
-                     });
-                 }
-                 Err(e) => {
-                     warn!("Failed to parse metrics file {}: {}", path.display(), e);
-                 }
-             }
-        }
-    }
+    let results: Vec<ExecutionResult> =
+        entries
+            .par_iter()
+            .filter(|path| path.extension().and_then(|s| s.to_str()) == Some("json"))
+            .filter_map(|path| {
+                let content = fs::read_to_string(path).ok()?;
+                match serde_json::from_str::<UnifiedMetrics>(&content) {
+                    Ok(metrics) => {
+                        let success = metrics.summary.success;
+                        Some(ExecutionResult {
+                            test_run: TestRun {
+                                zkvm_name: metrics.metadata.zkvm_name.clone(),
+                                program_name: metrics.metadata.program_name.clone(),
+                                mode: metrics.metadata.mode.clone().unwrap_or(
+                                    zkvm_benchmark_utils::core::metrics::ProofMode::Groth16,
+                                ),
+                                scale: metrics.metadata.scale.unwrap_or(0),
+                                repeat: 1,
+                            },
+                            metrics: Some(metrics),
+                            log_content: String::new(),
+                            success,
+                            error: None,
+                            resource_stats: None,
+                        })
+                    }
+                    Err(e) => {
+                        warn!("Failed to parse metrics file {}: {}", path.display(), e);
+                        None
+                    }
+                }
+            })
+            .collect();
 
     info!("📊 Loaded {} results", results.len());
 
@@ -494,9 +510,9 @@ async fn generate_reports_only(
 
     let reporter = BenchmarkReporter::new(results);
     let reports_dir = paths.reports;
-    
+
     reporter.generate(&reports_dir, formats)?;
-    
+
     info!("✅ Reports generated in: {}", reports_dir.display());
 
     Ok(())
