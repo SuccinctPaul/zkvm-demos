@@ -69,35 +69,145 @@ fn main() {
         "compress_to_groth16" => ZKMProofKind::CompressToGroth16,
         _ => ZKMProofKind::Groth16,
     };
+    println!("BENCHMARK: proof_mode={:?}", proof_mode);
 
-    let prover = match proof_mode {
-        ZKMProofKind::Core => client.prove(&pk, stdin).core(),
-        ZKMProofKind::Compressed => client.prove(&pk, stdin).compressed(),
-        ZKMProofKind::Plonk => client.prove(&pk, stdin).plonk(),
-        ZKMProofKind::Groth16 => client.prove(&pk, stdin).groth16(),
-        ZKMProofKind::CompressToGroth16 => client.prove(&pk, stdin).compress_to_groth16(),
+    let total_prove_start = std::time::Instant::now();
+
+    let proof = match proof_mode {
+        ZKMProofKind::Core => {
+            println!("Stage 1: Generating Core proof...");
+            let start = std::time::Instant::now();
+            let proof = client
+                .prove(&pk, stdin)
+                .core()
+                .run()
+                .expect("Core proof generation failed");
+            let duration = start.elapsed();
+
+            println!(
+                "BENCHMARK: stage1_vm_prove_time_s={:.6}",
+                duration.as_secs_f64()
+            );
+            println!(
+                "BENCHMARK: vm_core_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            println!(
+                "BENCHMARK: final_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            proof
+        }
+        ZKMProofKind::Compressed => {
+            println!("Stage 2: Generating Compressed proof...");
+            let start = std::time::Instant::now();
+            let proof = client
+                .prove(&pk, stdin)
+                .compressed()
+                .run()
+                .expect("Compressed proof generation failed");
+            let duration = start.elapsed();
+
+            println!(
+                "BENCHMARK: stage2_recursive_time_s={:.6}",
+                duration.as_secs_f64()
+            );
+            println!(
+                "BENCHMARK: compressed_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            println!(
+                "BENCHMARK: final_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            proof
+        }
+        ZKMProofKind::Groth16 => {
+            println!("Running full Groth16 pipeline...");
+            let start = std::time::Instant::now();
+            let proof = client
+                .prove(&pk, stdin)
+                .groth16()
+                .run()
+                .expect("Groth16 proof generation failed");
+            let duration = start.elapsed();
+
+            println!(
+                "BENCHMARK: total_prove_time_s={:.6}",
+                duration.as_secs_f64()
+            );
+            println!(
+                "BENCHMARK: groth16_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            println!(
+                "BENCHMARK: final_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            proof
+        }
+        ZKMProofKind::CompressToGroth16 => {
+            println!("Running CompressToGroth16 pipeline...");
+            let start = std::time::Instant::now();
+            let proof = client
+                .prove(&pk, stdin)
+                .compress_to_groth16()
+                .run()
+                .expect("CompressToGroth16 proof generation failed");
+            let duration = start.elapsed();
+
+            println!(
+                "BENCHMARK: total_prove_time_s={:.6}",
+                duration.as_secs_f64()
+            );
+            println!(
+                "BENCHMARK: groth16_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            println!(
+                "BENCHMARK: final_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            proof
+        }
+        ZKMProofKind::Plonk => {
+            println!("Running Plonk pipeline...");
+            let start = std::time::Instant::now();
+            let proof = client
+                .prove(&pk, stdin)
+                .plonk()
+                .run()
+                .expect("Plonk proof generation failed");
+            let duration = start.elapsed();
+
+            println!(
+                "BENCHMARK: total_prove_time_s={:.6}",
+                duration.as_secs_f64()
+            );
+            println!(
+                "BENCHMARK: plonk_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            println!(
+                "BENCHMARK: final_proof_size_bytes={}",
+                proof.bytes().len()
+            );
+            proof
+        }
     };
-    let proof = prover.run().expect("failed to generate proof");
+
+    let total_prove_time = total_prove_start.elapsed();
+    if matches!(
+        proof_mode,
+        ZKMProofKind::Core | ZKMProofKind::Compressed
+    ) {
+        println!(
+            "BENCHMARK: total_prove_time_s={:.6}",
+            total_prove_time.as_secs_f64()
+        );
+    }
 
     println!("✅ Successfully generated proof!");
-    println!(
-        "proof_mode: {:?} , proof size: {:?} Bytes",
-        proof_mode,
-        proof.bytes().len()
-    );
-    match proof_mode {
-        ZKMProofKind::Core => println!("BENCHMARK: vm_core_proof_size_bytes={}", proof.bytes().len()),
-        ZKMProofKind::Compressed => println!(
-            "BENCHMARK: compressed_proof_size_bytes={}",
-            proof.bytes().len()
-        ),
-        ZKMProofKind::Groth16 | ZKMProofKind::CompressToGroth16 => println!(
-            "BENCHMARK: groth16_proof_size_bytes={}",
-            proof.bytes().len()
-        ),
-        _ => println!("BENCHMARK: proof_size_bytes={}", proof.bytes().len()),
-    }
-    println!("BENCHMARK: proof_mode={:?}", proof_mode);
 
     // Verify the proof.
     println!("🔍 Verifying proof...");
@@ -106,6 +216,7 @@ fn main() {
     let verify_duration = verify_start.elapsed();
     println!("✨ Successfully verified proof!");
     println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+    println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
     println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=zkm");
     println!("BENCHMARK: zkvm_version=v0.1.0");

@@ -5,23 +5,20 @@
 //!
 //! Reference: https://github.com/powdr-labs/powdr
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
 use std::time::Instant;
 use zkvm_programs::{execute_program, load_program_input};
 
 // Import Powdr SDK
-// Note: Actual crate names and API might vary with versions.
-// This assumes powdr 0.1.0 API structure.
-#[cfg(feature = "powdr_sdk")]
 use powdr::pipeline::{Pipeline, Stage};
-#[cfg(feature = "powdr_sdk")]
 use powdr::backend::BackendType;
-#[cfg(feature = "powdr_sdk")]
-use powdr_number::GoldilocksField;
+use powdr::GoldilocksField;
+use anyhow::Context;
 
-const POWDR_VERSION: &str = "v0.1.0";
+const POWDR_VERSION: &str = "v0.1.3";
 
 fn main() -> Result<()> {
     // Initialize environment
@@ -63,16 +60,12 @@ fn main() -> Result<()> {
     let asm_path = find_powdr_asm();
     let guest_path = find_guest_source();
 
-    // Prioritize SDK usage if enabled, otherwise fallback to CLI or reference
-    #[cfg(feature = "powdr_sdk")]
-    {
-        if let Some(asm_file) = asm_path {
-            run_with_powdr_sdk(&asm_file, &input, &proof_mode, total_start)?;
-            return Ok(());
-        } else if let Some(source_path) = guest_path {
-             // ... could compile rust to asm here using SDK ...
-             println!("   Compiling Rust guest to ASM using SDK is complex, please pre-compile.");
-        }
+    if let Some(asm_file) = asm_path {
+        run_with_powdr_sdk(&asm_file, &input, &proof_mode, total_start)?;
+        return Ok(());
+    } else if let Some(source_path) = guest_path {
+         // ... could compile rust to asm here using SDK ...
+         println!("   Compiling Rust guest to ASM using SDK is complex, please pre-compile.");
     }
 
     // Fallback to CLI
@@ -94,7 +87,6 @@ fn main() -> Result<()> {
 }
 
 /// Run using Powdr SDK (Library)
-#[cfg(feature = "powdr_sdk")]
 fn run_with_powdr_sdk(
     asm_path: &PathBuf,
     input: &zkvm_programs::ProgramInput,
@@ -122,7 +114,7 @@ fn run_with_powdr_sdk(
     let mut pipeline = Pipeline::<GoldilocksField>::default()
         .from_file(asm_path.clone())
         .with_inputs(inputs.clone())
-        .with_backend(backend);
+        .with_backend(backend, None);
 
     let compile_duration = compile_start.elapsed();
     println!(
@@ -141,10 +133,6 @@ fn run_with_powdr_sdk(
         "BENCHMARK: execution_time_s={:.6}",
         exec_duration.as_secs_f64()
     );
-
-    // TODO: Extract result from memory/witness if possible via SDK
-    // For now, assume success if witness generation worked
-    // pipeline.witness()...
 
     // 3. Proof Generation
     println!("\n🔐 Step 3: Generating proof...");

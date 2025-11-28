@@ -81,13 +81,13 @@ For a quick demonstration of all available programs, run:
 cd sp1-zkvm/sp1-host
 
 # Run Fibonacci
-PROGRAM=fibonacci INPUT_N=20 cargo run --release -- --execute
+PROGRAM=fibonacci INPUT_N=20 cargo run --release
 
 # Run Sum
-PROGRAM=sum INPUT_N=100 cargo run --release -- --execute
+PROGRAM=sum INPUT_N=100 cargo run --release
 
 # Run Factorial
-PROGRAM=factorial INPUT_N=10 cargo run --release -- --execute
+PROGRAM=factorial INPUT_N=10 cargo run --release
 ```
 
 ## 📚 Documentation
@@ -131,21 +131,21 @@ The build process will:
 
 ## Running
 
-### Execute Only (Development Mode)
+### Running
 
-Fast execution without proof generation:
+Run the full benchmark pipeline (Execute + Prove + Verify):
 
 ```bash
 cd sp1-zkvm/sp1-host
 
 # Fibonacci
-PROGRAM=fibonacci INPUT_N=20 cargo run --release -- --execute
+PROGRAM=fibonacci INPUT_N=20 cargo run --release
 
 # Sum
-PROGRAM=sum INPUT_N=100 cargo run --release -- --execute
+PROGRAM=sum INPUT_N=100 cargo run --release
 
 # Factorial
-PROGRAM=factorial INPUT_N=10 cargo run --release -- --execute
+PROGRAM=factorial INPUT_N=10 cargo run --release
 ```
 
 Output example (Sum):
@@ -176,7 +176,7 @@ Generate a zero-knowledge proof:
 
 ```bash
 cd sp1-zkvm/sp1-host
-PROGRAM=fibonacci INPUT_N=20 cargo run --release -- --prove
+PROGRAM=fibonacci INPUT_N=20 cargo run --release
 ```
 
 Output:
@@ -235,16 +235,11 @@ let proof_mode = SP1ProofMode::Groth16;    // Groth16 proof (smallest, default)
 
 ## CLI Usage
 
-The host program supports command-line arguments:
+The host program runs the full pipeline by default:
 
 ```bash
-# Execute only (no proof)
-cargo run --release -- --execute
-
-# Generate proof
-cargo run --release -- --prove
-
-# Note: Must specify exactly one of --execute or --prove
+# Run execution, proof generation, and verification
+cargo run --release
 ```
 
 ## Performance Optimization
@@ -258,7 +253,7 @@ For faster proof generation, use the SP1 proving network:
 export SP1_PROVER=network
 export SP1_PRIVATE_KEY=your_private_key
 
-cargo run --release -- --prove
+cargo run --release
 ```
 
 ### Local Hardware Acceleration
@@ -268,7 +263,7 @@ cargo run --release -- --prove
 export RAYON_NUM_THREADS=16
 
 # Enable network features for better performance
-cargo run --release --features network -- --prove
+cargo run --release --features network
 ```
 
 ## Working with Public Inputs/Outputs
@@ -397,7 +392,7 @@ let proof = client.prove(&pk, &stdin)
 
 ```bash
 # Enable detailed profiling
-RUST_LOG=info cargo run --release -- --execute
+RUST_LOG=info cargo run --release
 
 # Analyze cycle counts
 # Check output for "Number of instructions" and "Number of cycles"
