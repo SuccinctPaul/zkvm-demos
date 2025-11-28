@@ -208,7 +208,7 @@ fn main() -> Result<()> {
 
         // TODO: Implement actual proof generation when WASM is available
         println!("   [TODO] Proof generation not implemented (reference mode)");
-        
+
         // Simulate verification
         println!("\n5️⃣  Verifying proof (reference mode)...");
         // TODO: Implement actual verification

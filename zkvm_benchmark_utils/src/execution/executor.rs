@@ -236,11 +236,12 @@ impl BenchmarkExecutor {
 
         // Prepare env vars
         let mut env_vars = zkvm_config.env_vars.clone().unwrap_or_default();
-        
+
         // Add program-specific env vars
         let programs = zkvm_config.get_programs();
         if let Some(program_config) = programs.iter().find(|p| {
-            p.name.parse::<ProgramName>()
+            p.name
+                .parse::<ProgramName>()
                 .map(|pn| pn == test_run.program_name)
                 .unwrap_or(false)
         }) {
@@ -248,9 +249,12 @@ impl BenchmarkExecutor {
                 env_vars.extend(prog_env_vars.clone());
             }
         }
-        
+
         // Add program ID and input parameter
-        env_vars.insert("PROGRAM_ID".to_string(), test_run.program_name.program_id().to_string());
+        env_vars.insert(
+            "PROGRAM_ID".to_string(),
+            test_run.program_name.program_id().to_string(),
+        );
         // For backward compatibility, also set FIBONACCI_N if it's Fibonacci
         match test_run.program_name {
             ProgramName::Fibonacci => {
@@ -261,7 +265,7 @@ impl BenchmarkExecutor {
                 env_vars.insert("PROGRAM_N".to_string(), test_run.scale.to_string());
             }
         }
-        
+
         env_vars.insert(
             format!("{}_PROOF_MODE", zkvm_name.to_uppercase()),
             test_run.mode.to_string(),
@@ -358,7 +362,7 @@ impl BenchmarkExecutor {
 
         // Check for failure patterns in the log content
         let log_failure = detect_failure_in_log(&cleaned_log);
-        
+
         // Determine success: must have metrics AND no failure patterns in log
         let success = if let Some(failure_reason) = &log_failure {
             warn!("  ⚠️  Detected failure in log: {}", failure_reason);
@@ -366,7 +370,7 @@ impl BenchmarkExecutor {
         } else {
             metrics.is_some()
         };
-        
+
         // If we detected a failure, ensure error is set
         let error = error.or_else(|| log_failure);
 
@@ -409,16 +413,19 @@ impl BenchmarkExecutor {
         let timeout_secs = {
             let programs = zkvm_config.get_programs();
             if let Some(program_config) = programs.iter().find(|p| {
-                p.name.parse::<ProgramName>()
+                p.name
+                    .parse::<ProgramName>()
                     .map(|pn| pn == test_run.program_name)
                     .unwrap_or(false)
             }) {
-                program_config.timeout_seconds
+                program_config
+                    .timeout_seconds
                     .or(zkvm_config.timeout_seconds)
                     .or(self.config.timeout_seconds)
                     .unwrap_or(3600)
             } else {
-                zkvm_config.timeout_seconds
+                zkvm_config
+                    .timeout_seconds
                     .or(self.config.timeout_seconds)
                     .unwrap_or(3600)
             }
@@ -518,8 +525,10 @@ impl BenchmarkExecutor {
         work_dir: &Path,
         env_vars: &HashMap<String, String>,
     ) -> Result<String> {
-        let (output, _) = self.run_command_with_monitoring(command, work_dir, env_vars, false).await?;
-        
+        let (output, _) = self
+            .run_command_with_monitoring(command, work_dir, env_vars, false)
+            .await?;
+
         // Check if command succeeded - run_command_with_monitoring returns output even on failure
         // We need to check the output for error patterns or rely on the caller to check
         // For now, we return the output and let the caller decide

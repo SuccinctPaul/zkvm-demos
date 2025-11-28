@@ -183,7 +183,7 @@ fn run_reference_execution(
     // Step 4: Verify proof (reference mode)
     // ═══════════════════════════════════════════════════════════════
     println!("🔍 Step 4: Verification (reference mode)...");
-    
+
     // TODO: Implement verification when SDK is available
     println!("   [TODO] Verification not implemented (SDK unavailable)");
     println!();

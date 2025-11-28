@@ -162,7 +162,7 @@ fn main() -> Result<()> {
 
     // Step 3: Generate proof
     println!("3️⃣  Proof generation...");
-    
+
     // Note: Full Kimchi proving integration is complex and API dependent.
     // For this demo, we simulate the interface but acknowledge it's not full ZK.
     #[cfg(feature = "proving")]

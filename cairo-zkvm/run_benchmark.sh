@@ -76,10 +76,11 @@ else
     # For execution-only mode, dynamically modify the source to use PROGRAM_N
     cp "src/lib.cairo" "src/lib.cairo.bak"
     
-    # Update the main function to use the correct N value
+    # Update the main function to use the correct N and PROGRAM_ID values
     sed -i.tmp "s/let n: felt252 = [0-9]*;/let n: felt252 = $PROGRAM_N;/" "src/lib.cairo"
+    sed -i.tmp "s/let program_id: felt252 = [0-9]*;/let program_id: felt252 = $PROGRAM_ID;/" "src/lib.cairo"
     rm -f "src/lib.cairo.tmp"
-    echo "   ✓ Configured for N=$PROGRAM_N"
+    echo "   ✓ Configured for N=$PROGRAM_N, ID=$PROGRAM_ID"
 fi
 
 # Step 2: Build

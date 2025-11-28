@@ -150,7 +150,7 @@ fn run_with_ceno(
 
     // Step 3: Proof generation
     println!("\n🔐 Step 3: Proof generation (via ceno_zkvm)...");
-    
+
     // Note: We are using a mock implementation here because full integration 
     // requires configuring the complex platform and proving parameters.
     // In a real scenario, this would look like:

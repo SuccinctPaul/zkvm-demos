@@ -9,6 +9,8 @@ license = "MIT OR Apache-2.0"
 cairo-m-common.workspace = true
 cairo-m-runner.workspace = true
 cairo-m-compiler.workspace = true
+cairo-m-prover.workspace = true
+stwo-prover.workspace = true
 
 # Common dependencies
 zkvm_programs.workspace = true

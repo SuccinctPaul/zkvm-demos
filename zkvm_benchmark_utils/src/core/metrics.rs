@@ -82,7 +82,7 @@ impl std::str::FromStr for ProofMode {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "core" | "fast" => Ok(ProofMode::Core),  // "fast" maps to Core for Pico compatibility
+            "core" | "fast" => Ok(ProofMode::Core), // "fast" maps to Core for Pico compatibility
             "compressed" | "aggressive" | "shrink" => Ok(ProofMode::Compressed),
             "groth16" => Ok(ProofMode::Groth16),
             "plonk" => Ok(ProofMode::Plonk),

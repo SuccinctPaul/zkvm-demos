@@ -124,6 +124,7 @@ fn run_with_snarkvm_sdk(
     // Prepare inputs
     let function_name = Identifier::from_str("main")?;
     let inputs = vec![
+        Value::from_str(&format!("{}u32", input.program.id()))?,
         Value::from_str(&format!("{}u32", input.n))?
     ];
 
@@ -263,6 +264,7 @@ fn run_with_leo_cli(
                 .current_dir(&program_dir)
                 .arg("run")  // 'run' instead of 'execute' per Leo README
                 .arg("main")
+                .arg(format!("{}u32", input.program.id()))
                 .arg(format!("{}u32", input.n))
                 .output();
 

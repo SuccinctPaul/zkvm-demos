@@ -12,10 +12,15 @@
 use anyhow::{Context, Result};
 use cairo_m_common::{CairoMValue, InputValue, Program};
 use cairo_m_compiler::{compile_cairo, CompilerOptions};
-use cairo_m_runner::{run_cairo_program, RunnerOptions};
+use cairo_m_prover::{
+    adapter::import_from_runner_output, prover::prove_cairo_m, prover_config::REGULAR_96_BITS,
+    verifier::verify_cairo_m,
+};
+use cairo_m_runner::{run_cairo_program, RunnerOptions, RunnerOutput};
 use once_cell::sync::Lazy;
 use std::fs;
 use std::time::Instant;
+use stwo_prover::core::vcs::blake2_merkle::Blake2sMerkleChannel;
 use zkvm_programs::{execute_program, load_program_input};
 
 const CAIRO_M_VERSION: &str = "v0.1.0-alpha";
@@ -132,17 +137,64 @@ fn main() -> Result<()> {
         );
     }
 
-    // Step 3: Proof generation (placeholder - requires cairo-m-prover)
-    // Note: cairo-m-prover is not yet available in the public repository
+    // Step 3: Proof generation
     println!("🔐 Step 3: Proof generation...");
-    println!("   ℹ️  Note: cairo-m-prover is not yet publicly available");
-    // TODO: Implement proof generation when prover is available
-    println!("   [TODO] Proof generation not implemented (prover unavailable)");
-    
-    // Step 4: Verification (placeholder)
+    let prove_start = Instant::now();
+
+    let segment = execution_result
+        .runner_output
+        .vm
+        .segments
+        .into_iter()
+        .next()
+        .context("No segments found in runner output")?;
+
+    let mut prover_input = import_from_runner_output(
+        segment,
+        execution_result.runner_output.public_address_ranges,
+    )
+    .context("Failed to import from runner output")?;
+
+    let pcs_config = REGULAR_96_BITS;
+
+    let proof = prove_cairo_m::<Blake2sMerkleChannel>(&mut prover_input, Some(pcs_config))
+        .context("Failed to generate proof")?;
+
+    let prove_duration = prove_start.elapsed();
+    let proof_size = proof.stark_proof.size_estimate();
+
+    println!(
+        "   ✅ Proof generated in {:.6}s",
+        prove_duration.as_secs_f64()
+    );
+    println!(
+        "BENCHMARK: proof_time_s={:.6}",
+        prove_duration.as_secs_f64()
+    );
+    println!("BENCHMARK: proof_size_bytes={}", proof_size);
+    println!();
+
+    // Step 4: Verification
     println!("✓ Step 4: Verification...");
-    // TODO: Implement verification when prover is available
-    println!("   [TODO] Verification not implemented (prover unavailable)");
+    let verify_start = Instant::now();
+
+    verify_cairo_m::<Blake2sMerkleChannel>(proof, Some(pcs_config))
+        .context("Failed to verify proof")?;
+
+    let verify_duration = verify_start.elapsed();
+    println!(
+        "   ✅ Proof verified in {:.6}s",
+        verify_duration.as_secs_f64()
+    );
+    println!(
+        "BENCHMARK: verification_time_s={:.6}",
+        verify_duration.as_secs_f64()
+    );
+    println!(
+        "BENCHMARK: verification_time_ms={:.3}",
+        verify_duration.as_secs_f64() * 1000.0
+    );
+    println!("BENCHMARK: success_status=success");
     println!();
 
     // Summary
@@ -157,7 +209,10 @@ fn main() -> Result<()> {
     println!("========================================");
     println!("Compile time:     {:.6}s", compile_duration.as_secs_f64());
     println!("Execution time:   {:.6}s", exec_duration.as_secs_f64());
+    println!("Prove time:       {:.6}s", prove_duration.as_secs_f64());
+    println!("Verify time:      {:.6}s", verify_duration.as_secs_f64());
     println!("Total time:       {:.6}s", total_duration.as_secs_f64());
+    println!("Proof size:       {} bytes", proof_size);
     println!("Cycles:           {}", execution_result.cycles);
     println!("========================================\n");
 
@@ -170,6 +225,7 @@ fn main() -> Result<()> {
 struct CairoMExecutionResult {
     result: u32,
     cycles: u64,
+    runner_output: RunnerOutput,
 }
 
 /// Execute a Cairo-M program using the runner
@@ -185,16 +241,20 @@ fn execute_cairo_m_program(
     let args = vec![InputValue::Number(n as i64)];
 
     // Run the program with cairo-m-runner
-    let runner_result = run_cairo_program(program, entrypoint, &args, RunnerOptions::default())
+    let runner_output = run_cairo_program(program, entrypoint, &args, RunnerOptions::default())
         .context("Failed to run Cairo-M program")?;
 
     // Extract result from return values
-    let result = extract_u32_result(&runner_result.return_values)?;
+    let result = extract_u32_result(&runner_output.return_values)?;
 
     // Get cycle count from VM trace length
-    let cycles = runner_result.vm.trace.len() as u64;
+    let cycles = runner_output.vm.trace.len() as u64;
 
-    Ok(CairoMExecutionResult { result, cycles })
+    Ok(CairoMExecutionResult {
+        result,
+        cycles,
+        runner_output,
+    })
 }
 
 /// Get entrypoint name for program ID
@@ -228,12 +288,4 @@ fn extract_u32_result(return_values: &[CairoMValue]) -> Result<u32> {
         CairoMValue::Pointer(m31) => Ok(m31.0),
         other => anyhow::bail!("Unexpected return type: {:?}", other),
     }
-}
-
-/// Estimate proof size based on cycle count
-fn estimate_proof_size(cycles: u64) -> usize {
-    // Stwo STARK proofs are typically 30-100 KB
-    // Size grows logarithmically with trace size
-    let log_cycles = (cycles as f64).log2().ceil() as usize;
-    20_000 + log_cycles * 2000
 }

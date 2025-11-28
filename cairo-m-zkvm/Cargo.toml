@@ -16,6 +16,8 @@ zkvm_programs = { path = "../programs", features = ["std"] }
 cairo-m-common = { git = "https://github.com/kkrt-labs/cairo-m" }
 cairo-m-runner = { git = "https://github.com/kkrt-labs/cairo-m" }
 cairo-m-compiler = { git = "https://github.com/kkrt-labs/cairo-m" }
+cairo-m-prover = { git = "https://github.com/kkrt-labs/cairo-m" }
+stwo-prover = { git = "https://github.com/starkware-libs/stwo", rev = "31966a3" }
 
 # misc
 dotenv = "0.15.0"

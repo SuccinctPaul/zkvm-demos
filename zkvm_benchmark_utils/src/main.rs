@@ -94,9 +94,8 @@ async fn run_benchmarks(
     info!("📦 Selected zkVMs: {}", zkvm_names.join(", "));
 
     // Parse program filter if specified
-    let program_names: Option<Vec<String>> = programs_filter.map(|p| {
-        p.split(',').map(|s| s.trim().to_string()).collect()
-    });
+    let program_names: Option<Vec<String>> =
+        programs_filter.map(|p| p.split(',').map(|s| s.trim().to_string()).collect());
 
     // Parse scale filter if specified
     let scale_values: Option<Vec<u32>> = scales_filter.map(|s| {
@@ -119,21 +118,22 @@ async fn run_benchmarks(
             let mut filtered_programs = Vec::new();
             for prog_name in prog_names {
                 // Find existing program config or create new one
-                let existing_prog = zkvm_config.get_programs()
+                let existing_prog = zkvm_config
+                    .get_programs()
                     .into_iter()
                     .find(|p| p.name == *prog_name);
-                
+
                 if let Some(mut prog_config) = existing_prog {
-        // Apply scale filter if specified
+                    // Apply scale filter if specified
                     if let Some(ref scales) = scale_values {
                         prog_config.scales = scales.clone();
                     }
                     filtered_programs.push(prog_config);
                 } else {
                     // Create new program config
-                    let scales = scale_values.clone().unwrap_or_else(|| {
-                        zkvm_config.get_test_scales(None)
-                    });
+                    let scales = scale_values
+                        .clone()
+                        .unwrap_or_else(|| zkvm_config.get_test_scales(None));
                     filtered_programs.push(ProgramConfig {
                         name: prog_name.clone(),
                         scales,
@@ -160,7 +160,9 @@ async fn run_benchmarks(
         info!(
             "  ✅ Config loaded: modes={:?}, programs={:?}",
             zkvm_config.prove_modes,
-            zkvm_config.get_programs().iter()
+            zkvm_config
+                .get_programs()
+                .iter()
                 .map(|p| format!("{}: {:?}", p.name, p.scales))
                 .collect::<Vec<_>>()
         );
