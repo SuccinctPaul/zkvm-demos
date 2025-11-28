@@ -44,6 +44,7 @@ scales = [1, 10, 50]
 # 环境变量
 # ----------------------------------------------------------------
 [env_vars]
+RUSTFLAGS = "-C target-cpu=native"
 RUST_LOG = "debug"
 RISC0_DEV_MODE = "0"
 # Note: RISC0_PROOF_MODE is injected by the runner

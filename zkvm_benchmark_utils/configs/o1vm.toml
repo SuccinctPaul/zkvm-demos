@@ -30,6 +30,7 @@ name = "sig"
 scales = [1, 10, 50]
 
 [env_vars]
+RUSTFLAGS = "-C target-cpu=native"
 RUST_LOG = "debug"
 
 # ----------------------------------------------------------------

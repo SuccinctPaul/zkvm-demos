@@ -67,6 +67,7 @@ scales = [1, 10, 50]
 # Environment Variables
 # ----------------------------------------------------------------
 [env_vars]
+RUSTFLAGS = "-C target-cpu=native"
 RUST_LOG = "debug"
 # FIBONACCI_N is set by the runner based on program scale
 

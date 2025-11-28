@@ -38,6 +38,7 @@ scales = [1, 10, 50]
 # Environment Variables
 # ----------------------------------------------------------------
 [env_vars]
+RUSTFLAGS = "-C target-cpu=native"
 RUST_LOG = "debug"
 # Note: PROGRAM_NAME and PROGRAM_N are set automatically by the benchmark runner
 
