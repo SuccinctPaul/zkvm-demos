@@ -388,7 +388,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec",
- "stwo-prover 0.1.1 (git+https://github.com/starkware-libs/stwo?rev=ab57a1c)",
+ "stwo-prover",
  "thiserror 2.0.17",
 ]
 
@@ -440,7 +440,7 @@ dependencies = [
  "serde_json",
  "smallvec",
  "sonic-rs 0.3.17",
- "stwo-prover 0.1.1 (git+https://github.com/starkware-libs/stwo?rev=ab57a1c)",
+ "stwo-prover",
  "thiserror 2.0.17",
 ]
 
@@ -467,7 +467,7 @@ dependencies = [
  "rustc-hash 1.1.0",
  "salsa",
  "salsa-macros",
- "stwo-prover 0.1.1 (git+https://github.com/starkware-libs/stwo?rev=ab57a1c)",
+ "stwo-prover",
 ]
 
 [[package]]
@@ -531,7 +531,7 @@ dependencies = [
  "once_cell",
  "serde",
  "serde_json",
- "stwo-prover 0.1.1 (git+https://github.com/starkware-libs/stwo?branch=main)",
+ "stwo-prover",
  "zkvm_programs",
 ]
 
@@ -571,7 +571,7 @@ dependencies = [
  "stwo-air-utils",
  "stwo-air-utils-derive",
  "stwo-constraint-framework",
- "stwo-prover 0.1.1 (git+https://github.com/starkware-libs/stwo?rev=ab57a1c)",
+ "stwo-prover",
  "thiserror 2.0.17",
  "tracing",
  "tracing-subscriber",
@@ -593,7 +593,7 @@ dependencies = [
  "regex",
  "smallvec",
  "sonic-rs 0.5.6",
- "stwo-prover 0.1.1 (git+https://github.com/starkware-libs/stwo?rev=ab57a1c)",
+ "stwo-prover",
  "thiserror 2.0.17",
  "tracing",
  "tracing-subscriber",
@@ -2421,7 +2421,7 @@ dependencies = [
  "itertools 0.12.1",
  "rayon",
  "stwo-air-utils-derive",
- "stwo-prover 0.1.1 (git+https://github.com/starkware-libs/stwo?rev=ab57a1c)",
+ "stwo-prover",
 ]
 
 [[package]]
@@ -2444,28 +2444,7 @@ dependencies = [
  "num-traits",
  "rand 0.8.5",
  "rayon",
- "stwo-prover 0.1.1 (git+https://github.com/starkware-libs/stwo?rev=ab57a1c)",
- "tracing",
-]
-
-[[package]]
-name = "stwo-prover"
-version = "0.1.1"
-source = "git+https://github.com/starkware-libs/stwo?branch=main#5879ead36241ee1593af64d42fd7ef038391e9f6"
-dependencies = [
- "blake2",
- "blake3",
- "bytemuck",
- "cfg-if",
- "educe",
- "hex",
- "itertools 0.12.1",
- "num-traits",
- "rand 0.8.5",
- "serde",
- "starknet-crypto",
- "starknet-ff",
- "thiserror 1.0.69",
+ "stwo-prover",
  "tracing",
 ]
 

@@ -266,7 +266,8 @@ fn run_with_valida_cli(
         None => {
             println!("   ⚠️ Guest binary not found");
             println!("   To compile guest:");
-            println!("   cd valida-guest && valida compile guest.c -o guest.bin");
+            println!("   cd valida-guest && cargo +valida build --release");
+            println!("   OR (C): valida compile valida-guest/guest.c -o guest.bin");
             println!("\n   Falling back to reference execution...\n");
 
             run_reference_execution(input, total_start)?;
