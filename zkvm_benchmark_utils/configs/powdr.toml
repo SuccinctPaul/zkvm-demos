@@ -6,7 +6,7 @@
 
 name = "powdr"
 version = "v0.1.0"
-enabled = false  # SDK support added; falls back to CLI/Reference if needed
+enabled = true  # SDK support added; falls back to CLI/Reference if needed
 
 # Test scales (program input N values)
 test_scales = [10, 20]
