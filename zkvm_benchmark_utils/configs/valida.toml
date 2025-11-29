@@ -10,8 +10,8 @@ test_scales = [10, 20]
 prove_modes = ["core"]
 
 working_dir = "../valida-zkvm/valida-host"
-build_command = "cargo +valida build --release"
-run_command = "cargo +valida run --release"
+build_command = "cargo build --release"
+run_command = "cargo run --release"
 
 timeout_seconds = 600
 repeat_count = 1

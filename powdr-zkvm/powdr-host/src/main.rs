@@ -13,10 +13,10 @@ use std::time::Instant;
 use zkvm_programs::{execute_program, load_program_input};
 
 // Import Powdr SDK
-use powdr::pipeline::{Pipeline, Stage};
+use powdr::pipeline::Pipeline;
 use powdr::backend::BackendType;
 use powdr::GoldilocksField;
-use anyhow::Context;
+// use anyhow::Context;
 
 const POWDR_VERSION: &str = "v0.1.3";
 
@@ -63,7 +63,7 @@ fn main() -> Result<()> {
     if let Some(asm_file) = asm_path {
         run_with_powdr_sdk(&asm_file, &input, &proof_mode, total_start)?;
         return Ok(());
-    } else if let Some(source_path) = guest_path {
+    } else if let Some(_source_path) = guest_path {
          // ... could compile rust to asm here using SDK ...
          println!("   Compiling Rust guest to ASM using SDK is complex, please pre-compile.");
     }
@@ -100,7 +100,10 @@ fn run_with_powdr_sdk(
     let compile_start = Instant::now();
 
     let backend = match proof_mode {
-        "halo2" => BackendType::Halo2,
+        "halo2" => {
+             println!("⚠️ Halo2 backend not supported in this version, falling back to Mock");
+             BackendType::Mock
+        },
         "plonky3" => BackendType::Plonky3,
         _ => BackendType::Mock, // Default/fallback
     };
@@ -113,7 +116,7 @@ fn run_with_powdr_sdk(
 
     let mut pipeline = Pipeline::<GoldilocksField>::default()
         .from_file(asm_path.clone())
-        .with_inputs(inputs.clone())
+        .with_prover_inputs(inputs.clone())
         .with_backend(backend, None);
 
     let compile_duration = compile_start.elapsed();
@@ -126,7 +129,7 @@ fn run_with_powdr_sdk(
     println!("\n🚀 Step 2: Witness Generation (Execution)...");
     let exec_start = Instant::now();
 
-    pipeline.advance_to(Stage::GeneratedWitness)?;
+    pipeline.compute_witness().map_err(|e| anyhow::anyhow!("Witness generation failed: {}", e.join("\n")))?;
     
     let exec_duration = exec_start.elapsed();
     println!(
@@ -138,8 +141,9 @@ fn run_with_powdr_sdk(
     println!("\n🔐 Step 3: Generating proof...");
     let prove_start = Instant::now();
 
-    pipeline.advance_to(Stage::Proof)?;
-    let proof = pipeline.proof().context("Proof not generated")?;
+    pipeline.compute_proof().map_err(|e| anyhow::anyhow!("Proof generation failed: {}", e.join("\n")))?;
+    let proof = pipeline.proof().map_err(|e| anyhow::anyhow!("Failed to get proof: {}", e.join("\n")))?;
+    let proof = proof.clone();
 
     let prove_duration = prove_start.elapsed();
     println!(
@@ -152,7 +156,7 @@ fn run_with_powdr_sdk(
     println!("\n✓ Step 4: Verifying proof...");
     let verify_start = Instant::now();
     
-    pipeline.verify(proof.clone(), Some(vec![]))?; // Public inputs if any
+    pipeline.verify(&proof, &[]).map_err(|e| anyhow::anyhow!("Verification failed: {}", e.join("\n")))?; // Public inputs if any
 
     let verify_duration = verify_start.elapsed();
     println!(
