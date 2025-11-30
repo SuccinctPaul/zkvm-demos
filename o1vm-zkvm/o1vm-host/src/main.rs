@@ -66,7 +66,8 @@ fn main() -> Result<()> {
     println!("BENCHMARK: zkvm_name=o1vm");
     println!("BENCHMARK: zkvm_version={}", O1VM_VERSION);
     // Note: proof_mode is "reference" because full Kimchi proving is not yet implemented
-    println!("BENCHMARK: proof_mode=kimchi");
+    let proof_mode = std::env::var("O1VM_PROOF_MODE").unwrap_or_else(|_| "kimchi".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
 
     println!(
         "📋 Input: Program={} (ID={}) N={}\n",

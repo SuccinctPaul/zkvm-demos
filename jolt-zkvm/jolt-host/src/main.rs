@@ -106,7 +106,8 @@ pub fn main() {
     println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=jolt");
     println!("BENCHMARK: zkvm_version=v0.3.0-alpha");
-    println!("BENCHMARK: proof_mode=core");
+    let proof_mode = std::env::var("JOLT_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
     
     // Timing metrics
     println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());

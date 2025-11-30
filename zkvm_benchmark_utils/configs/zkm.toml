@@ -7,7 +7,7 @@ name = "zkm"
 version = "v0.3.0"
 enabled = true
 test_scales = [10, 20]
-prove_modes = ["core", "compressed", "groth16"]
+prove_modes = ["core", "compressed"]
 
 working_dir = "../zkm-zkvm/zkm-host"
 
@@ -103,6 +103,8 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 # Execution
 "instruction_count" = "legacy_instruction_count"
 "total_cycles" = "legacy_cycles"
+"total_syscall_cycles" = "total_syscall_cycles"
+"touched_memory_addresses" = "touched_memory_addresses"
 "execution_time_s" = "raw_execute_time_s"
 
 # VM Circuit

@@ -104,7 +104,8 @@ fn main() -> anyhow::Result<()> {
     println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=openvm");
     println!("BENCHMARK: zkvm_version=v0.1.0");
-    println!("BENCHMARK: proof_mode=core");
+    let proof_mode = std::env::var("OPENVM_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
     println!("BENCHMARK: success_status=success");
     println!("BENCHMARK: total_time_s={:.6}", (exec_duration + prove_duration + verify_duration).as_secs_f64());
 

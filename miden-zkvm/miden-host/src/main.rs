@@ -21,7 +21,8 @@ fn main() -> Result<()> {
     println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
     println!("BENCHMARK: zkvm_name=miden");
     println!("BENCHMARK: zkvm_version={}", MIDEN_VERSION);
-    println!("BENCHMARK: proof_mode=core");
+    let proof_mode = std::env::var("MIDEN_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
     
     println!("Program: {} (ID={})", input.program.name(), input.program.id());
     println!("Input N: {}\n", input.n);

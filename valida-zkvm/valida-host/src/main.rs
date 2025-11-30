@@ -33,7 +33,8 @@ fn main() -> Result<()> {
     );
     println!("BENCHMARK: zkvm_name=valida");
     println!("BENCHMARK: zkvm_version={}", VALIDA_VERSION);
-    println!("BENCHMARK: proof_mode=stark");
+    let proof_mode = std::env::var("VALIDA_PROOF_MODE").unwrap_or_else(|_| "stark".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
     
     println!("=== Valida zkVM Multi-Program Demo ===");
     println!("Program: {} (ID={})", input.program.name(), input.program.id());

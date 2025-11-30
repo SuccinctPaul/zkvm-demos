@@ -40,7 +40,8 @@ fn main() -> Result<()> {
     );
     println!("BENCHMARK: zkvm_name=snarkvm");
     println!("BENCHMARK: zkvm_version={}", SNARKVM_VERSION);
-    println!("BENCHMARK: proof_mode=varuna");
+    let proof_mode = std::env::var("SNARKVM_PROOF_MODE").unwrap_or_else(|_| "varuna".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
 
     println!(
         "Program: {} (ID={})",

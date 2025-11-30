@@ -41,7 +41,8 @@ fn main() {
     );
     println!("BENCHMARK: zkvm_name=ceno");
     println!("BENCHMARK: zkvm_version={}", CENO_VERSION);
-    println!("BENCHMARK: proof_mode=core");
+    let proof_mode = std::env::var("CENO_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
 
     println!(
         "📊 Input: Program={} (ID={}) N={}\n",

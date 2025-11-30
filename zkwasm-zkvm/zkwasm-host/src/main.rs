@@ -102,7 +102,8 @@ fn main() -> Result<()> {
             println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
             println!("BENCHMARK: zkvm_name=zkwasm");
             println!("BENCHMARK: zkvm_version=v0.1.0");
-            println!("BENCHMARK: proof_mode=core");
+            let proof_mode = std::env::var("ZKWASM_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+            println!("BENCHMARK: proof_mode={}", proof_mode);
             println!("BENCHMARK: circuit_k={}", k);
             
             // Timing metrics

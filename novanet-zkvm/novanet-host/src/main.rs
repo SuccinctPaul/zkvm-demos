@@ -51,7 +51,8 @@ fn main() -> Result<()> {
     );
     println!("BENCHMARK: zkvm_name=novanet");
     println!("BENCHMARK: zkvm_version={}", NOVANET_VERSION);
-    println!("BENCHMARK: proof_mode=nova-ivc");
+    let proof_mode = std::env::var("NOVANET_PROOF_MODE").unwrap_or_else(|_| "nova-ivc".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
 
     println!(
         "📊 Input: Program={} (ID={}) N={}\n",

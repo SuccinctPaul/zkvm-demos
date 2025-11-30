@@ -105,6 +105,7 @@ mkdir -p "$PROOF_DIR"
 python3 -c "
 import struct
 import sys
+import os
 program_id = int(sys.argv[1])
 n = int(sys.argv[2])
 with open('build/input.bin', 'wb') as f:
@@ -112,7 +113,8 @@ with open('build/input.bin', 'wb') as f:
 print(f'BENCHMARK: program_name=fibonacci_{n}')
 print(f'BENCHMARK: zkvm_name=zisk')
 print(f'BENCHMARK: zkvm_version=v0.14.0')
-print(f'BENCHMARK: proof_mode=core')
+proof_mode = os.environ.get('ZISK_PROOF_MODE', 'core')
+print(f'BENCHMARK: proof_mode={proof_mode}')
 print(f'Generated input.bin: program_id={program_id}, n={n}')
 " "$PROGRAM_ID" "$N"
 

@@ -294,8 +294,10 @@ rows_reduction_hint_count = '(fixed log2 rows can be potentially reduced.*)'
 # ====================
 # 1. Execution Phase
 # ====================
-"total_cycles" = "raw_total_cycles"
 "instruction_count" = "raw_total_instruction_count"
+"total_cycles" = "raw_total_cycles"
+"total_syscall_cycles" = "total_syscall_cycles"
+"touched_memory_addresses" = "touched_memory_addresses"
 "execution_time_s" = "raw_execution_time_s"
 
 # ====================
