@@ -26,7 +26,7 @@ scales = [500]
 
 [[programs]]
 name = "sig"
-scales = [1, 10, 50]
+scales = [2, 10, 50]
 
 [env_vars]
 RUSTFLAGS = "-C target-cpu=native"

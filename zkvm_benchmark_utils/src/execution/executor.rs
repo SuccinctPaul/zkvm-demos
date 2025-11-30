@@ -459,10 +459,10 @@ impl BenchmarkExecutor {
             resource_stats.as_ref(),
         );
 
-        // Save metrics to file (process_log doesn't save anymore? Oh wait, old code did save.)
-        // We should ensure process_log logic matches.
-        // In my new parse_all_logs, I manually save.
-        // In run_single_task, I should also save to maintain behavior.
+        // Save metrics to file
+        // Note: process_log creates UnifiedMetrics which contains resource stats merged in.
+        // We save the UnifiedMetrics JSON to parsed-metrics directory.
+        // The raw resource stats json is kept in raw-logs directory (saved in phase 1).
 
         let paths = self.config.get_paths();
         if let Ok(Some(ref m)) = metrics_result {
@@ -596,6 +596,12 @@ impl BenchmarkExecutor {
         let mut resource_path = None;
         if let Some(ref stats) = resource_stats {
             let base_name = log_path.file_stem().and_then(|s| s.to_str()).unwrap();
+
+            // Just return the path, don't save again if it's already saved by run_command_with_monitoring?
+            // Actually run_command_with_monitoring does NOT save to file, it returns the struct.
+            // So we DO need to save it here once.
+            // The issue might be if we save it again during parsing phase?
+
             if let Ok(path) = self.save_resource_stats(stats, base_name) {
                 resource_path = Some(path);
             }
