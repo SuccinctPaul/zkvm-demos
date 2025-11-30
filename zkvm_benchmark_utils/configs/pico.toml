@@ -123,13 +123,25 @@ raw_setup_keys_time_ms = 'setup_keys: close time\.busy=([\d.]+)ms'
 # Log format: "core_prove: close time.busy=1.60s"
 # ================================================================
 raw_core_prove_time_s = 'core_prove: close time\.busy=([\d.]+)s'
+raw_core_proof_time_s = 'BENCHMARK: core_proof_time_s=([\d.]+)'
+raw_core_proof_size_bytes = 'BENCHMARK: core_proof_size_bytes=(\d+)'
+raw_core_verification_time_s = 'BENCHMARK: core_verification_time_s=([\d.]+)'
+
+# Compressed Mode Metrics
+raw_compressed_proof_time_s = 'BENCHMARK: compressed_proof_time_s=([\d.]+)'
+raw_compressed_verification_time_s = 'BENCHMARK: compressed_verification_time_s=([\d.]+)'
+raw_compressed_proof_size_bytes = 'BENCHMARK: compressed_proof_size_bytes=(\d+)'
+
+# Groth16 Mode Metrics
+raw_groth16_proof_time_s = 'BENCHMARK: groth16_proof_time_s=([\d.]+)'
+raw_groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
+raw_groth16_verification_time_s = 'BENCHMARK: groth16_verification_time_s=([\d.]+)'
 
 # ================================================================
-# BENCHMARK Format (New code, if pre-built is updated available)
+# BENCHMARK Format - Common
 # ================================================================
-benchmark_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
-benchmark_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
-benchmark_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
 
 # ----------------------------------------------------------------
 # Metric Mapping
@@ -139,6 +151,7 @@ benchmark_success_status = 'BENCHMARK: success_status=(\w+)'
 # 1. Execution Phase
 # ====================
 "total_cycles" = "raw_total_cycles"
+"output_result" = "raw_output_result"
 
 # ====================
 # 2. VM Circuit Phase
@@ -148,10 +161,23 @@ benchmark_success_status = 'BENCHMARK: success_status=(\w+)'
 "vm_prove_time_s" = "raw_total_prove_time_s"
 "vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
 
+# Mode-specific mappings (captured if available)
+"core_prove_time_s" = "raw_core_proof_time_s"
+"core_verification_time_s" = "raw_core_verification_time_s"
+"core_proof_size_bytes" = "raw_core_proof_size_bytes"
+
+"compressed_prove_time_s" = "raw_compressed_proof_time_s"
+"compressed_verification_time_s" = "raw_compressed_verification_time_s"
+"compressed_proof_size_bytes" = "raw_compressed_proof_size_bytes"
+
+"groth16_prove_time_s" = "raw_groth16_proof_time_s"
+"groth16_verification_time_s" = "raw_groth16_verification_time_s"
+"groth16_proof_size_bytes" = "raw_groth16_proof_size_bytes"
+
 # ====================
 # 3. Verification Phase
 # ====================
-"success_status" = "raw_verify_success"
+"success_status" = "raw_success_status"
 
 # ====================
 # 4. Initialization

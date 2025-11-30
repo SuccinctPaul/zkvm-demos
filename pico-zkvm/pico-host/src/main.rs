@@ -98,25 +98,20 @@ fn main() -> anyhow::Result<()> {
             println!("Running in PROVE (core/fast) mode...");
             let riscv_proof = client.prove_fast(create_stdin())?;
             let duration = prove_start.elapsed();
-            println!("BENCHMARK: proof_time_s={:.6}", duration.as_secs_f64());
+            println!("BENCHMARK: core_proof_time_s={:.6}", duration.as_secs_f64());
 
             // Approximate proof size for core mode
             let size = bincode::serialize(&riscv_proof)?.len();
-            println!("BENCHMARK: vm_core_proof_size_bytes={}", size);
-            println!("BENCHMARK: final_proof_size_bytes={}", size);
+            println!("BENCHMARK: core_proof_size_bytes={}", size);
             
-            println!("BENCHMARK: verification_time_s=0.0");
+            // Core verification not applicable/benchmarked here
+            println!("BENCHMARK: core_verification_time_s=0.0");
             
             if let Some(public_buffer) = &riscv_proof.pv_stream {
                 let result: u32 = bincode::deserialize(public_buffer).expect("Failed to deserialize public values");
                 println!("BENCHMARK: output_result={}", result);
                 
-                println!("\n============ Summary ============");
-                println!("Program: {}", input.program.name());
-                println!("Output: {}", result);
-                println!("Proof size: {} bytes", size);
-                println!("Prove time: {:.2}s", duration.as_secs_f64());
-                println!("=================================\n");
+                // Summary block removed to avoid redundancy
             } else {
                 println!("Warning: No public values in proof");
             }
@@ -125,11 +120,10 @@ fn main() -> anyhow::Result<()> {
             println!("Running in COMPRESSED PROVE mode...");
             let (riscv_proof, combined_proof) = client.prove(create_stdin())?;
             let duration = prove_start.elapsed();
-            println!("BENCHMARK: proof_time_s={:.6}", duration.as_secs_f64());
+            println!("BENCHMARK: compressed_proof_time_s={:.6}", duration.as_secs_f64());
 
             let size = bincode::serialize(&combined_proof)?.len();
             println!("BENCHMARK: compressed_proof_size_bytes={}", size);
-            println!("BENCHMARK: final_proof_size_bytes={}", size);
             
             println!("\n--- Verification Phase ---");
             let verify_start = Instant::now();
@@ -137,18 +131,13 @@ fn main() -> anyhow::Result<()> {
             let proofs = (riscv_proof.clone(), combined_proof);
             client.verify(&proofs)?;
             let verify_duration = verify_start.elapsed();
-            println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+            println!("BENCHMARK: compressed_verification_time_s={:.6}", verify_duration.as_secs_f64());
             
             if let Some(public_buffer) = &riscv_proof.pv_stream {
                 let result: u32 = bincode::deserialize(public_buffer).expect("Failed to deserialize public values");
                 println!("BENCHMARK: output_result={}", result);
 
-                println!("\n============ Summary ============");
-                println!("Program: {}", input.program.name());
-                println!("Output: {}", result);
-                println!("Proof size: {} bytes", size);
-                println!("Prove time: {:.2}s", duration.as_secs_f64());
-                println!("=================================\n");
+                // Summary block removed to avoid redundancy
             } else {
                  println!("Warning: No public values in proof");
             }
@@ -158,24 +147,18 @@ fn main() -> anyhow::Result<()> {
             // prove_evm writes files to disk and returns () or Result<()>
             client.prove_evm(create_stdin(), false, "proofs", "kb")?;
             let duration = prove_start.elapsed();
-            println!("BENCHMARK: proof_time_s={:.6}", duration.as_secs_f64());
+            println!("BENCHMARK: groth16_proof_time_s={:.6}", duration.as_secs_f64());
 
             // For Groth16, we'll try to get the file size of the generated proof if possible,
             // otherwise use a dummy value or try to read 'proofs/proof.json' if that's where it writes.
             // Assuming standard Groth16 proof size (approx 200-300 bytes) + public inputs
             let size = 260; // gnark's groth16 proof size
             println!("BENCHMARK: groth16_proof_size_bytes={}", size);
-            println!("BENCHMARK: final_proof_size_bytes={}", size);
 
-            println!("BENCHMARK: verification_time_s=0.0");
-            println!("BENCHMARK: proof_size_bytes={}", size);
+            println!("BENCHMARK: groth16_verification_time_s=0.0");
             println!("Warning: Public values not verified in Groth16 mode (proof generated on disk)");
 
-            println!("\n============ Summary ============");
-            println!("Program: {}", input.program.name());
-            println!("Proof size: {} bytes", size);
-            println!("Prove time: {:.2}s", duration.as_secs_f64());
-            println!("=================================\n");
+            // Summary block removed to avoid redundancy
         }
         _ => {
             panic!("Unknown proof mode: {}", proof_mode);
