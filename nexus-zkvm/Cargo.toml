@@ -16,15 +16,7 @@ resolver = "2"
 [workspace.lints]
 
 [workspace.dependencies]
-fib = { path = "../fib" }
-common = { path = "../common" }
-
-#misc
-dotenv = "0.15.0"
-anyhow = "1.0.98"
-
-clap = { version = "4.0", features = ["derive", "env"] }
-
+zkvm_programs = { path = "../programs" }
 
 
 # Always optimize; building and running the guest takes much longer without optimization.

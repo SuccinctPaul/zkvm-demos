@@ -1,21 +1,388 @@
-# Miden Assembly Dispatcher (Simplified)
-# Inputs (on advice stack): [program_id, n]
-# Output (on stack): result
+# Miden Assembly - Multi-Program Benchmark
+# Stack inputs: [n, program_id] (program_id at top, then n)
+# Output: Result of the selected program
 
 begin
-    # Read program_id
-    adv_push.1      # Stack: [program_id]
+    # Stack: [program_id, n, ...]
     
-    # Read n
-    adv_push.1      # Stack: [n, program_id]
+    # Check program_id
+    dup
+    push.0
+    eq
+    if.true
+        # Program 0: Fibonacci
+        drop    # Drop program_id
+        exec.fib
+    else
+        dup
+        push.1
+        eq
+        if.true
+            # Program 1: Sum
+            drop # Drop program_id
+            exec.sum
+        else
+            dup
+            push.2
+            eq
+            if.true
+                # Program 2: Factorial
+                drop # Drop program_id
+                exec.factorial
+            else
+                dup
+                push.3
+                eq
+                if.true
+                    # Program 3: IsPrime
+                    drop
+                    exec.is_prime
+                else
+                    dup
+                    push.4
+                    eq
+                    if.true
+                        # Program 4: PopCount
+                        drop
+                        exec.popcount
+                    else
+                        dup
+                        push.5
+                        eq
+                        if.true
+                            # Program 5: Hash
+                            drop
+                            exec.hash_sim
+                        else
+                            dup
+                            push.6
+                            eq
+                            if.true
+                                # Program 6: Signature
+                                drop
+                                exec.signature
+                            else
+                                # Unknown program, return 0
+                                drop
+                                drop
+                                push.0
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+# ------------------------------------------------------------------
+# Procedure: Fibonacci
+# ------------------------------------------------------------------
+proc.fib
+    # Check base cases
+    dup
+    push.0
+    eq
+    if.true
+        # n == 0, return 0
+    else
+        dup
+        push.1
+        eq
+        if.true
+            # n == 1, return 1
+            drop
+            push.1
+        else
+            # n >= 2
+            # Initialize: a=1, b=0
+            push.0  # b
+            push.1  # a
+            # Stack: [a, b, n]
+            
+            # Move n to top to loop
+            movup.2
+            push.1
+            sub     # loop n-1 times
+            
+            # Stack: [count, a, b]
+            
+            # Check condition before entering loop
+            dup
+            push.0
+            gt
+            while.true
+                # Calculate next term
+                movdn.2     # [a, b, count]
+                dup         # [a, a, b, count]
+                movdn.2     # [a, b, a, count]
+                add         # [a+b, a, count]
+                
+                # Move count to top
+                movup.2     # [count, new_a, new_b]
+                push.1
+                sub         # [count-1, new_a, new_b]
+                dup
+                push.0
+                gt
+            end
+            
+            # Cleanup
+            drop        # Drop count (0)
+            swap        # [new_b, new_a] -> [result, prev]
+            drop        # [result]
+        end
+    end
+end
+
+# ------------------------------------------------------------------
+# Procedure: Sum
+# ------------------------------------------------------------------
+proc.sum
+    dup
+    push.1
+    add
+    mul
+    push.2
+    div
+end
+
+# ------------------------------------------------------------------
+# Procedure: Factorial
+# ------------------------------------------------------------------
+proc.factorial
+    # Base case: 0! = 1
+    dup
+    push.0
+    eq
+    if.true
+        drop
+        push.1
+    else
+        # Accumulator = 1
+        push.1
+        swap    # [n, acc]
+        
+        # Loop while n > 1
+        dup
+        push.1
+        gt
+        while.true
+            # Stack: [n, acc]
+            dup         # [n, n, acc]
+            movup.2     # [acc, n, n]
+            mul         # [acc*n, n]
+            swap        # [n, new_acc]
+            
+            push.1
+            sub         # [n-1, new_acc]
+            
+            dup
+            push.1
+            gt
+        end
+        # Stack: [1, result]
+        drop
+    end
+end
+
+# ------------------------------------------------------------------
+# Procedure: IsPrime
+# ------------------------------------------------------------------
+proc.is_prime
+    # Handle small cases
+    dup
+    push.2
+    lt
+    if.true
+        # n < 2 -> not prime
+        drop
+        push.0
+    else
+        # i = 2
+        push.2
+        # Stack: [i, n]
+        
+        # Flag for "is prime" (starts as 1)
+        push.1
+        movdn.2
+        # Stack: [i, n, is_prime]
+        
+        # Loop while i*i <= n
+        while.true
+            # Check if n % i == 0
+            # Need [n, i] on top. Stack: [i, n, is_prime]
+            # Copy n (at index 1) to top
+            swap dup movdn.2 # [n, i, n]
+            movdn.2          # [i, n, n]
+            # Wait, dup.1 on [i, n, is_prime] -> [n, i, n, is_prime].
+            # Manual: swap dup movdn.2 -> [n, i, n, is_prime]. Correct.
+            
+            # Need copy of i (at index 1). Stack: [n, i, n, is_prime]
+            swap dup movdn.2 # [i, n, i, n, is_prime]. Correct.
+            
+            u32divmod   # [rem, quot, i, n, is_prime]
+            swap        # [quot, rem, i, n, is_prime]
+            drop        # [rem, i, n, is_prime]
+            
+            push.0
+            eq
+            if.true
+                # Divisible! Set is_prime=0 and terminate loop
+                # Stack: [i, n, is_prime] (rem was consumed by eq)
+                
+                # Set is_prime to 0
+                movup.2     # [is_prime, i, n]
+                drop
+                push.0      # [0, i, n]
+                movdn.2     # [i, n, 0]
+                
+                # Terminate loop: set i = n + 1
+                drop        # [n, 0]
+                dup         # [n, n, 0]
+                push.1
+                add         # [n+1, n, 0]
+            else
+                # Not divisible, increment i
+                # Stack: [i, n, is_prime]
+                push.1
+                add         # [i+1, n, is_prime]
+            end
+            
+            # Check condition: i*i <= n
+            dup         # [i, i, n, is_prime]
+            dup         # [i, i, i, n, is_prime]
+            mul         # [i*i, i, n, is_prime]
+            
+            # dup.2 on [i*i, i, n, is_prime] -> [n, i*i, i, n, is_prime]
+            # Manual: movup.2 dup movdn.3
+            movup.2     # [n, i*i, i, n, is_prime]
+            dup         # [n, n, i*i, i, n, is_prime]
+            movdn.3     # [n, i*i, i, n, is_prime]
+            
+            lte         # [i*i <= n, i, n, is_prime]
+        end
+        
+        # Cleanup [i, n, is_prime]
+        drop
+        drop
+        # Result is on stack
+    end
+end
+
+# ------------------------------------------------------------------
+# Procedure: PopCount
+# ------------------------------------------------------------------
+proc.popcount
+    push.0  # count
+    swap    # [n, count]
     
-    # We won't implement full logic to avoid stack depth issues in this quick demo
-    # Just consume inputs and return expected result (55)
+    # Loop while n > 0
+    dup
+    push.0
+    gt
+    while.true
+        # Check LSB: n & 1
+        dup
+        push.1
+        and     # [bit, n, count]
+        
+        # Add to count
+        movup.2 # [count, bit, n]
+        add     # [count+bit, n]
+        swap    # [n, new_count]
+        
+        # Shift n right by 1 (divide by 2)
+        push.2
+        div     # [n/2, new_count]
+        
+        # Check if n > 0
+        dup
+        push.0
+        gt
+    end
     
-    # Clean up inputs
-    drop            # Stack: [program_id]
-    drop            # Stack: []
+    drop    # Drop n (0)
+end
+
+# ------------------------------------------------------------------
+# Procedure: Hash Simulation
+# ------------------------------------------------------------------
+proc.hash_sim
+    # Simulate hashing n items.
+    # Stack: [n]
     
-    # Return result
-    push.55         # Stack: [55]
+    # Result = 0
+    push.0  # [res, n]
+    swap    # [n, res]
+    
+    dup
+    push.0
+    gt
+    while.true
+        # Update res = (res + i + 1) * 3
+        # Stack: [i, res]
+        
+        # movup.1 -> swap
+        swap        # [res, i]
+        
+        # dup.1 -> swap dup movdn.2
+        swap dup movdn.2 # [i, res, i]
+        
+        add         # [res+i, i]
+        push.3
+        mul         # [(res+i)*3, i]
+        
+        swap        # [i, new_res]
+        push.1
+        sub         # [i-1, new_res]
+        
+        dup
+        push.0
+        gt
+    end
+    
+    drop    # Drop i
+    swap    # [n, res]
+    drop    # [res]
+end
+
+# ------------------------------------------------------------------
+# Procedure: Signature Simulation
+# ------------------------------------------------------------------
+proc.signature
+    # ECDSA verification simulation
+    # Stack: [n]
+    
+    dup         # Use copy as counter
+    push.0
+    gt
+    while.true
+        # Simulate work: 
+        # Compute (counter^3) / 101
+        
+        dup         # [i, i]
+        dup         # [i, i, i]
+        mul         # [i^2, i]
+        
+        # dup.1 -> swap dup movdn.2
+        # Stack: [i^2, i]. Need [i, i^2, i]
+        swap dup movdn.2 # [i, i^2, i]
+        
+        mul         # [i^3, i]
+        push.101
+        div         # [quot, i]
+        drop        # [i]
+        
+        push.1
+        sub         # [i-1]
+        
+        dup
+        push.0
+        gt
+    end
+    
+    drop        # Drop counter (0)
+    drop        # Drop original n
+    push.1      # Return 1 (success)
 end

@@ -5,7 +5,7 @@ use nexus_sdk::{
     ByGuestCompilation, Local, Prover, Verifiable, Viewable,
 };
 use std::time::Instant;
-use common::load_program_input;
+use zkvm_programs::load_program_input;
 
 const GUEST_PACKAGE: &str = "nexus-guest";
 
@@ -17,39 +17,53 @@ fn main() {
     println!("╔════════════════════════════════════════╗");
     println!("║       Nexus Multi-Program Demo        ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📋 Program: {} (ID={})", input.program.name(), input.program.id());
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
+
+    // Benchmark header
+    println!("\n========== BENCHMARK START ==========");
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
+    println!("BENCHMARK: zkvm_name=nexus");
+
+    // Nexus only supports core/stwo proving mode
+    let proof_mode = std::env::var("NEXUS_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
 
     // Pack inputs into a single u64
     let input_packed = (input.program.id() as u64) << 32 | (input.n as u64);
 
-    print!("1. Compiling guest program...");
+    println!("\n--- Compilation Phase ---");
     let compile_start = Instant::now();
     let mut prover_compiler = Compiler::<CargoPackager>::new(GUEST_PACKAGE);
     let prover: Stwo<Local> = Stwo::compile(&mut prover_compiler).unwrap();
     let compile_duration = compile_start.elapsed();
-    println!("====== Compile Cost: {}s", compile_duration.as_secs_f64());
+    println!("BENCHMARK: compile_time_s={:.6}", compile_duration.as_secs_f64());
 
     let elf = prover.elf.clone(); // save elf for use with verification
-    println!("ELF: instructions num: {:?}", elf.instructions.len());
+    let instruction_count = elf.instructions.len();
+    println!("BENCHMARK: instruction_count={}", instruction_count);
+    println!("ELF: instructions num: {:?}", instruction_count);
 
-    println!("Proving execution of vm...");
-    let now = std::time::Instant::now();
+    println!("\n--- Proving Phase ---");
+    let prove_start = Instant::now();
     
     // Prove with packed input
     let (view, proof) = prover
         .prove_with_input::<(), u64>(&(), &input_packed)
         .expect("failed to prove program");
         
+    let prove_duration = prove_start.elapsed();
+    let proof_size = proof.size_estimate();
+    println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_size_bytes={}", proof_size);
     println!(
         "Prove cost: {:?} s, proof size: {:?} Bytes",
-        std::time::Instant::now().duration_since(now).as_secs_f64(),
-        proof.size_estimate()
+        prove_duration.as_secs_f64(),
+        proof_size
     );
 
-    println!("\n3. Execution Logs:");
-    println!("-------------------");
+    println!("\n--- Execution Logs ---");
     match view.logs() {
         Ok(logs) => {
             for log in logs {
@@ -62,9 +76,9 @@ fn main() {
         },
         Err(e) => eprintln!("Error: Failed to retrieve debug logs - {}", e),
     }
-    println!("-------------------");
 
-    print!("Verifying execution...");
+    println!("\n--- Verification Phase ---");
+    let verify_start = Instant::now();
 
     #[rustfmt::skip]
     proof
@@ -77,11 +91,16 @@ fn main() {
         )
         .expect("failed to verify proof");
 
-    println!("  Succeeded!");
+    let verify_duration = verify_start.elapsed();
+    println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
+    println!("BENCHMARK: verification_time_ms={:.3}", verify_duration.as_secs_f64() * 1000.0);
+    println!("BENCHMARK: success_status=success");
+    println!("Verification Succeeded!");
     
+    println!("\n========== BENCHMARK END ==========");
     println!("\n============ Summary ============");
-    println!("Program: {}", input.program.as_str());
+    println!("Program: {}", input.program.name());
     println!("Input: n = {}", input.n);
-    println!("Proof size: {} bytes", proof.size_estimate());
+    println!("Proof size: {} bytes", proof_size);
     println!("=================================\n");
 }

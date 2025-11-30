@@ -1,0 +1,196 @@
+# ================================================================
+# Pico zkVM Benchmark Configuration
+# ================================================================
+# ⚠️ Note: Pico SDK v1.1.6 has toolchain compatibility issues
+# Use pre-built binaries to run, skipping build steps
+
+name = "pico"
+version = "v1.1.6"
+enabled = true
+
+# Test scales (program input N value)
+# Note: If programs are configured, test_scales will be ignored (kept for backward compatibility)
+test_scales = [10, 20]
+
+# Proving mode
+# Pico supports "core" (fast), "compressed" (combined), and "groth16" (evm, which needs lots of memory)
+prove_modes = ["core", "compressed"]
+
+# Pico project path (use pico-zkvm root as working directory)
+working_dir = "../pico-zkvm"
+
+# Build and run commands
+# ⚠️ Skip build: Pico SDK v1.1.6 has toolchain compatibility issues
+#    - error[E0635]: unknown feature `const_cmp`
+#    - error[E0658]: using `_` for array lengths is unstable
+build_command = "cargo build --release"
+# Use pre-built binaries, do not set build_command
+run_command = "./target/release/pico-host"
+
+# Timeout setting (seconds)
+timeout_seconds = 3600
+
+# Repeat count
+repeat_count = 1
+
+# Program configuration
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+# ----------------------------------------------------------------
+# Environment variables
+# ----------------------------------------------------------------
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+# Note: PICO_PROOF_MODE is injected by the runner
+
+# ----------------------------------------------------------------
+# Parsing rules (Parsed Metrics)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# RiscV Execution Report (Core Metrics)
+# Log format: "|- cycles:           5361"
+# ================================================================
+raw_total_cycles = '\|-\s*cycles:\s+(\d+)'
+raw_chunk_num = '\|-\s*chunk_num:\s+(\d+)'
+raw_chunk_size = '\|-\s*chunk_size:\s+(\d+)'
+raw_chunk_batch_size = '\|-\s*chunk_batch_size:\s+(\d+)'
+
+# ================================================================
+# Initialization Phase
+# ================================================================
+raw_elf_size_bytes = 'ELF size: (\d+) bytes'
+raw_initialization_time_s = 'Initialization completed in ([\d.]+)s'
+
+# ================================================================
+# Proving Phase Details
+# ================================================================
+# RISCV machine prove total time: "RISCV MACHINE PROVE: close time.busy=2.17s"
+raw_riscv_prove_time_s = 'RISCV MACHINE PROVE: close time\.busy=([\d.]+)s'
+# Finish RISCV time: "--- Finish riscv in 2.167714125s"
+raw_finish_riscv_time_s = '--- Finish riscv in ([\d.]+)s'
+# User friendly prove time: "Proof generation completed in 2.33s"
+# Fallback format: "Prove time: 2.33s"
+raw_prove_time_alt = 'Prove time: ([\d.]+)s'
+
+# ================================================================
+# Recursion Layers Time
+# ================================================================
+raw_convert_prove_time_s = 'CONVERT MACHINE PROVE: close time\.busy=([\d.]+)s'
+# Matches both "COMBINE MACHINE PROVE: close time.busy=..." and "COMBINE MACHINE PROVE:combine layer: close time.busy=..."
+raw_combine_prove_time_s = 'COMBINE MACHINE PROVE: close time\.busy=([\d.]+)s'
+raw_compress_prove_time_s = 'COMPRESS MACHINE PROVE: close time\.busy=([\d.]+)s'
+raw_embed_prove_time_s = 'EMBED MACHINE PROVE: close time\.busy=([\d.]+)s'
+
+# ================================================================
+# Chunk proving time statistics
+# Log format: "total  │      4329 ms"
+# ================================================================
+raw_chunks_total_prove_ms = 'total\s+│\s+(\d+)\s+ms'
+
+# ================================================================
+# Proof Size
+# ================================================================
+raw_proof_size_bytes = 'Proof size: (\d+) bytes'
+
+# ================================================================
+# Verification Phase
+# ================================================================
+# "riscv_prover prove success"
+raw_prove_success = 'riscv_prover prove (success)'
+# "riscv_prover proof verify success"  
+raw_verify_success = 'riscv_prover proof verify (success)'
+
+# ================================================================
+# Chip Statistics
+# Log format: "chip Cpu | width 117 rows 32768 cells 3833856"
+# ================================================================
+raw_cpu_chip_rows = 'chip Cpu\s+\| width \d+\s+rows (\d+)'
+raw_cpu_chip_cells = 'chip Cpu\s+\| width \d+\s+rows \d+\s+cells (\d+)'
+raw_program_chip_rows = 'chip Program\s+\| width \d+\s+rows (\d+)'
+raw_memory_chip_rows = 'chip MemoryReadWrite\s+\| width \d+\s+rows (\d+)'
+raw_poseidon2_chip_rows = 'chip Poseidon2\s+\| width \d+\s+rows (\d+)'
+raw_batch_fri_chip_rows = 'chip BatchFRI\s+\| width \d+\s+rows (\d+)'
+raw_ext_alu_chip_rows = 'chip ExtAlu\s+\| width \d+\s+rows (\d+)'
+raw_base_alu_chip_rows = 'chip BaseAlu\s+\| width \d+\s+rows (\d+)'
+raw_keccak_permute_chip_rows = 'chip KeccakPermute\s+\| width \d+\s+rows (\d+)'
+raw_sha_compress_chip_rows = 'chip ShaCompress\s+\| width \d+\s+rows (\d+)'
+
+# ================================================================
+# Setup Keys Time
+# Log format: "setup_keys: close time.busy=199ms"
+# ================================================================
+raw_setup_keys_time_ms = 'setup_keys: close time\.busy=([\d.]+)ms'
+
+# ================================================================
+# Core Prove Time (per chunk)
+# Log format: "core_prove: close time.busy=1.60s"
+# ================================================================
+raw_core_prove_time_s = 'core_prove: close time\.busy=([\d.]+)s'
+raw_core_proof_time_s = 'BENCHMARK: core_proof_time_s=([\d.]+)'
+raw_core_proof_size_bytes = 'BENCHMARK: core_proof_size_bytes=(\d+)'
+raw_core_verification_time_s = 'BENCHMARK: core_verification_time_s=([\d.]+)'
+
+# Compressed Mode Metrics
+raw_compressed_proof_time_s = 'BENCHMARK: compressed_proof_time_s=([\d.]+)'
+raw_compressed_verification_time_s = 'BENCHMARK: compressed_verification_time_s=([\d.]+)'
+raw_compressed_proof_size_bytes = 'BENCHMARK: compressed_proof_size_bytes=(\d+)'
+
+# Groth16 Mode Metrics
+raw_groth16_proof_time_s = 'BENCHMARK: groth16_proof_time_s=([\d.]+)'
+raw_groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
+raw_groth16_verification_time_s = 'BENCHMARK: groth16_verification_time_s=([\d.]+)'
+
+# ================================================================
+# BENCHMARK Format - Common
+# ================================================================
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_execution_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
+
+# ----------------------------------------------------------------
+# Metric Mapping
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Execution Phase
+# ====================
+"total_cycles" = "raw_total_cycles"
+"output_result" = "raw_output_result"
+"execution_time_s" = "raw_execution_time_s"
+
+# ====================
+# 2. VM Circuit Phase
+# ====================
+"vm_chunk_count" = "raw_chunk_num"
+"vm_prove_time_s" = "raw_riscv_prove_time_s"
+"vm_prove_proof_size_bytes" = "raw_core_proof_size_bytes"
+
+# Mode-specific mappings (captured if available)
+
+"aggressive_prove_time_s" = "raw_compressed_proof_time_s"
+"aggressive_proof_size_bytes" = "raw_compressed_proof_size_bytes"
+
+
+"snark_proof_time_s" = "raw_groth16_proof_time_s"
+"snark_proof_size_bytes" = "raw_groth16_proof_size_bytes"
+
+# ====================
+# 3. Verification Phase
+# ====================
+"success_status" = "raw_success_status"
+#"core_verification_time_s" = "raw_core_verification_time_s"
+#"compressed_verification_time_s" = "raw_compressed_verification_time_s"
+#"groth16_verification_time_s" = "raw_groth16_verification_time_s"
+"verification_time_s" = "raw_compressed_verification_time_s"

@@ -1,0 +1,142 @@
+# ================================================================
+# RISC0 zkVM Benchmark Configuration
+# ================================================================
+
+name = "risc0"
+version = "v3.0.3"
+enabled = true
+
+# Test scales (program input N value)
+# Note: If programs are configured, test_scales will be ignored (kept for backward compatibility)
+test_scales = [10, 20]
+
+# Proving mode
+prove_modes = ["core", "compressed", "groth16"]
+
+# RISC0 project path
+working_dir = "../risc0-zkvm/risc0-host"
+
+# Build and run commands
+build_command = "cargo build --release"
+run_command = "cargo run --release"
+
+# Timeout setting (seconds)
+timeout_seconds = 3600
+
+# Repeat count
+repeat_count = 1
+
+# Program configuration (Recommended way to configure multiple programs)
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+# ----------------------------------------------------------------
+# Environment variables
+# ----------------------------------------------------------------
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+RISC0_DEV_MODE = "0"
+# Note: RISC0_PROOF_MODE is injected by the runner
+
+# ----------------------------------------------------------------
+# Parsing rules (Parsed Metrics)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# Basic Information (Basic Info)
+# ================================================================
+raw_program_name = 'BENCHMARK: program_name=(\w+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+
+# ================================================================
+# Execution Phase
+# ================================================================
+# Host output format: "BENCHMARK: total_cycles=12345"
+raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
+raw_user_cycles = 'BENCHMARK: user_cycles=(\d+)'
+raw_segment_count = 'BENCHMARK: segment_count=(\d+)'
+
+# ================================================================
+# Proving Phase
+# ================================================================
+# Host output format: "BENCHMARK: proof_time_s=1.234567"
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+
+# Host output format: "BENCHMARK: proof_size_bytes=12345"
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
+# ================================================================
+# Verification Phase
+# ================================================================
+# Host output format: "BENCHMARK: verification_time_s=0.123456"
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
+
+# Host output format: "BENCHMARK: success_status=success"
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Fallback mode (compatible with old log format)
+# ================================================================
+# Old format: "proof mode: core, proof size: 12345 Bytes, proof time: 1.234s"
+fallback_proof_mode = 'proof mode: (\w+),'
+fallback_proof_size = 'proof size: (\d+) Bytes'
+fallback_proof_time = 'proof time: ([\d.]+)s'
+
+# Guest output format (cycle tracker)
+guest_cycles = 'fibonacci \(cycle tracker\): (\d+)'
+
+# ----------------------------------------------------------------
+# Metric Mapping
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Execution Phase
+# ====================
+"total_cycles" = "raw_total_cycles"
+"instruction_count" = "raw_user_cycles"
+
+# ====================
+# 2. VM Circuit Phase (Core Proving)
+# ====================
+"vm_chunk_count" = "raw_segment_count"
+"vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+
+# ====================
+# 3. Aggressive Phase (Compressed)
+# ====================
+# RISC0 compressed mode (succinct) reuses the same proof metrics
+"aggressive_prove_time_s" = "raw_proof_time_s"
+"aggressive_proof_size_bytes" = "raw_proof_size_bytes"
+
+# ====================
+# 4. SNARK Phase (Groth16)
+# ====================
+# RISC0 groth16 mode reuses the same proof metrics
+# TODO: here the snark proof time is little bit different with others.
+#   raw_proof_time_s is wrong, because it's the total proof generation time.
+#   And we need to calc the time from the logs:
+#   eg: 2025-11-30T17:29:45.438705Z DEBUG risc0_zkvm::receipt: Receipt::verify_with_context
+#       2025-11-30T17:29:45.438708Z DEBUG risc0_zkvm::receipt: InnerReceipt::verify_integrity_with_context
+#
+"snark_proof_time_s" = "raw_proof_time_s"
+"snark_proof_size_bytes" = "raw_proof_size_bytes"
+"snark_type" = "raw_proof_mode"
+
+# ====================
+# 5. Verification Phase
+# ====================
+"verification_time_s" = "raw_verification_time_s"
+"success_status" = "raw_success_status"

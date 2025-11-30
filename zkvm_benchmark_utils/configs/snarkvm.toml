@@ -1,0 +1,119 @@
+# ================================================================
+# snarkVM Benchmark Configuration
+# ================================================================
+# snarkVM is the Aleo network's zkVM using Marlin proving system
+
+name = "snark_vm"
+version = "v0.16.0"
+enabled = true  # SDK support added; falls back to CLI/Reference if needed
+test_scales = [10, 20]
+prove_modes = ["core"]
+
+working_dir = "../snarkvm-zkvm/snarkvm-host"
+build_command = "cargo build --release"
+run_command = "cargo run --release"
+
+timeout_seconds = 600
+repeat_count = 1
+
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+
+# ----------------------------------------------------------------
+# Parsed Metrics (Regular Expressions)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# BENCHMARK Format Logs (Primary Source)
+# ================================================================
+# Metadata
+raw_program_name = 'BENCHMARK: program_name=([a-zA-Z0-9_]+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
+
+# ================================================================
+# Compilation Phase
+# ================================================================
+raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
+
+# ================================================================
+# Execution Phase
+# ================================================================
+raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
+
+# ================================================================
+# Proving Phase
+# ================================================================
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+raw_vm_prove_khz = 'BENCHMARK: vm_prove_khz=([\d.]+)'
+
+# ================================================================
+# Verification Phase
+# ================================================================
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Total Time
+# ================================================================
+raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
+
+# ================================================================
+# Legacy Format (Fallback Parsing)
+# ================================================================
+legacy_result = 'Result: (\d+)'
+legacy_exec_time = 'Execution completed in ([\d.]+)s'
+legacy_proof_time = 'Proving time: ([\d.]+)s'
+legacy_proof_size = 'Proof size: (\d+) bytes'
+legacy_constraints = 'Estimated constraints: (\d+)'
+
+# ----------------------------------------------------------------
+# Metric Mapping (Raw -> Standard Keys)
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Compilation Phase
+# ====================
+"compile_time_s" = "raw_compile_time_s"
+
+# ====================
+# 2. Execution Phase
+# ====================
+"execution_time_s" = "raw_execution_time_s"
+"total_cycles" = "raw_total_cycles"
+
+# ====================
+# 3. Proving Phase
+# ====================
+"vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+"vm_prove_khz" = "raw_vm_prove_khz"
+
+# ====================
+# 4. Verification Phase
+# ====================
+"verification_time_s" = "raw_verification_time_s"
+
+# ====================
+# 5. Status & Summary
+# ====================
+"success_status" = "raw_success_status"
+"total_time_s" = "raw_total_time_s"

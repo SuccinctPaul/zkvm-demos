@@ -1,18 +1,13 @@
 [package]
 name = "valida-guest"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
 
-# Note: Valida primarily uses C for guest programs
-# This Cargo.toml is here for workspace consistency
-# The actual guest program is in fib.c
+[dependencies]
+zkvm_programs = { path = "../../programs" }
 
-
-
-
-
-
-
-
+[profile.release]
+panic = "abort"
+lto = true
+opt-level = 3
+codegen-units = 1

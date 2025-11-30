@@ -13,7 +13,7 @@ resolver = "2"
 [workspace.lints]
 
 [workspace.dependencies]
-common = { path = "../common" }
+zkvm_programs = { path = "../programs" }
 
 # Miden VM dependencies
 miden-vm = "0.11"

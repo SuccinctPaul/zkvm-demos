@@ -1,0 +1,133 @@
+# ================================================================
+# ZKM zkVM Benchmark Configuration
+# ================================================================
+# ZKM is a MIPS/RISC-V zkVM with Groth16/Plonk support
+
+name = "zkm"
+version = "v0.3.0"
+enabled = true
+test_scales = [10, 20]
+prove_modes = ["core", "compressed", "groth16"]
+
+working_dir = "../zkm-zkvm/zkm-host"
+
+# Note: ZKM requires sourcing the toolchain environment first
+# Using wrapper scripts to avoid shell special characters ($, &) blocked by executor
+build_command = "./build.sh"
+run_command = "./run.sh"
+
+timeout_seconds = 3600
+repeat_count = 1
+
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+
+[parsed_metrics]
+# BENCHMARK format logs (primary)
+raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+# raw_proof_size_bytes removed in favor of specific keys
+raw_vm_core_proof_size_bytes = 'BENCHMARK: vm_core_proof_size_bytes=(\d+)'
+raw_compressed_proof_size_bytes = 'BENCHMARK: compressed_proof_size_bytes=(\d+)'
+raw_groth16_proof_size_bytes = 'BENCHMARK: groth16_proof_size_bytes=(\d+)'
+raw_execute_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
+raw_stage1_vm_prove_time_s = 'BENCHMARK: stage1_vm_prove_time_s=([\d.]+)'
+raw_stage2_recursive_time_s = 'BENCHMARK: stage2_recursive_time_s=([\d.]+)'
+raw_total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
+raw_final_proof_size_bytes = 'BENCHMARK: final_proof_size_bytes=(\d+)'
+raw_vm_circuit_chunk_count = 'BENCHMARK: vm_circuit_chunk_count=(\d+)'
+
+# Legacy / Alternative format fallback
+raw_total_instruction_count = 'total_instruction_count=(\d+)'
+raw_total_cycles = 'total_cycles=(\d+)'
+legacy_proof_size = 'proof size: (\d+) Bytes'
+total_syscall_cycles = 'total_syscall_cycles=(\d+)'
+touched_memory_addresses = 'touched_memory_addresses=(\d+)'
+
+# ================================================================
+# ZKM Trace & Proof Metrics
+# ================================================================
+
+# Core Phase (VM Execution & Trace Generation)
+core_proof_total_time_s = 'prove_core:phase 2 prover: close time\.busy=([\d.]+)s'
+
+# Compress Phase (Recursion Layer 1)
+compress_total_time_s = 'compress: close time\.busy=([\d.]+)s'
+
+# Shrink Phase (Recursion Layer 2)
+shrink_total_time_s = 'shrink: close time\.busy=([\d.]+)s'
+
+# Wrap Phase (Recursion Layer 3 / Aggregation)
+wrap_bn254_proving_time_s = 'wrap_bn254: wrap proving time: ([\d.]+)s'
+wrap_bn254_total_time_s = 'wrap_bn254: close time\.busy=([\d.]+)s'
+wrap_bn254_total_events = 'wrap_bn254: total events: (\d+)'
+wrap_bn254_merkle_build_time_s = 'wrap_bn254:prove_shards:open multi batches:build merkle tree: close time\.busy=([\d.]+)s'
+
+# Groth16 Phase (Final SNARK)
+groth16_r1cs_reading_time_s = 'Reading R1CS took ([\d.]+)s'
+groth16_proving_key_reading_time_s = 'Reading proving key took ([\d.]+)s'
+groth16_witness_reading_time_ms = 'Reading witness file took ([\d.]+)ms'
+groth16_witness_generation_time_ms = 'Generating witness took ([\d.]+)ms'
+groth16_constraint_count = 'nbConstraints=(\d+)'
+groth16_solver_time_ms = 'constraint system solver done.*took=([\d.]+)'
+groth16_prover_time_ms = 'prover done.*took=([\d.]+)'
+groth16_generation_time_s = 'Generating proof took ([\d.]+)s'
+groth16_verifier_time_ms = 'verifier done.*took=([\d.]+)'
+wrap_groth16_total_time_s = 'wrap_groth16_bn254: close time\.busy=([\d.]+)s'
+raw_snark_type = 'prover done.*backend=(\w+)'
+
+# Detailed Timing (Generic)
+prove_shards_time_s = 'prove_shards: close time\.busy=([\d.]+)s'
+compute_quotient_time_ms = 'compute quotient values: close time\.busy=([\d.]+)ms'
+open_multi_batches_time_s = 'open multi batches: close time\.busy=([\d.]+)s'
+
+# Dimensions
+merkle_dimensions = 'dimensions="([^"]+)"'
+
+[metric_mapping]
+# Execution
+"instruction_count" = "raw_total_instruction_count"
+"total_cycles" = "raw_total_cycles"
+"total_syscall_cycles" = "total_syscall_cycles"
+"touched_memory_addresses" = "touched_memory_addresses"
+"execution_time_s" = "raw_execute_time_s"
+
+# VM Circuit
+"vm_prove_time_s" = "core_proof_total_time_s"
+"vm_chunk_count" = "raw_vm_circuit_chunk_count"
+"vm_prove_proof_size_bytes" = "raw_vm_core_proof_size_bytes"
+
+# Aggressive / Recursion
+# Mapping the wrap phase total time as the aggressive prove time,
+# as it seems to be the dominant recursion step in ZKM logs.
+"aggressive_prove_time_s" = "compress_total_time_s"
+"aggressive_proof_size_bytes" = "raw_compressed_proof_size_bytes"
+
+# Groth16 / SNARK
+"snark_proof_size_bytes" = "raw_groth16_proof_size_bytes"
+"snark_setup_time_s" = "groth16_r1cs_reading_time_s"
+"snark_witness_time_s" = "groth16_witness_generation_time_ms"
+"snark_constraint_count" = "groth16_constraint_count"
+"snark_proof_time_s" = "groth16_generation_time_s"
+"snark_type" = "raw_snark_type"
+
+# Verification
+"verification_time_s" = "raw_verification_time_s"
+"success_status" = "raw_success_status"

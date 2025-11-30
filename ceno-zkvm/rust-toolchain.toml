@@ -1,9 +1,7 @@
 [toolchain]
-# Using nightly toolchain for Nexus zkVM compatibility
-# (CENO proof-of-concept implementation)
-channel = "nightly-2025-04-06"
-targets = ["riscv32i-unknown-none-elf"]
-
-
-
-
+# CENO zkVM - matching official Scroll CENO toolchain
+# https://github.com/scroll-tech/ceno
+channel = "nightly-2025-08-18"
+targets = ["riscv32im-unknown-none-elf"]
+# We need the sources for build-std
+components = ["rust-src", "rustfmt", "clippy"]

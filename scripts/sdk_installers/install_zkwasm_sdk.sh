@@ -73,6 +73,9 @@ echo ""
 
 # Build zkWasm CLI
 echo -e "${BLUE}Building zkWasm CLI (this may take 10-20 minutes)...${NC}"
+# Fix CMake compatibility issue with newer CMake versions
+# wabt-sys uses an old CMakeLists.txt that requires CMake < 3.5 syntax
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
 cargo build --release
 echo -e "${GREEN}✓ Build complete${NC}"
 echo ""

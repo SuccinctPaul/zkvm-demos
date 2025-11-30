@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 openvm-sdk = { git = "https://github.com/openvm-org/openvm", tag = "v1.4.0" }
 openvm-build = { git = "https://github.com/openvm-org/openvm", tag = "v1.4.0" }
-common = { workspace = true }
+zkvm_programs = { workspace = true, features = ["std"] }
 dotenv = "0.15.0"
 anyhow = "1.0"
 bincode = "1.3"

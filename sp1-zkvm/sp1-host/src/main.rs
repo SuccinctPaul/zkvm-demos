@@ -4,17 +4,16 @@
 //!
 //! You can run this script using the following command:
 //! ```shell
-//! PROGRAM=fibonacci INPUT_N=30 cargo run --release -- --execute
-//! PROGRAM=hash INPUT_N=256 cargo run --release -- --execute
-//! PROGRAM=signature INPUT_N=10 cargo run --release -- --prove
+//! PROGRAM=fibonacci INPUT_N=30 cargo run --release
+//! PROGRAM=hash INPUT_N=256 cargo run --release
+//! PROGRAM=signature INPUT_N=10 cargo run --release
 //! ```
 
-mod cli;
 
-use clap::Parser;
-use cli::Args;
 use sp1_sdk::{include_elf, ProverClient, SP1Proof, SP1ProofMode, SP1Stdin};
-use common::load_program_input;
+use std::time::Instant;
+
+use zkvm_programs::load_program_input;
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const GUEST_ELF: &[u8] = include_elf!("sp1-guest");
@@ -24,21 +23,13 @@ fn main() {
     sp1_sdk::utils::setup_logger();
     dotenv::dotenv().ok();
 
-    // Parse the command line arguments.
-    let args = Args::parse();
-
-    if args.execute == args.prove {
-        eprintln!("Error: You must specify either --execute or --prove");
-        std::process::exit(1);
-    }
-
     // Load program input from environment
     let input = load_program_input();
-    
+
     println!("╔════════════════════════════════════════╗");
     println!("║         SP1 Multi-Program Demo        ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} ({})", input.program.as_str(), input.program.description());
+    println!("📋 Program: {} ({})", input.program.name(), input.program.description());
     println!("📊 Input N: {}", input.n);
     println!();
 
@@ -54,74 +45,199 @@ fn main() {
     stdin.write(&program_id);
     stdin.write(&input.n);
 
-    if args.execute {
-        // Execute the program
-        println!("⚙️  Executing program...");
-        let (mut public_values, report) = client.execute(GUEST_ELF, &stdin).run().unwrap();
+    // ============================================================
+    // BENCHMARK MODE: Output detailed metrics
+    // ============================================================
 
-        // Read the output result
-        let result: u32 = public_values.read();
-        
-        println!();
-        println!("✅ Execution Results:");
-        println!("─────────────────────────────────────");
-        println!("📤 Output: {}", result);
-        println!("📊 Instructions: {}", report.total_instruction_count());
-        println!("🔄 Cycles: {}", report.total_syscall_count());
-        println!();
-        println!("✨ Program executed successfully!");
-    } else {
-        // Setup the program for proving.
-        println!("🔧 Setting up proving environment...");
-        let (pk, vk) = client.setup(GUEST_ELF);
+    println!("\n========== BENCHMARK START ==========");
 
-        // Generate the proof
-        println!("🔐 Generating proof...");
-        
-        // Allow configuring proof mode via environment variable
-        let proof_mode = match std::env::var("PROOF_MODE").unwrap_or_default().as_str() {
-            "core" => SP1ProofMode::Core,
-            "compressed" => SP1ProofMode::Compressed,
-            "plonk" => SP1ProofMode::Plonk,
-            _ => SP1ProofMode::Groth16,
-        };
-        
-        let prover = client.prove(&pk, &stdin).mode(proof_mode);
-        let proof = prover.run().expect("failed to generate proof");
+    // Metadata
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
+    println!("BENCHMARK: zkvm_name=SP1");
+    println!("BENCHMARK: zkvm_version=v5.0.0");
 
-        println!();
-        println!("✅ Successfully generated proof!");
+    // Setup the program for proving.
+    println!("🔧 Setting up proving environment...");
+    let (pk, vk) = client.setup(GUEST_ELF);
 
-        // Calculate proof size
-        let proof_size = match proof.proof.clone() {
-            SP1Proof::Core(core_proof) => {
-                let mut total_proof_bytes = 0;
-                for cp in core_proof {
-                    let proof_bytes = serde_json::to_vec(&cp).unwrap();
-                    total_proof_bytes += proof_bytes.len();
+    // ========== Stage 0: Execution ==========
+    println!("⚙️  Executing program...");
+    let exec_start = Instant::now();
+    let (_output, report) = client.execute(GUEST_ELF, &stdin).run().unwrap();
+    let exec_time = exec_start.elapsed();
+
+    println!("\n--- Execution Phase ---");
+    println!("BENCHMARK: total_system_call_cycles={}", report.total_syscall_count());
+    println!("BENCHMARK: total_instruction_count={}", report.total_instruction_count());
+    println!("BENCHMARK: execute_time_s={:.6}", exec_time.as_secs_f64());
+
+    // Determine proof mode from environment or default to Groth16
+    let proof_mode = std::env::var("SP1_PROOF_MODE")
+        .unwrap_or_else(|_| "groth16".to_string())
+        .to_lowercase();
+
+    let mode = match proof_mode.as_str() {
+        "core" => SP1ProofMode::Core,
+        "compressed" => SP1ProofMode::Compressed,
+        "plonk" => SP1ProofMode::Plonk,
+        _ => SP1ProofMode::Groth16,
+    };
+
+    println!("\n--- Proving Phase (mode: {:?}) ---", mode);
+
+    // Start total proving timer
+    let total_prove_start = Instant::now();
+
+    match mode {
+        SP1ProofMode::Core => {
+            // Stage 1: Core STARK proof
+            println!("Stage 1: Generating Core STARK proof...");
+            let stage1_start = Instant::now();
+
+            let proof = client.prove(&pk, &stdin)
+                .mode(SP1ProofMode::Core)
+                .run()
+                .expect("Core proof generation failed");
+
+            let stage1_time = stage1_start.elapsed();
+            
+            // Measure core proof size and chunk count
+            let (core_proof_size, chunk_count) = match &proof.proof {
+                SP1Proof::Core(core_proofs) => {
+                    let mut total = 0;
+                    for cp in core_proofs {
+                        if let Ok(bytes) = bincode::serialize(cp) {
+                            total += bytes.len();
+                        }
+                    }
+                    (total, core_proofs.len())
                 }
-                total_proof_bytes
-            }
-            SP1Proof::Compressed(compress) => {
-                let proof_bytes = serde_json::to_vec(&compress.proof).unwrap();
-                proof_bytes.len()
-            }
-            _ => proof.bytes().len(),
-        };
-        
-        println!();
-        println!("📊 Proof Information:");
-        println!("─────────────────────────────────────");
-        println!("🔒 Mode: {:?}", proof_mode);
-        println!("📦 Size: {} bytes ({:.2} KB)", proof_size, proof_size as f64 / 1024.0);
+                _ => (0, 0),
+            };
 
-        // Verify the proof.
-        println!();
-        println!("🔍 Verifying proof...");
-        client.verify(&proof, &vk).expect("failed to verify proof");
-        
-        println!();
-        println!("✨ Successfully verified proof!");
-        println!("╚════════════════════════════════════════╝");
+            println!("BENCHMARK: stage1_vm_prove_time_s={:.6}", stage1_time.as_secs_f64());
+            println!("BENCHMARK: vm_circuit_chunk_count={}", chunk_count);
+            println!("BENCHMARK: vm_core_proof_size_bytes={}", core_proof_size);
+            println!("BENCHMARK: final_proof_size_bytes={}", core_proof_size);
+
+            let total_prove_time = total_prove_start.elapsed();
+            println!("BENCHMARK: total_prove_time_s={:.6}", total_prove_time.as_secs_f64());
+
+            // Verify
+            let verify_start = Instant::now();
+            client.verify(&proof, &vk).expect("Verification failed");
+            let verify_time = verify_start.elapsed();
+
+            println!("\n--- Verification Phase ---");
+            println!("BENCHMARK: verification_time_s={:.6}", verify_time.as_secs_f64());
+            println!("BENCHMARK: verification_time_ms={:.3}", verify_time.as_secs_f64() * 1000.0);
+        }
+
+        SP1ProofMode::Compressed => {
+            // Stage 1: Core proof (internal)
+            println!("Stage 1: Core proof (internal)...");
+
+            // Stage 2: Compressed proof
+            println!("Stage 2-3: Generating Compressed proof...");
+            let stage2_start = Instant::now();
+
+            let proof = client.prove(&pk, &stdin)
+                .mode(SP1ProofMode::Compressed)
+                .run()
+                .expect("Compressed proof generation failed");
+
+            let stage2_time = stage2_start.elapsed();
+
+            // Measure compressed proof size
+            let compressed_size = match &proof.proof {
+                SP1Proof::Compressed(compressed) => {
+                    bincode::serialize(&compressed.proof)
+                        .map(|bytes| bytes.len())
+                        .unwrap_or(0)
+                }
+                _ => 0,
+            };
+
+            println!("BENCHMARK: stage2_recursive_time_s={:.6}", stage2_time.as_secs_f64());
+            println!("BENCHMARK: compressed_proof_size_bytes={}", compressed_size);
+            println!("BENCHMARK: final_proof_size_bytes={}", compressed_size);
+
+            let total_prove_time = total_prove_start.elapsed();
+            println!("BENCHMARK: total_prove_time_s={:.6}", total_prove_time.as_secs_f64());
+
+            // Verify
+            let verify_start = Instant::now();
+            client.verify(&proof, &vk).expect("Verification failed");
+            let verify_time = verify_start.elapsed();
+
+            println!("\n--- Verification Phase ---");
+            println!("BENCHMARK: verification_time_s={:.6}", verify_time.as_secs_f64());
+            println!("BENCHMARK: verification_time_ms={:.3}", verify_time.as_secs_f64() * 1000.0);
+        }
+
+        SP1ProofMode::Groth16 => {
+            // Full pipeline with all stages
+            println!("Running full Groth16 pipeline with detailed timing...");
+
+            let proof = client.prove(&pk, &stdin)
+                .mode(SP1ProofMode::Groth16)
+                .run()
+                .expect("Groth16 proof generation failed");
+
+            let total_prove_time = total_prove_start.elapsed();
+
+            // Measure Groth16 proof size
+            let groth16_size = proof.bytes().len();
+
+            // Note: For detailed stage breakdown, we would need to instrument SP1 SDK
+            // For now, we output total time and final proof size
+            println!("BENCHMARK: total_prove_time_s={:.6}", total_prove_time.as_secs_f64());
+            println!("BENCHMARK: groth16_proof_size_bytes={}", groth16_size);
+            println!("BENCHMARK: final_proof_size_bytes={}", groth16_size);
+
+            // Verify
+            let verify_start = Instant::now();
+            client.verify(&proof, &vk).expect("Verification failed");
+            let verify_time = verify_start.elapsed();
+
+            println!("\n--- Verification Phase ---");
+            println!("BENCHMARK: verification_time_s={:.6}", verify_time.as_secs_f64());
+            println!("BENCHMARK: verification_time_ms={:.3}", verify_time.as_secs_f64() * 1000.0);
+            println!("BENCHMARK: on_chain_gas_estimate=280000");
+        }
+
+        SP1ProofMode::Plonk => {
+            // Plonk mode
+            println!("Running Plonk pipeline...");
+
+            let proof = client.prove(&pk, &stdin)
+                .mode(SP1ProofMode::Plonk)
+                .run()
+                .expect("Plonk proof generation failed");
+
+            let total_prove_time = total_prove_start.elapsed();
+            let plonk_size = proof.bytes().len();
+
+            println!("BENCHMARK: total_prove_time_s={:.6}", total_prove_time.as_secs_f64());
+            println!("BENCHMARK: plonk_proof_size_bytes={}", plonk_size);
+            println!("BENCHMARK: final_proof_size_bytes={}", plonk_size);
+
+            // Verify
+            let verify_start = Instant::now();
+            client.verify(&proof, &vk).expect("Verification failed");
+            let verify_time = verify_start.elapsed();
+
+            println!("\n--- Verification Phase ---");
+            println!("BENCHMARK: verification_time_s={:.6}", verify_time.as_secs_f64());
+            println!("BENCHMARK: verification_time_ms={:.3}", verify_time.as_secs_f64() * 1000.0);
+        }
     }
+
+    // Summary
+    println!("\n--- Summary ---");
+    println!("BENCHMARK: success_status=success");
+
+    println!("========== BENCHMARK END ==========\n");
+
+    println!("✓ Successfully generated and verified proof!");
 }

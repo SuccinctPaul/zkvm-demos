@@ -1,6 +1,6 @@
 use openvm_sdk::{config::ProverConfig, Prover, StdIn};
 use std::time::Instant;
-use common::load_program_input;
+use zkvm_programs::load_program_input;
 
 // Include the guest program ELF binary
 openvm_sdk::include_guest!();
@@ -15,7 +15,7 @@ fn main() -> anyhow::Result<()> {
     println!("╔════════════════════════════════════════╗");
     println!("║       OpenVM Multi-Program Demo       ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!("📋 Program: {} (ID={})", input.program.name(), input.program.id());
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
 
@@ -35,6 +35,7 @@ fn main() -> anyhow::Result<()> {
     
     println!("   Guest program loaded in {:.2}s", load_start.elapsed().as_secs_f64());
     println!("   ELF size: {} bytes", elf.len());
+    println!("BENCHMARK: elf_size_bytes={}", elf.len());
 
     println!("\n3. Executing program in zkVM...");
     let exec_start = Instant::now();
@@ -48,12 +49,16 @@ fn main() -> anyhow::Result<()> {
     let prover = Prover::new(&config)?;
     let (output, execution_report) = prover.execute(elf, stdin.clone())?;
     
-    println!("   Execution completed in {:.2}s", exec_start.elapsed().as_secs_f64());
+    let exec_duration = exec_start.elapsed();
+    println!("   Execution completed in {:.2}s", exec_duration.as_secs_f64());
     println!("   Cycle count: {}", execution_report.total_cycles());
+    println!("BENCHMARK: execution_time_s={:.6}", exec_duration.as_secs_f64());
+    println!("BENCHMARK: total_cycles={}", execution_report.total_cycles());
     
     // Read the result from output
     let result: u32 = output.read();
     println!("   Result: {}", result);
+    println!("BENCHMARK: output_result={}", result);
 
     println!("\n4. Generating zero-knowledge proof...");
     let prove_start = Instant::now();
@@ -68,10 +73,12 @@ fn main() -> anyhow::Result<()> {
     
     let prove_duration = prove_start.elapsed();
     println!("   Proof generation completed in {:.2}s", prove_duration.as_secs_f64());
+    println!("BENCHMARK: proof_time_s={:.6}", prove_duration.as_secs_f64());
     
     // Get proof size
     let proof_bytes = bincode::serialize(&proof)?;
     println!("   Proof size: {} bytes", proof_bytes.len());
+    println!("BENCHMARK: proof_size_bytes={}", proof_bytes.len());
 
     println!("\n5. Verifying proof...");
     let verify_start = Instant::now();
@@ -79,17 +86,28 @@ fn main() -> anyhow::Result<()> {
     // Verify the proof
     prover.verify(&proof)?;
     
-    println!("   Verification completed in {:.2}s", verify_start.elapsed().as_secs_f64());
+    let verify_duration = verify_start.elapsed();
+    println!("   Verification completed in {:.2}s", verify_duration.as_secs_f64());
     println!("   ✓ Proof verified successfully!");
+    println!("BENCHMARK: verification_time_s={:.6}", verify_duration.as_secs_f64());
 
     println!("\n============ Summary ============");
-    println!("Program: {}", input.program.as_str());
+    println!("Program: {}", input.program.name());
     println!("Input N: {}", input.n);
     println!("Output: {}", result);
     println!("Total cycles: {}", execution_report.total_cycles());
     println!("Proof size: {} bytes", proof_bytes.len());
     println!("Prove time: {:.2}s", prove_duration.as_secs_f64());
     println!("=================================\n");
+
+    // Output BENCHMARK metadata
+    println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
+    println!("BENCHMARK: zkvm_name=openvm");
+    println!("BENCHMARK: zkvm_version=v0.1.0");
+    let proof_mode = std::env::var("OPENVM_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
+    println!("BENCHMARK: success_status=success");
+    println!("BENCHMARK: total_time_s={:.6}", (exec_duration + prove_duration + verify_duration).as_secs_f64());
 
     Ok(())
 }

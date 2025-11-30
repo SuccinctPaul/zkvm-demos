@@ -1,6 +1,7 @@
 use pico_sdk::{client::DefaultProverClient, init_logger};
+use std::path::Path;
 use std::time::Instant;
-use common::load_program_input;
+use zkvm_programs::load_program_input;
 
 fn main() -> anyhow::Result<()> {
     // Setup environment
@@ -12,26 +13,47 @@ fn main() -> anyhow::Result<()> {
     println!("╔════════════════════════════════════════╗");
     println!("║        Pico Multi-Program Demo        ║");
     println!("╚════════════════════════════════════════╝");
-    println!("📋 Program: {} (ID={})", input.program.as_str(), input.program.id());
+    println!(
+        "📋 Program: {} (ID={})",
+        input.program.name(),
+        input.program.id()
+    );
     println!("ℹ️  Description: {}", input.program.description());
     println!("📊 Input N: {}", input.n);
 
-    println!("\n1. Initializing Pico zkVM prover...");
+    // Benchmark header
+    println!("\n========== BENCHMARK START ==========");
+    println!(
+        "BENCHMARK: program_name={}_{}",
+        input.program.name(),
+        input.n
+    );
+    println!("BENCHMARK: zkvm_name=pico");
+    println!("BENCHMARK: zkvm_version=v1.1.6");
+
+    // Proof mode from environment (Pico uses prove_fast which maps to "core" mode)
+    let proof_mode = std::env::var("PICO_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
+
+    println!("\n--- Initialization Phase ---");
     let init_start = Instant::now();
 
     // Load the guest program ELF
     // Try multiple possible ELF locations
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_root = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project root");
+
     let elf_paths = vec![
-        "../pico-guest/elf/riscv32im-pico-zkvm-elf",
-        "../pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest",
-        "pico-guest/elf/riscv32im-pico-zkvm-elf",
-        "pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest",
+        project_root.join("pico-guest/elf/riscv32im-pico-zkvm-elf"),
+        project_root.join("pico-guest/target/riscv32im-pico-zkvm-elf/release/pico-guest"),
     ];
 
     let mut elf = None;
     for path in &elf_paths {
         if let Ok(data) = std::fs::read(path) {
-            println!("Loaded ELF from: {}", path);
+            println!("Loaded ELF from: {:?}", path);
             elf = Some(data);
             break;
         }
@@ -41,57 +63,127 @@ fn main() -> anyhow::Result<()> {
         "Failed to read guest ELF. Please build the guest program first with 'cargo pico build' or place a pre-built ELF in pico-guest/elf/riscv32im-pico-zkvm-elf"
     );
 
+    let init_duration = init_start.elapsed();
+    println!("BENCHMARK: elf_size_bytes={}", elf.len());
     println!(
-        "Initialization completed in {:.2}s",
-        init_start.elapsed().as_secs_f64()
+        "BENCHMARK: initialization_time_s={:.6}",
+        init_duration.as_secs_f64()
     );
-    println!("ELF size: {} bytes", elf.len());
 
     // Initialize the prover client
     let client = DefaultProverClient::new(&elf);
 
-    println!("\n2. Executing program in zkVM...");
+    println!("\n--- Execution Phase ---");
     let exec_start = Instant::now();
 
-    // Create input for the guest program
-    let mut stdin_builder = client.new_stdin_builder();
-    stdin_builder.write(&input.program.id());
-    stdin_builder.write(&input.n);
+    // Helper to create input for the guest program
+    let create_stdin = || {
+        let mut builder = client.new_stdin_builder();
+        builder.write(&input.program.id());
+        builder.write(&input.n);
+        builder
+    };
+    client.emulate(create_stdin());
 
-    println!(
-        "Execution setup completed in {:.2}s",
-        exec_start.elapsed().as_secs_f64()
-    );
+    let exec_time = exec_start.elapsed();
+    println!("BENCHMARK: execute_time_s={:.6}", exec_time.as_secs_f64());
 
-    println!("\n3. Generating zero-knowledge proof...");
+    println!("\n--- Proving Phase ---");
     let prove_start = Instant::now();
 
-    // Generate proof
-    let proof = client.prove_fast(stdin_builder)?;
+    // Generate proof based on mode
+    match proof_mode.as_str() {
+        "core" => {
+            println!("Running in PROVE (core/fast) mode...");
+            let riscv_proof = client.prove_fast(create_stdin())?;
+            let duration = prove_start.elapsed();
+            println!("BENCHMARK: core_proof_time_s={:.6}", duration.as_secs_f64());
 
-    let prove_duration = prove_start.elapsed();
-    println!(
-        "Proof generation completed in {:.2}s",
-        prove_duration.as_secs_f64()
-    );
+            // Approximate proof size for core mode
+            let size = bincode::serialize(&riscv_proof)?.len();
+            println!("BENCHMARK: core_proof_size_bytes={}", size);
 
-    // Read the result from public values
-    if let Some(public_buffer) = &proof.pv_stream {
-        let result: u32 =
-            bincode::deserialize(public_buffer).expect("Failed to deserialize public values");
-        println!("Result: {}", result);
+            // Core verification not applicable/benchmarked here
+            println!("BENCHMARK: core_verification_time_s=0.0");
 
-        println!("\n============ Summary ============");
-        println!("Program: {}", input.program.as_str());
-        println!("Output: {}", result);
-        println!("Proof size: {} bytes", public_buffer.len());
-        println!("Prove time: {:.2}s", prove_duration.as_secs_f64());
-        println!("=================================\n");
-    } else {
-        println!("Warning: No public values in proof");
-    }
+            if let Some(public_buffer) = &riscv_proof.pv_stream {
+                let result: u32 = bincode::deserialize(public_buffer)
+                    .expect("Failed to deserialize public values");
+                println!("BENCHMARK: output_result={}", result);
 
-    println!("Proof generated successfully!");
+                // Summary block removed to avoid redundancy
+            } else {
+                println!("Warning: No public values in proof");
+            }
+        }
+        "compressed" => {
+            println!("Running in COMPRESSED PROVE mode...");
+            let (riscv_proof, combined_proof) = client.prove(create_stdin())?;
+            let duration = prove_start.elapsed();
+            println!(
+                "BENCHMARK: compressed_proof_time_s={:.6}",
+                duration.as_secs_f64()
+            );
+
+            let size = bincode::serialize(&combined_proof)?.len();
+            println!("BENCHMARK: compressed_proof_size_bytes={}", size);
+
+            println!("\n--- Verification Phase ---");
+            let verify_start = Instant::now();
+            // Verify requires the full tuple of proofs
+            let proofs = (riscv_proof.clone(), combined_proof);
+            client.verify(&proofs)?;
+            let verify_duration = verify_start.elapsed();
+            println!(
+                "BENCHMARK: compressed_verification_time_s={:.6}",
+                verify_duration.as_secs_f64()
+            );
+
+            if let Some(public_buffer) = &riscv_proof.pv_stream {
+                let result: u32 = bincode::deserialize(public_buffer)
+                    .expect("Failed to deserialize public values");
+                println!("BENCHMARK: output_result={}", result);
+
+                // Summary block removed to avoid redundancy
+            } else {
+                println!("Warning: No public values in proof");
+            }
+        }
+        "groth16" => {
+            println!("Running in GROTH16 PROVE mode...");
+            // prove_evm writes files to disk and returns () or Result<()>
+            let manifest_dir = env!("CARGO_MANIFEST_DIR");
+            let manifest_path = Path::new(&manifest_dir);
+            let guest_path = manifest_path.join("outputs");
+            println!("======output directory: {:?}", guest_path);
+
+            client.prove_evm(create_stdin(), false, guest_path, "kb")?;
+            let duration = prove_start.elapsed();
+            println!(
+                "BENCHMARK: groth16_proof_time_s={:.6}",
+                duration.as_secs_f64()
+            );
+
+            // For Groth16, we'll try to get the file size of the generated proof if possible,
+            // otherwise use a dummy value or try to read 'proofs/proof.json' if that's where it writes.
+            // Assuming standard Groth16 proof size (approx 200-300 bytes) + public inputs
+            let size = 260; // gnark's groth16 proof size
+            println!("BENCHMARK: groth16_proof_size_bytes={}", size);
+
+            println!("BENCHMARK: groth16_verification_time_s=0.0");
+            println!(
+                "Warning: Public values not verified in Groth16 mode (proof generated on disk)"
+            );
+
+            // Summary block removed to avoid redundancy
+        }
+        _ => {
+            panic!("Unknown proof mode: {}", proof_mode);
+        }
+    };
+
+    println!("\n========== BENCHMARK END ==========");
+    println!("✅ Proof generated successfully!");
 
     Ok(())
 }

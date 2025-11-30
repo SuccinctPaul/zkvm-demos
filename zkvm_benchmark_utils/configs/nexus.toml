@@ -1,0 +1,114 @@
+# ================================================================
+# Nexus zkVM Benchmark Configuration
+# ================================================================
+
+name = "nexus"
+version = "v0.3.4"
+enabled = true
+
+# Test scales (program input N value)
+# Note: If programs are configured, test_scales will be ignored (kept for backward compatibility)
+test_scales = [10, 20]
+
+# Proving mode (Nexus only supports core/stwo mode)
+prove_modes = ["core"]
+
+# Nexus project path
+working_dir = "../nexus-zkvm/nexus-host"
+
+# Build and run commands
+build_command = "cargo build --release"
+run_command = "cargo run --release -- --nocapture"
+
+# Timeout setting (seconds)
+timeout_seconds = 3600
+
+# Repeat count
+repeat_count = 1
+
+# Program configuration
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+# ----------------------------------------------------------------
+# Environment variables
+# ----------------------------------------------------------------
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+# Note: NEXUS_PROOF_MODE is injected by the runner
+
+# ----------------------------------------------------------------
+# Parsing rules (Parsed Metrics)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# Basic Information (Basic Info)
+# ================================================================
+raw_program_name = 'BENCHMARK: program_name=(\w+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+
+# ================================================================
+# Compilation Phase
+# ================================================================
+raw_compile_time_s = 'BENCHMARK: compile_time_s=([\d.]+)'
+
+# ================================================================
+# Execution Phase
+# ================================================================
+raw_instruction_count = 'BENCHMARK: instruction_count=(\d+)'
+
+# ================================================================
+# Proving Phase
+# ================================================================
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
+# ================================================================
+# Verification Phase
+# ================================================================
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Fallback mode (compatible with old log format)
+# ================================================================
+fallback_compile_time_s = 'Compile Cost: ([\d.]+)s'
+fallback_instruction_count = 'ELF: instructions num: (\d+)'
+fallback_prove_time_s = 'Prove cost: ([\d.]+) s'
+fallback_proof_size = 'proof size: (\d+) Bytes'
+fallback_success = 'Verifying execution\.\.\.\s+(Succeeded!)'
+fallback_summary_proof_size = 'Proof size: (\d+) bytes'
+
+# ----------------------------------------------------------------
+# Metric Mapping
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Execution Phase
+# ====================
+"instruction_count" = "raw_instruction_count"
+"execution_time_s" = "raw_compile_time_s"
+
+# ====================
+# 2. VM Circuit Phase (Core/Stwo Proving)
+# ====================
+"vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+
+# ====================
+# 3. Verification Phase
+# ====================
+"verification_time_s" = "raw_verification_time_s"
+"success_status" = "raw_success_status"

@@ -1,0 +1,6 @@
+{
+  "program": "sum",
+  "source": "../programs/sum.cm",
+  "entrypoints": ["sum", "main"],
+  "instructions": 80
+}

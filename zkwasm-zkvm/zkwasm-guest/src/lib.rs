@@ -3,12 +3,20 @@
 
 #![no_std]
 
-use core::panic::PanicInfo;
-use common::execute_program;
+use zkvm_programs::execute_program;
 
+#[cfg(not(test))]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+// We need a panic handler when targeting WASM, but it was conflicting when std was somehow included.
+// But when targeting wasm32-unknown-unknown specifically, std is usually not present or is minimal.
+// Let's try adding it back but ONLY for wasm32 target or when std is not present.
+
+#[cfg(target_arch = "wasm32")]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    loop {}
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+   loop {}
 }
 
 // External host functions that can be called from the guest

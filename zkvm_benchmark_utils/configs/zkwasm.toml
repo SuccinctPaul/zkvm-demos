@@ -1,0 +1,202 @@
+# ================================================================
+# zkWasm Benchmark Configuration
+# ================================================================
+# zkWasm is a WebAssembly-based zkVM using Halo2 proofs
+# Homepage: https://github.com/DelphinusLab/zkWasm
+
+name = "zk_wasm"
+version = "v0.1.0"
+enabled = true  # Requires delphinus-cli; script will check availability
+test_scales = [10, 20]
+prove_modes = ["core"]
+
+# NOTE: Must run from zkwasm-zkvm root (not zkwasm-host) because
+# zkwasm-host uses relative paths like "zkwasm-guest/Cargo.toml"
+# The host program wraps the delphinus-cli (official zkWasm CLI)
+working_dir = "../zkwasm-zkvm"
+build_command = "cargo build --release -p zkwasm-host"
+# run command uses the 'run' subcommand which orchestrates build/setup/prove/verify
+run_command = "./target/release/zkwasm-host run"
+
+timeout_seconds = 3600
+repeat_count = 1
+
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+# ----------------------------------------------------------------
+# Environment Variables
+# ----------------------------------------------------------------
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+# Note: PROGRAM_NAME and PROGRAM_N are set automatically by the benchmark runner
+
+# ----------------------------------------------------------------
+# Parsed Metrics (Regular Expressions)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# BENCHMARK Format Logs (Primary)
+# These are output by zkwasm-host main.rs when benchmark completes
+# ================================================================
+raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_circuit_k = 'BENCHMARK: circuit_k=(\d+)'
+
+# Timing metrics from BENCHMARK output
+raw_build_time_s = 'BENCHMARK: build_time_s=([\d.]+)'
+raw_setup_time_s = 'BENCHMARK: setup_time_s=([\d.]+)'
+raw_prove_time_s = 'BENCHMARK: prove_time_s=([\d.]+)'
+raw_verify_time_s = 'BENCHMARK: verify_time_s=([\d.]+)'
+raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
+# ================================================================
+# Program Input/Output Info
+# From zkwasm-host output at start of run
+# ================================================================
+raw_program_id = 'Program: \w+ \(ID=(\d+)\)'
+raw_input_n = 'Input N: (\d+)'
+
+# ================================================================
+# Step Completion Markers
+# These indicate successful completion of each phase
+# ================================================================
+step_wasm_built = '(WASM built successfully)'
+step_circuit_setup = '(Circuit setup complete)'
+step_proof_generated = '(Proof generated successfully)'
+step_proof_verified = '(Proof verified successfully)'
+step_complete = '(Complete! Proof generated and verified successfully)'
+
+# ================================================================
+# Error Detection Patterns
+# Used to detect and diagnose failures
+# ================================================================
+error_wasm_build_failed = '(Failed to build WASM guest program)'
+error_circuit_setup_failed = '(Failed to setup circuit)'
+error_proof_failed = '(Failed to generate proof)'
+error_verify_failed = '(Failed to verify proof)'
+error_cli_not_found = '(zkWasm CLI.*not found)'
+error_missing_target = "(wasm32-unknown-unknown.*target may not be installed)"
+error_compile_failed = "(could not compile.*due to.*previous error)"
+
+# ================================================================
+# zkWasm CLI (zkwasm-cli) Output Metrics
+# These are output by zkwasm-cli during various operations
+# ================================================================
+
+# Guest execution metrics
+cli_guest_instructions = 'total guest instructions used (\d+)'
+cli_host_api_used = 'total host api used \{([^}]*)\}'
+
+# Params reuse detection
+cli_params_reused = '(Found existing params at)'
+cli_params_path = 'Found existing params at "([^"]+)"'
+
+# Proof count
+cli_proof_count = 'Found (\d+) proofs, verifying'
+
+# Verification result
+cli_verification_succeeded = '(Verification succeeded!)'
+cli_halo2_verify_succeed = '(verify halo2 proof succeed)'
+
+# Instance data
+cli_instance_size = 'loading instance size: (\d+)'
+
+# ================================================================
+# Circuit Configuration (from debug output)
+# ================================================================
+cli_circuit_k = 'Circuit K: (\d+)'
+cli_max_pages = 'supports up to (\d+) pages'
+cli_max_available_rows = 'max_available_rows: (\d+)'
+
+# Table sizes - match non-zero values (proving phase, not setup phase)
+cli_execution_table_size = 'size of execution table: ([1-9]\d*)'
+cli_memory_table_size = 'size of memory writing table: ([1-9]\d*)'
+
+# ================================================================
+# Halo2 Backend Metrics (from debug output)
+# ================================================================
+halo2_quotient_poly_degree = 'quotient_poly_degree (\d+)'
+halo2_gpus_number = 'gpus number is (\d+)'
+
+# Complexity metrics from evaluation debug
+halo2_complexity_mul = 'complexity is ComplexityProfiler \{ mul: (\d+)'
+halo2_complexity_sum = ', sum: (\d+)'
+halo2_complexity_scale = ', scale: (\d+)'
+halo2_complexity_unit = ', unit: (\d+)'
+halo2_complexity_y = ', y: (\d+)'
+halo2_r_deep = 'r deep is (\d+)'
+
+# Constraint and column counts (if available)
+halo2_constraint_count = 'constraints:?\s*(\d+)'
+halo2_advice_columns = 'advice columns:?\s*(\d+)'
+halo2_lookup_count = 'lookups:?\s*(\d+)'
+halo2_permutation_count = 'permutations:?\s*(\d+)'
+
+# ================================================================
+# Memory and Resource Metrics (from debug output)
+# ================================================================
+raw_memory_usage_mb = 'memory usage:?\s*([\d.]+)\s*MB'
+raw_peak_memory_mb = 'peak memory:?\s*([\d.]+)\s*MB'
+
+# ----------------------------------------------------------------
+# Metric Mapping (Raw -> Standard Keys)
+# Maps raw metrics to the standard keys used by the framework
+# See zkvm_benchmark_utils/src/core/metrics.rs for standard keys
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Execution Phase
+# ====================
+# zkWasm uses "guest instructions" as the execution metric
+"instruction_count" = "cli_guest_instructions"
+
+# ====================
+# 2. VM Circuit Phase (Proving)
+# ====================
+# Map prove time to vm_prove_time_s (standard key)
+"vm_prove_time_s" = "raw_prove_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+
+# Table sizes as chunk info
+"vm_chunk_size_rows" = "cli_execution_table_size"
+
+# ====================
+# 3. SNARK Phase (Halo2)
+# ====================
+"snark_setup_time_s" = "raw_setup_time_s"
+"snark_constraint_count" = "halo2_constraint_count"
+
+# ====================
+# 4. Verification Phase
+# ====================
+"verification_time_s" = "raw_verify_time_s"
+
+# ====================
+# 5. Summary/Status
+# ====================
+"total_time_s" = "raw_total_time_s"
+"success_status" = "raw_success_status"
+
+# ====================
+# Custom zkWasm-specific metrics (not mapped to standard)
+# ====================
+# These remain in custom_metrics for reference:
+# - circuit_k, max_available_rows, max_pages
+# - execution_table_size, memory_table_size
+# - halo2_complexity_*, halo2_r_deep, gpus
+# - params_reused, proof_count, instance_size

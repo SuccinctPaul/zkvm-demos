@@ -6,7 +6,7 @@
 #![no_std]
 
 use core::panic::PanicInfo;
-use common::execute_program;
+use zkvm_programs::execute_program;
 
 // Panic handler for no_std environment
 #[panic_handler]

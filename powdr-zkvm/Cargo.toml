@@ -12,13 +12,19 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
-common = { path = "../common" }
+zkvm_programs = { path = "../programs" }
+
+# Powdr SDK is accessed via powdr-rs CLI
+# Install: cargo install powdr-cli
+# Or from: https://github.com/powdr-labs/powdr-legacy
 
 # misc
 dotenv = "0.15.0"
 anyhow = "1.0.98"
 env_logger = "0.11"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 # Always optimize; building and running the guest takes much longer without optimization.
 [profile.dev]
@@ -27,4 +33,3 @@ opt-level = 3
 [profile.release]
 debug = 1
 lto = true
-

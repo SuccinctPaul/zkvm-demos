@@ -11,8 +11,7 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
-common = { path = "../common" }
+zkvm_programs = { path = "../programs" }
 
 # misc
 dotenv = "0.15.0"

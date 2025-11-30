@@ -1,0 +1,30 @@
+// Sum computation in Cairo-M
+// Computes the sum of integers from 1 to n
+// 
+// Usage:
+//   cairo-m-compiler --input sum.cm --output sum.json
+//   cairo-m-runner sum.json --entrypoint sum --arguments 100
+
+// Sum function - computes 1 + 2 + ... + n
+// Input: n (felt) - upper bound of summation
+// Output: sum from 1 to n
+func sum(n: felt) -> felt {
+    // Use formula: n * (n + 1) / 2 for efficiency
+    // But we implement iteratively for more cycles/trace
+    
+    let mut total: felt = 0;
+    let mut i: felt = 1;
+    
+    while i <= n {
+        total = total + i;
+        i = i + 1;
+    }
+    
+    return total;
+}
+
+// Entry point
+func main(input: felt) -> felt {
+    return sum(input);
+}
+

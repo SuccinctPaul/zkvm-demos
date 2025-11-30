@@ -1,9 +1,5 @@
 {
-  "entrypoints": [
-    "fibonacci"
-  ],
-  "instructions": [],
-  "note": "This is a placeholder - actual compilation requires cairo-m-compiler",
-  "program": "fibonacci",
+  "note": "Placeholder",
+  "program": "dispatcher",
   "source": "../programs/fibonacci.cm"
 }

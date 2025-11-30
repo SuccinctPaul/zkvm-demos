@@ -1,6 +1,6 @@
 #![no_main]
 
-use common::execute_program;
+use zkvm_programs::execute_program;
 pico_sdk::entrypoint!(main);
 use pico_sdk::io::{commit, read_as};
 

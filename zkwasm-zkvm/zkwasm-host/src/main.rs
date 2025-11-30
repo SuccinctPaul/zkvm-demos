@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::process::Command;
 use std::fs;
-use common::load_program_input;
+use zkvm_programs::load_program_input;
 
 #[derive(Parser)]
 #[command(name = "zkwasm-host")]
@@ -43,6 +43,16 @@ enum Commands {
     },
 }
 
+/// Timing results for each phase
+#[derive(Default)]
+struct BenchmarkTimings {
+    build_time_s: f64,
+    setup_time_s: f64,
+    prove_time_s: f64,
+    verify_time_s: f64,
+    total_time_s: f64,
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     
@@ -56,18 +66,103 @@ fn main() -> Result<()> {
         Commands::Verify => verify()?,
         Commands::Run { k } => {
             println!("Running complete zkWasm demo...\n");
-            println!("Program: {} (ID={})", input.program.as_str(), input.program.id());
+            println!("Program: {} (ID={})", input.program.name(), input.program.id());
             println!("Input N: {}", input.n);
             
+            let mut timings = BenchmarkTimings::default();
+            let total_start = std::time::Instant::now();
+            
+            // Build phase
+            let build_start = std::time::Instant::now();
             build_wasm()?;
+            timings.build_time_s = build_start.elapsed().as_secs_f64();
+            
+            // Setup phase
+            let setup_start = std::time::Instant::now();
             setup_circuit(k)?;
+            timings.setup_time_s = setup_start.elapsed().as_secs_f64();
+            
+            // Prove phase
+            let prove_start = std::time::Instant::now();
             prove(input.program.id(), input.n, false)?;
+            timings.prove_time_s = prove_start.elapsed().as_secs_f64();
+            
+            // Verify phase
+            let verify_start = std::time::Instant::now();
             verify()?;
-            println!("\n✅ Complete! Proof generated and verified successfully.");
+            timings.verify_time_s = verify_start.elapsed().as_secs_f64();
+            
+            timings.total_time_s = total_start.elapsed().as_secs_f64();
+            
+            // Get proof size if available
+            let proof_size = get_proof_size();
+            
+            // Output BENCHMARK metrics in standard format
+            println!("\n--- BENCHMARK METRICS ---");
+            println!("BENCHMARK: program_name={}_{}", input.program.name(), input.n);
+            println!("BENCHMARK: zkvm_name=zkwasm");
+            println!("BENCHMARK: zkvm_version=v0.1.0");
+            let proof_mode = std::env::var("ZKWASM_PROOF_MODE").unwrap_or_else(|_| "core".to_string());
+            println!("BENCHMARK: proof_mode={}", proof_mode);
+            println!("BENCHMARK: circuit_k={}", k);
+            
+            // Timing metrics
+            println!("BENCHMARK: build_time_s={:.6}", timings.build_time_s);
+            println!("BENCHMARK: setup_time_s={:.6}", timings.setup_time_s);
+            println!("BENCHMARK: prove_time_s={:.6}", timings.prove_time_s);
+            println!("BENCHMARK: verify_time_s={:.6}", timings.verify_time_s);
+            println!("BENCHMARK: total_time_s={:.6}", timings.total_time_s);
+            
+            // Proof size
+            if let Some(size) = proof_size {
+                println!("BENCHMARK: proof_size_bytes={}", size);
+            }
+            
+            println!("BENCHMARK: success_status=success");
+            println!("--- END BENCHMARK METRICS ---\n");
+            
+            println!("✅ Complete! Proof generated and verified successfully.");
         }
     }
     
     Ok(())
+}
+
+/// Get the proof file size in bytes
+fn get_proof_size() -> Option<u64> {
+    // Try to find the transcript file (proof file)
+    let proof_paths = [
+        "output/output.0.transcript.data",
+        "output/proof.bin",
+    ];
+    
+    for path in &proof_paths {
+        if let Ok(metadata) = fs::metadata(path) {
+            return Some(metadata.len());
+        }
+    }
+    
+    // Try to sum all transcript files
+    if let Ok(entries) = fs::read_dir("output") {
+        let mut total_size = 0u64;
+        let mut found = false;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if name.contains("transcript") || name.ends_with(".proof") {
+                    if let Ok(metadata) = fs::metadata(&path) {
+                        total_size += metadata.len();
+                        found = true;
+                    }
+                }
+            }
+        }
+        if found {
+            return Some(total_size);
+        }
+    }
+    
+    None
 }
 
 fn build_wasm() -> Result<()> {
@@ -100,16 +195,19 @@ fn build_wasm() -> Result<()> {
 fn setup_circuit(k: u32) -> Result<()> {
     println!("⚙️  Setting up zkWasm circuit (k={})...", k);
     
-    // Check if zkwasm-cli is installed
+    // Check if delphinus-cli is installed
     let zkwasm_cli = find_zkwasm_cli()?;
     
     let params_dir = "params";
     fs::create_dir_all(params_dir)?;
     
+    // Official zkWasm CLI format:
+    // delphinus-cli --params <PARAMS> <NAME> setup -k <K> --wasm <WASM>
+    // where <NAME> is a required project/job name
     let status = Command::new(&zkwasm_cli)
         .args([
             "--params", params_dir,
-            "output",
+            "zkwasm_bench",  // Required project name
             "setup",
             "-k", &k.to_string(),
             "--wasm", "output/guest.wasm",
@@ -129,12 +227,13 @@ fn prove(program_id: u32, n: u32, mock: bool) -> Result<()> {
     
     let zkwasm_cli = find_zkwasm_cli()?;
     
-    // Pass inputs as separate --public arguments or space separated?
-    // zkWasm CLI usually takes --public for each input
+    // Official zkWasm CLI format:
+    // delphinus-cli --params <PARAMS> <NAME> prove --wasm <WASM> --output <OUTPUT> --public <PUBLIC_INPUT>
+    // where <NAME> is a required project name, and public inputs use format value:type
     let mut args = vec![
         "--params".to_string(),
         "params".to_string(),
-        "output".to_string(),
+        "zkwasm_bench".to_string(),  // Required project name
         "prove".to_string(),
         "--wasm".to_string(),
         "output/guest.wasm".to_string(),
@@ -147,7 +246,7 @@ fn prove(program_id: u32, n: u32, mock: bool) -> Result<()> {
     ];
     
     if mock {
-        args.push("--mock".to_string());
+        args.push("-m".to_string());  // --mock or -m for mock test
     }
     
     let status = Command::new(&zkwasm_cli)
@@ -167,10 +266,12 @@ fn verify() -> Result<()> {
     
     let zkwasm_cli = find_zkwasm_cli()?;
     
+    // Official zkWasm CLI format:
+    // delphinus-cli --params <PARAMS> <NAME> verify --output <OUTPUT>
     let status = Command::new(&zkwasm_cli)
         .args([
             "--params", "params",
-            "output",
+            "zkwasm_bench",  // Required project name
             "verify",
             "--output", "output",
         ])
@@ -185,26 +286,42 @@ fn verify() -> Result<()> {
 }
 
 fn find_zkwasm_cli() -> Result<PathBuf> {
-    // Try to find zkwasm-cli in PATH or common locations
-    if let Ok(output) = Command::new("which").arg("delphinus-cli").output() {
-        if output.status.success() {
-            let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            if !path.is_empty() {
-                return Ok(PathBuf::from(path));
+    // Try to find delphinus-cli in PATH or common locations
+    // Note: The official CLI binary is named 'delphinus-cli' per zkWasm README
+    // Some installations may also have 'zkwasm-cli' as an alias
+    for cli_name in ["delphinus-cli", "zkwasm-cli"] {
+        if let Ok(output) = Command::new("which").arg(cli_name).output() {
+            if output.status.success() {
+                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !path.is_empty() {
+                    return Ok(PathBuf::from(path));
+                }
             }
         }
     }
     
     // Check common installation paths
     let common_paths = vec![
-        "delphinus-cli",
-        "./delphinus-cli",
-        "../delphinus-cli",
+        // Standard installation location (official name: delphinus-cli)
+        format!("{}/.zkwasm/zkwasm/target/release/delphinus-cli", std::env::var("HOME").unwrap_or_default()),
+        format!("{}/.local/bin/delphinus-cli", std::env::var("HOME").unwrap_or_default()),
+        // Alternative name
+        format!("{}/.zkwasm/zkwasm/target/release/zkwasm-cli", std::env::var("HOME").unwrap_or_default()),
+        format!("{}/.local/bin/zkwasm-cli", std::env::var("HOME").unwrap_or_default()),
+        // Local directory
+        "delphinus-cli".to_string(),
+        "./delphinus-cli".to_string(),
+        "zkwasm-cli".to_string(),
+        "./zkwasm-cli".to_string(),
     ];
     
     for path in common_paths {
-        if Command::new(path).arg("--help").output().is_ok() {
-            return Ok(PathBuf::from(path));
+        let path_buf = PathBuf::from(&path);
+        if path_buf.exists() {
+            // Verify it's executable
+            if Command::new(&path).arg("--help").output().is_ok() {
+                return Ok(path_buf);
+            }
         }
     }
     

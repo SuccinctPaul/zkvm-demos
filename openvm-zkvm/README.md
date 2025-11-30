@@ -1,6 +1,6 @@
-# OpenVM zkVM Fibonacci Demo
+# OpenVM zkVM Multi-Program Demo
 
-This is a demonstration of using [OpenVM](https://github.com/openvm-org/openvm) to compute Fibonacci numbers with zero-knowledge proofs.
+This is a demonstration of using [OpenVM](https://github.com/openvm-org/openvm) to run multiple benchmark programs with zero-knowledge proofs.
 
 ## About OpenVM
 
@@ -12,22 +12,17 @@ OpenVM is a high-performance, modular zkVM developed by OpenVM Foundation that p
 - Flexible configuration options
 - High-level API for proof generation and verification
 
-## Project Structure
+## Supported Programs
 
-```
-openvm-zkvm/
-├── openvm-guest/        # Guest program (runs inside zkVM)
-│   ├── Cargo.toml
-│   └── src/
-│       └── main.rs      # Fibonacci computation logic
-├── openvm-host/         # Host program (manages proving/verification)
-│   ├── Cargo.toml
-│   ├── build.rs         # Build script for guest program
-│   └── src/
-│       └── main.rs      # Prover and verifier logic
-├── Cargo.toml           # Workspace configuration
-└── rust-toolchain.toml  # Rust toolchain specification
-```
+| Program | Description | Input `n` |
+|---------|-------------|-----------|
+| fibonacci | Compute nth Fibonacci number | Index (0-indexed) |
+| sum | Sum integers 1..=n | Upper bound |
+| factorial | Compute n! | Number |
+| isprime | Check if n is prime | Number to check |
+| popcount | Count set bits in n | Number |
+| hash | SHA256 hash of n bytes | Bytes (max 1024) |
+| signature | ECDSA verification simulation | Iterations (1-100) |
 
 ## Prerequisites
 
@@ -38,62 +33,98 @@ openvm-zkvm/
 
 2. Install OpenVM toolchain:
    ```bash
-   cd scripts/sdk_installers
-e
+   # Install cargo-openvm CLI
+   cargo install cargo-openvm
+   
+   # Setup aggregation keys (required for proof generation)
+   cargo openvm setup
    ```
-
-   This script will:
-   - Install `cargo-openvm` CLI tool
-   - Setup aggregation keys for proof generation
-   - Install the required Rust toolchain (nightly-2025-02-14)
 
 ## Configuration
 
-Set the Fibonacci number to compute via environment variable:
+Set the program and input via environment variables:
 
 ```bash
-# Create .env file in the project root or set environment variable
-export FIBONACCI_N=10
+# Program ID (0=fibonacci, 1=sum, 2=factorial, 3=isprime, 4=popcount, 5=hash, 6=signature)
+export PROGRAM_ID=0
+
+# Input parameter N
+export PROGRAM_N=20
+
+# Or use FIBONACCI_N for backward compatibility
+export FIBONACCI_N=20
 ```
 
-Or create a `.env` file in the workspace root:
+Or create a `.env` file:
 ```
-FIBONACCI_N=10
+PROGRAM_ID=0
+PROGRAM_N=20
 ```
 
-## Building
+## Build Process
+
+The build uses **cargo-openvm** to compile the guest program for the zkVM target.
+
+### Step 1: Build Guest (automatically via build.rs)
+
+When you build the host, the `build.rs` script automatically runs:
+```bash
+cargo openvm build
+```
+in the `openvm-guest/` directory to compile the guest program.
+
+### Step 2: Build Host
 
 ```bash
 cd openvm-zkvm/openvm-host
 cargo build --release
 ```
 
-The build process will:
-1. Use the build script to compile the guest program
-2. Generate the guest ELF binary
-3. Compile the host program with OpenVM SDK dependencies
+The complete build flow:
+1. `build.rs` invokes `cargo openvm build` on the guest
+2. Guest ELF is generated for the OpenVM zkVM target
+3. Host includes the guest ELF via `openvm_sdk::include_guest!()`
+4. Host is compiled with OpenVM SDK dependencies
+
+### Manual Guest Build (optional)
+
+To build the guest separately:
+```bash
+cd openvm-zkvm/openvm-guest
+cargo openvm build
+```
 
 ## Running
 
-### Execute the program and generate proof:
+### Execute and Generate Proof
 
 ```bash
 cd openvm-zkvm/openvm-host
-RUST_LOG=info cargo run --release
+cargo run --release
+```
+
+Or with specific program:
+```bash
+PROGRAM_ID=5 PROGRAM_N=500 cargo run --release  # Hash 500 bytes
 ```
 
 The program will:
-1. Load the Fibonacci input number from environment
-2. Initialize the OpenVM prover with default configuration
-3. Load and execute the guest program in the zkVM
+1. Load program configuration from environment
+2. Initialize the OpenVM prover
+3. Execute the guest program in the zkVM
 4. Generate a zero-knowledge proof
 5. Verify the proof
-6. Display execution statistics (cycles, proof size, timing)
+6. Output benchmark metrics
 
 ## Expected Output
 
 ```
-fib_n = 10
+╔════════════════════════════════════════╗
+║       OpenVM Multi-Program Demo       ║
+╚════════════════════════════════════════╝
+📋 Program: fibonacci (ID=0)
+ℹ️  Description: Compute nth Fibonacci number
+📊 Input N: 20
 
 1. Initializing OpenVM prover...
    Initialization completed in 0.05s
@@ -105,7 +136,7 @@ fib_n = 10
 3. Executing program in zkVM...
    Execution completed in 0.15s
    Cycle count: XXXX
-   Fibonacci(10) = 89
+   Result: 6765
 
 4. Generating zero-knowledge proof...
    Proof generation completed in 5.50s
@@ -116,47 +147,90 @@ fib_n = 10
    ✓ Proof verified successfully!
 
 ============ Summary ============
-Input: n = 10
-Output: fibonacci(10) = 89
+Program: fibonacci
+Input N: 20
+Output: 6765
 Total cycles: XXXX
 Proof size: XXXX bytes
 Prove time: 5.50s
 =================================
+
+BENCHMARK: program_name=fibonacci_20
+BENCHMARK: zkvm_name=openvm
+BENCHMARK: success_status=success
 ```
 
-## Features
+## BENCHMARK Output Format
 
-- **Modular Design**: OpenVM's modular architecture allows for flexible configuration
-- **Performance**: Optimized execution and proving times
-- **RISC-V Compatibility**: Supports standard RISC-V instruction set
-- **Rust Integration**: Seamless Rust development experience
-- **Public Input/Output**: Support for committed values via `openvm::io::commit`
-- **Logging**: Guest program logging with `openvm::println!`
+The program outputs standardized benchmark metrics:
 
-## Working with Inputs/Outputs
-
-### Reading Input in Guest
-
-```rust
-// In guest program (openvm-guest/src/main.rs)
-let n: u32 = openvm::io::read();
+```
+BENCHMARK: program_name=<program>_<n>
+BENCHMARK: zkvm_name=openvm
+BENCHMARK: zkvm_version=v0.1.0
+BENCHMARK: proof_mode=core
+BENCHMARK: elf_size_bytes=<size>
+BENCHMARK: execution_time_s=<time>
+BENCHMARK: total_cycles=<cycles>
+BENCHMARK: output_result=<result>
+BENCHMARK: proof_time_s=<time>
+BENCHMARK: proof_size_bytes=<size>
+BENCHMARK: verification_time_s=<time>
+BENCHMARK: success_status=success
+BENCHMARK: total_time_s=<total>
 ```
 
-### Committing Output in Guest
+## Project Structure
 
-```rust
-// Make result public
-let result = fib::fibonacci(n);
-openvm::io::commit(&result);
+```
+openvm-zkvm/
+├── Cargo.toml              # Workspace configuration
+├── rust-toolchain.toml     # Rust nightly toolchain
+├── openvm-guest/           # Guest program (runs in zkVM)
+│   ├── Cargo.toml
+│   └── src/main.rs         # no_std guest code
+└── openvm-host/            # Host program (proof generation)
+    ├── Cargo.toml
+    ├── build.rs            # Runs `cargo openvm build` on guest
+    └── src/main.rs         # Host code with OpenVM SDK
 ```
 
-### Reading Committed Output in Host
+## Key Files
 
+### `openvm-host/build.rs`
 ```rust
-// In host program
-let (output, _report) = prover.execute(elf, stdin)?;
-let result: u32 = output.read();
-println!("Result: {}", result);
+// Automatically builds guest using cargo-openvm
+let status = Command::new("cargo")
+    .args(&["openvm", "build"])
+    .current_dir("../openvm-guest")
+    .status()?;
+```
+
+### `openvm-guest/src/main.rs`
+```rust
+#![no_main]
+#![no_std]
+
+openvm::entry!(main);
+
+pub fn main() {
+    let program_id: u32 = openvm::io::read();
+    let n: u32 = openvm::io::read();
+    let result = execute_program(program_id, n);
+    openvm::io::commit(&result);
+}
+```
+
+### `openvm-host/src/main.rs`
+```rust
+openvm_sdk::include_guest!();  // Include compiled guest ELF
+
+fn main() {
+    let prover = Prover::new(&config)?;
+    let (output, report) = prover.execute(GUEST_ELF, stdin)?;
+    let proof = prover.prove(GUEST_ELF, stdin)?;
+    prover.verify(&proof)?;
+}
 ```
 
 ## Development Tips
@@ -167,51 +241,23 @@ println!("Result: {}", result);
 RUST_LOG=debug cargo run --release
 ```
 
-### Custom Prover Configuration
+### Clean Build
 
-```rust
-use openvm_sdk::{config::ProverConfig, Prover};
+```bash
+# Clean all build artifacts
+cargo clean
 
-// Create custom configuration
-let config = ProverConfig::default()
-    .with_log_level("info");
-
-let prover = Prover::new(&config)?;
+# Rebuild
+cd openvm-host
+cargo build --release
 ```
-
-## Resources
-
-- [OpenVM Documentation](https://docs.openvm.dev/)
-- [OpenVM GitHub Repository](https://github.com/openvm-org/openvm)
-- [OpenVM Examples](https://github.com/openvm-org/openvm/tree/main/examples)
-
-## Notes
-
-- This demo uses the recursive Fibonacci implementation from the shared `fib` library
-- The guest program runs in a `no_std` environment
-- Proof generation time depends on:
-  - Input size (problem complexity)
-  - System hardware capabilities
-  - Prover configuration settings
-- For production use, consider:
-  - Iterative Fibonacci implementation for better performance
-  - Custom prover configurations for optimization
-  - Profiling to identify bottlenecks
-
-## Version Information
-
-- OpenVM SDK: Latest stable version
-- Rust Toolchain: nightly-2025-02-14
-- Rust Edition: 2021
 
 ## Troubleshooting
 
 ### Installation Issues
 
-If OpenVM installation fails:
-
 ```bash
-# Manual installation
+# Install cargo-openvm
 cargo install cargo-openvm
 
 # Setup aggregation keys
@@ -223,35 +269,46 @@ cargo openvm --version
 
 ### Build Errors
 
+If guest build fails:
 ```bash
-# Clean build artifacts
-cargo clean
+# Check cargo-openvm is installed
+which cargo-openvm
 
-# Update dependencies
-cargo update
+# Try manual guest build
+cd openvm-guest
+cargo openvm build
 
-# Rebuild
-cd openvm-host
-cargo build --release
+# Check for errors
 ```
+
+### "Force-skipping unavailable component" Warning
+
+This warning can be safely ignored - it's from an unrelated target configuration.
 
 ### Runtime Errors
 
-For runtime issues:
-- Check that environment variables are set correctly
-- Ensure sufficient memory is available for proof generation (8GB+ recommended)
-- Enable debug logging: `RUST_LOG=debug cargo run --release`
+- Check environment variables are set correctly
+- Ensure sufficient memory (8GB+ recommended)
+- Enable debug logging: `RUST_LOG=debug`
 
-### Performance Issues
+### Performance Tips
 
-For slow proof generation:
+- Always use `--release` flag
 - Ensure system has sufficient resources
-- Try building with optimizations: `--release` flag
-- Consider reducing input size for testing
-- Check system resource usage during proving
+- Start with smaller input values for testing
+
+## Resources
+
+- [OpenVM Documentation](https://docs.openvm.dev/)
+- [OpenVM GitHub Repository](https://github.com/openvm-org/openvm)
+- [OpenVM Examples](https://github.com/openvm-org/openvm/tree/main/examples)
+
+## Version Information
+
+- OpenVM SDK: v1.4.0
+- Rust Toolchain: nightly-2025-02-14
+- Rust Edition: 2021
 
 ## License
 
 MIT OR Apache-2.0
-
-

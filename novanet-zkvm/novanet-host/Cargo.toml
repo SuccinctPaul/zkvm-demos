@@ -6,11 +6,20 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+# Guest program (computation logic)
 guest = { package = "novanet-guest", path = "../novanet-guest" }
-common.workspace = true
-fib.workspace = true
+zkvm_programs.workspace = true
+
+# NovaNet zkEngine SDK
+zk-engine.workspace = true
+
+# Utilities
 dotenv.workspace = true
 anyhow.workspace = true
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-
+serde.workspace = true
+serde_json.workspace = true
+bincode.workspace = true
+rand.workspace = true
+sha2.workspace = true
+log.workspace = true
+env_logger.workspace = true

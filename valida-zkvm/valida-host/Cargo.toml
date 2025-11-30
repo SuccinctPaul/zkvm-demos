@@ -6,8 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-common.workspace = true
-fib.workspace = true
+zkvm_programs.workspace = true
 dotenv.workspace = true
 anyhow.workspace = true
 clap.workspace = true

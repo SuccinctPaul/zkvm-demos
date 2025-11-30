@@ -1,0 +1,173 @@
+# ================================================================
+# ZisK zkVM Benchmark Configuration
+# ================================================================
+# ZisK is a zkVM by Polygon with focus on performance
+#
+# ⚠️ Platform Support:
+#   - Linux x86_64: Native proof generation ✅
+#   - macOS: Automatic Docker execution ✅ (run_benchmark.sh handles this)
+#
+# 🐳 macOS Docker Setup (first time):
+#   cd docker/scripts && ./build-base.sh && cd ..
+#   docker compose build zisk-zkvm
+#
+# The run_benchmark.sh script automatically detects the platform
+# and uses Docker on macOS for proof generation.
+
+name = "zisk"
+version = "v0.10.0"
+enabled = false  # Requires cargo-zisk (Linux) or Docker (macOS); run_benchmark.sh handles this
+
+# Test scales (program input N values)
+test_scales = [10, 20]
+
+# Proof modes
+# ZisK uses VADCOP (Verifiable Arbitrary Distributed Computation Protocol)
+prove_modes = ["core"]
+
+# Working directory (zisk-guest subdirectory)
+working_dir = "../zisk-zkvm/zisk-guest"
+
+# Build command
+# On macOS, cargo-zisk is not available, so we skip build (run_benchmark.sh handles it via Docker)
+# On Linux, you can uncomment this line to enable native build:
+# build_command = "cargo-zisk build --release"
+
+# Run command
+# Uses wrapper script that:
+# 1. Detects platform (macOS -> Docker, Linux -> native)
+# 2. Generates input.bin with correct PROGRAM_N
+# 3. Runs cargo-zisk with the generated input
+# 4. Generates and verifies proof
+run_command = "./run_benchmark.sh"
+
+# Timeout settings (seconds)
+# Docker execution on macOS can take longer (60-120 seconds for proof)
+# ROM setup (first time) can take 5-10 minutes
+timeout_seconds = 900
+
+# Repeat count
+repeat_count = 1
+
+# Program configuration
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+# ----------------------------------------------------------------
+# Environment Variables
+# ----------------------------------------------------------------
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+# FIBONACCI_N is set by the runner based on program scale
+
+# ----------------------------------------------------------------
+# Parsed Metrics (Regular Expressions)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# BENCHMARK Format (Primary - from run_benchmark.sh wrapper)
+# These are the main metrics output by our benchmark wrapper script
+# ================================================================
+# Program and zkVM info
+benchmark_program_name = 'BENCHMARK: program_name=(\S+)'
+benchmark_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+benchmark_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+benchmark_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+
+# Timing metrics
+benchmark_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+benchmark_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+benchmark_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+
+# Proof metrics
+benchmark_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
+# Status
+benchmark_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Execution Output (from ziskemu)
+# ================================================================
+# Hex output from ziskemu (e.g., "00000037")
+raw_output_hex = '^([0-9a-fA-F]{8})$'
+# Result from guest program: "Result: 89"
+raw_output_result = 'Result:\s*(\d+)'
+# Output value from ziskemu
+raw_output_value = 'Output\s*\[\d+\]\s*=\s*(\d+)'
+
+# ================================================================
+# Proof Verification (from cargo-zisk verify)
+# ================================================================
+# Verification success: "[INFO ] ProofMan:     ✓ Vadcop Final proof was verified"
+raw_verify_vadcop = 'Vadcop Final proof was (verified)'
+raw_verify_result = 'proof was (\w+)'
+
+# ================================================================
+# ROM Setup (First Time, optional)
+# ================================================================
+raw_rom_setup_time_s = 'ROM setup completed in ([\d.]+)s'
+
+# ================================================================
+# Alternative timing formats (fallback)
+# ================================================================
+raw_build_time_s = 'Built in ([\d.]+)s'
+raw_executed_time_s = 'Executed in ([\d.]+)s'
+raw_proof_generated_s = 'Proof generated in ([\d.]+)s'
+raw_proofman_time_s = 'ProofMan:.*completed in ([\d.]+)s'
+
+# ================================================================
+# Cycles and Performance Metrics (from ziskemu)
+# ================================================================
+raw_total_cycles = 'Total cycles:\s*(\d+)'
+raw_instruction_count = 'Instructions:\s*(\d+)'
+raw_memory_operations = 'Memory operations:\s*(\d+)'
+
+# ----------------------------------------------------------------
+# Metric Mapping (Raw -> Standard Keys)
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Execution Phase
+# ====================
+"execution_time_s" = "benchmark_execution_time_s"
+"total_cycles" = "raw_total_cycles"
+"instruction_count" = "raw_instruction_count"
+
+# ====================
+# 2. Proving Phase
+# ====================
+"vm_prove_time_s" = "benchmark_proof_time_s"
+"vm_prove_proof_size_bytes" = "benchmark_proof_size_bytes"
+
+# ====================
+# 3. Verification Phase
+# ====================
+"verification_time_s" = "benchmark_verification_time_s"
+
+# ====================
+# 4. Status
+# ====================
+"success_status" = "benchmark_success_status"
+
+# ====================
+# 5. Initialization (ROM Setup)
+# ====================
+"prover_initialization_time_s" = "raw_rom_setup_time_s"
+
+# ====================
+# 6. Metadata (optional)
+# ====================
+"program_name" = "benchmark_program_name"
+"zkvm_version" = "benchmark_zkvm_version"
+"proof_mode" = "benchmark_proof_mode"
+

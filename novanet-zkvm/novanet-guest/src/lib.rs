@@ -1,10 +1,10 @@
 //! Novanet zkVM Guest Program - Multi-Program Support
-//! 
+//!
 //! This guest program executes dispatched algorithms
 //! in a zero-knowledge proof environment using Novanet zkVM.
 
 use serde::{Deserialize, Serialize};
-use common::execute_program;
+use zkvm_programs::execute_program;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgramInput {

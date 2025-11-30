@@ -11,17 +11,16 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
-common = { path = "../common" }
+zkvm_programs = { path = "../programs" }
 
-# snarkVM dependencies
-snarkvm = { version = "0.16", features = ["circuit", "console"] }
-snarkvm-circuit = "0.16"
-snarkvm-console = "0.16"
+# snarkVM is used via Leo CLI for Aleo programs
+# Install Leo: https://developer.aleo.org/leo/installation
 
 # misc
 anyhow = "1.0"
 colored = "2.1"
+rand = "0.8"
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
 
 [profile.dev]
 opt-level = 3
@@ -29,4 +28,3 @@ opt-level = 3
 [profile.release]
 debug = 1
 lto = true
-

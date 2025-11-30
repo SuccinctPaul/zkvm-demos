@@ -6,10 +6,12 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-common.workspace = true
-anyhow.workspace = true
-colored.workspace = true
-snarkvm.workspace = true
-snarkvm-circuit.workspace = true
-snarkvm-console.workspace = true
+zkvm_programs = { workspace = true }
+anyhow = { workspace = true }
+colored = { workspace = true }
 
+# snarkVM SDK
+# Note: snarkvm crates are currently split. 'snarkvm' is the umbrella crate.
+# We need specific components for execution and proving.
+snarkvm = { version = "0.16.0", default-features = false, features = ["console", "synthesizer", "algorithms"] }
+rand = "0.8"

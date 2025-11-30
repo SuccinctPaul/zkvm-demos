@@ -1,0 +1,142 @@
+# ================================================================
+# Lean zkVM Benchmark Configuration
+# ================================================================
+# Lean zkVM uses WHIR + SuperSpartan with KoalaBear field
+# Note: This is a reference implementation
+
+name = "lean"
+version = "v0.1.0"
+enabled = false
+
+# Test scales (program input N values)
+test_scales = [10, 20]
+
+# Proof modes
+# Lean uses WHIR + SuperSpartan AIR-optimized proofs
+prove_modes = ["core"]
+
+# Working directory (lean-zkvm root)
+working_dir = "../lean-zkvm"
+
+# Build and run commands
+build_command = "cargo build --release -p lean-host"
+run_command = "./target/release/lean-host"
+
+# Timeout settings (seconds)
+timeout_seconds = 600
+
+# Repeat count for averaging
+repeat_count = 1
+
+# Program configuration
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+# ----------------------------------------------------------------
+# Environment Variables
+# ----------------------------------------------------------------
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+# Note: LEAN_PROOF_MODE is injected by the runner
+
+# ----------------------------------------------------------------
+# Parsed Metrics (Regular Expressions)
+# ----------------------------------------------------------------
+[parsed_metrics]
+# ================================================================
+# BENCHMARK Format Logs (Primary Source)
+# ================================================================
+# Metadata
+raw_program_name = 'BENCHMARK: program_name=([a-zA-Z0-9_]+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+raw_output_result = 'BENCHMARK: output_result=(\d+)'
+
+# ================================================================
+# Setup Phase
+# ================================================================
+raw_setup_time_s = 'BENCHMARK: setup_time_s=([\d.]+)'
+
+# ================================================================
+# Execution Phase
+# ================================================================
+raw_execution_time_s = 'BENCHMARK: execution_time_s=([\d.]+)'
+raw_total_cycles = 'BENCHMARK: total_cycles=(\d+)'
+raw_instruction_count = 'BENCHMARK: instruction_count=(\d+)'
+
+# ================================================================
+# Proving Phase
+# ================================================================
+raw_proof_time_s = 'BENCHMARK: proof_time_s=([\d.]+)'
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+raw_vm_chunk_count = 'BENCHMARK: vm_chunk_count=(\d+)'
+raw_vm_chunk_size_rows = 'BENCHMARK: vm_chunk_size_rows=(\d+)'
+raw_vm_prove_khz = 'BENCHMARK: vm_prove_khz=([\d.]+)'
+
+# ================================================================
+# Verification Phase
+# ================================================================
+raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
+raw_verification_time_ms = 'BENCHMARK: verification_time_ms=([\d.]+)'
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+
+# ================================================================
+# Total Time
+# ================================================================
+raw_total_time_s = 'BENCHMARK: total_time_s=([\d.]+)'
+
+# ================================================================
+# Legacy Format (Fallback Parsing)
+# ================================================================
+legacy_computation_time_ms = 'Computation time: ([\d.]+)ms'
+legacy_proving_time_s = 'Proving time: ([\d.]+)s'
+legacy_verification_time_ms = 'Verification time: ([\d.]+)ms'
+legacy_cycles = 'Estimated cycles: ~(\d+)'
+legacy_proof_size_kib = 'Proof size: ~(\d+) KiB'
+
+# ----------------------------------------------------------------
+# Metric Mapping (Raw -> Standard Keys)
+# ----------------------------------------------------------------
+[metric_mapping]
+# ====================
+# 1. Setup Phase
+# ====================
+"setup_time_s" = "raw_setup_time_s"
+
+# ====================
+# 2. Execution Phase
+# ====================
+"execution_time_s" = "raw_execution_time_s"
+"total_cycles" = "raw_total_cycles"
+"instruction_count" = "raw_instruction_count"
+
+# ====================
+# 3. Proving Phase
+# ====================
+"vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+"vm_chunk_count" = "raw_vm_chunk_count"
+"vm_chunk_size_rows" = "raw_vm_chunk_size_rows"
+"vm_prove_khz" = "raw_vm_prove_khz"
+
+# ====================
+# 4. Verification Phase
+# ====================
+"verification_time_s" = "raw_verification_time_s"
+
+# ====================
+# 5. Status & Summary
+# ====================
+"success_status" = "raw_success_status"
+"total_time_s" = "raw_total_time_s"

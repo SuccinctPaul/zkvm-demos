@@ -11,8 +11,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
-common = { path = "../common" }
+zkvm_programs = { path = "../programs" }
 
 # o1vm dependencies
 kimchi = { git = "https://github.com/o1-labs/proof-systems", branch = "master" }

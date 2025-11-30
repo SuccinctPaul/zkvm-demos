@@ -1,5 +1,6 @@
 [toolchain]
-channel = "stable"
-components = ["rustfmt", "clippy"]
+# ZKsync Airbender requires nightly Rust for #![feature(...)]
+# Pinning to a specific nightly version that is known to work and avoids E0391 cycles
+channel = "nightly-2025-11-27"
+components = ["rustfmt", "clippy", "rust-src"]
 targets = ["riscv32im-unknown-none-elf"]
-

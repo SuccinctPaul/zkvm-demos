@@ -3,13 +3,9 @@ members = ["openvm-guest", "openvm-host"]
 resolver = "2"
 
 [workspace.dependencies]
-fib = { path = "../fib" }
-common = { path = "../common" }
+zkvm_programs = { path = "../programs", default-features = false }
 
-
-
-
-
-
-
-
+# Optimize for zkVM execution
+[profile.release]
+opt-level = 3
+lto = true

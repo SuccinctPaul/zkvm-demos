@@ -7,4 +7,9 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-common = { path = "../../common", default-features = false }
+zkvm_programs = { path = "../../programs", default-features = false }
+wee_alloc = "0.4.5"
+
+[features]
+default = []
+std = []

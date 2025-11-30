@@ -1,119 +1,292 @@
-//! Novanet zkVM Host Program - Multi-Program Demo
+//! NovaNet zkVM Host Program - Multi-Program Demo
+//!
+//! This implementation uses the zkEngine from ICME-Lab for WASM-based
+//! zero-knowledge proofs using Nova folding scheme.
+//!
+//! Repository: https://github.com/ICME-Lab/zkEngine_dev
+//! Based on: https://github.com/kkrt-labs/zkvm-benchmarks/tree/master/novanet
 
 use anyhow::Result;
-use guest::{compute_program, ProgramInput, ProgramOutput};
+use std::path::PathBuf;
 use std::time::Instant;
-use common::load_program_input;
+use zk_engine::{
+    nova::{
+        provider::{ipa_pc, Bn256EngineIPA},
+        spartan,
+        traits::Dual,
+    },
+    utils::logging::init_logger,
+    wasm_ctx::{WASMArgsBuilder, WASMCtx},
+    wasm_snark::{StepSize, WasmSNARK},
+};
+use zkvm_programs::{execute_program, load_program_input};
 
-// Alias guest crate removed as it is already named 'guest' in Cargo.toml
+const NOVANET_VERSION: &str = "v0.3.0-zkengine";
 
-/// Simulated proof structure for Novanet zkVM
-#[derive(Debug, Clone)]
-pub struct NovanetProof {
-    pub input: ProgramInput,
-    pub output: ProgramOutput,
-    pub proof_data: Vec<u8>,
-}
-
-/// Simulated prover for Novanet zkVM
-pub struct NovanetProver {
-    pub circuit_compiled: bool,
-}
-
-impl NovanetProver {
-    pub fn new() -> Self {
-        Self {
-            circuit_compiled: true,
-        }
-    }
-
-    pub fn compile_guest() -> Result<Self> {
-        println!("📦 Compiling guest program for Novanet zkVM...");
-        Ok(Self::new())
-    }
-
-    pub fn prove(&self, input: ProgramInput) -> Result<NovanetProof> {
-        println!("🔨 Generating proof for Program(ID={}) Input({})", input.program_id, input.n);
-        
-        // Execute the computation
-        let output = compute_program(input.clone());
-        
-        let proof_data = format!(
-            "Nova-proof-prog({})-n({})-result({})",
-            input.program_id, input.n, output.result
-        )
-        .into_bytes();
-
-        Ok(NovanetProof {
-            input,
-            output,
-            proof_data,
-        })
-    }
-
-    pub fn verify(&self, proof: &NovanetProof) -> Result<bool> {
-        println!("🔍 Verifying proof...");
-        
-        let expected_output = compute_program(proof.input.clone());
-        let is_valid = expected_output.result == proof.output.result;
-        
-        Ok(is_valid)
-    }
-}
+// Type aliases for zkEngine (following their test examples)
+pub type E = Bn256EngineIPA;
+pub type EE1 = ipa_pc::EvaluationEngine<E>;
+pub type EE2 = ipa_pc::EvaluationEngine<Dual<E>>;
+pub type S1 = spartan::batched::BatchedRelaxedR1CSSNARK<E, EE1>;
+pub type S2 = spartan::snark::RelaxedR1CSSNARK<Dual<E>, EE2>;
 
 fn main() -> Result<()> {
+    // Initialize environment
+    dotenv::dotenv().ok();
+    init_logger();
+
     println!("========================================");
-    println!("Novanet zkVM Multi-Program Demo");
+    println!("NovaNet zkVM Multi-Program Demo");
+    println!("Powered by zkEngine (ICME-Lab)");
     println!("========================================\n");
 
     // Load program input
     let input_data = load_program_input();
-    println!("📊 Input: Program={} (ID={}) N={}\n", 
-             input_data.program.as_str(), input_data.program.id(), input_data.n);
 
-    // Step 1: Compile guest program
-    println!("1️⃣  Compiling guest program...");
-    let compile_start = Instant::now();
-    let prover = NovanetProver::compile_guest()?;
-    let compile_duration = compile_start.elapsed();
-    println!("   ✓ Compilation completed in {:.2}s\n", compile_duration.as_secs_f64());
+    // Output BENCHMARK metadata early
+    println!(
+        "BENCHMARK: program_name={}_{}",
+        input_data.program.name(),
+        input_data.n
+    );
+    println!("BENCHMARK: zkvm_name=novanet");
+    println!("BENCHMARK: zkvm_version={}", NOVANET_VERSION);
+    let proof_mode = std::env::var("NOVANET_PROOF_MODE").unwrap_or_else(|_| "nova-ivc".to_string());
+    println!("BENCHMARK: proof_mode={}", proof_mode);
 
-    // Step 2: Setup
-    println!("2️⃣  Setting up proving system...");
+    println!(
+        "📊 Input: Program={} (ID={}) N={}\n",
+        input_data.program.name(),
+        input_data.program.id(),
+        input_data.n
+    );
+
+    let total_start = Instant::now();
+
+    // Step 1: Compute expected result first
+    println!("1️⃣  Computing expected result...");
+    let exec_start = Instant::now();
+
+    let expected_result = execute_program(input_data.program.id(), input_data.n);
+
+    let exec_duration = exec_start.elapsed();
+    println!(
+        "   ✓ Expected result: {} (computed in {:.6}s)",
+        expected_result,
+        exec_duration.as_secs_f64()
+    );
+    println!("BENCHMARK: output_result={}", expected_result);
+    println!(
+        "BENCHMARK: execution_time_s={:.6}",
+        exec_duration.as_secs_f64()
+    );
+    println!();
+
+    // Step 2: Setup zkEngine parameters
+    println!("2️⃣  Setting up zkEngine parameters...");
     let setup_start = Instant::now();
+
+    // Configure step size for Nova IVC
+    // Larger step sizes = fewer folding steps but more constraints per step
+    let step_size = StepSize::new(10);
+
+    // Generate public parameters
+    let pp = WasmSNARK::<E, S1, S2>::setup(step_size.clone());
+
     let setup_duration = setup_start.elapsed();
-    println!("   ✓ Setup completed in {:.2}s\n", setup_duration.as_secs_f64());
+    println!(
+        "   ✓ Public parameters generated in {:.2}s",
+        setup_duration.as_secs_f64()
+    );
+    println!(
+        "BENCHMARK: setup_time_s={:.6}",
+        setup_duration.as_secs_f64()
+    );
+    println!();
 
-    // Step 3: Generate proof
-    println!("3️⃣  Generating proof...");
-    let prove_start = Instant::now();
-    
-    let prog_input = ProgramInput { 
-        program_id: input_data.program.id(), 
-        n: input_data.n 
-    };
-    let proof = prover.prove(prog_input)?;
-    
-    let prove_duration = prove_start.elapsed();
-    println!("   ✓ Proof generated in {:.2}s", prove_duration.as_secs_f64());
-    println!("   ✓ Result: {}", proof.output.result);
-    println!("   ✓ Proof size: {} bytes\n", proof.proof_data.len());
+    // Step 3: Build WASM context
+    println!("3️⃣  Building WASM context...");
+    let build_start = Instant::now();
 
-    // Step 4: Verify proof
-    println!("4️⃣  Verifying proof...");
-    let verify_start = Instant::now();
-    
-    let is_valid = prover.verify(&proof)?;
-    
-    let verify_duration = verify_start.elapsed();
-
-    if is_valid {
-        println!("   ✓ Proof verified successfully in {:.2}s\n", verify_duration.as_secs_f64());
-        println!("✅ Novanet zkVM Demo completed successfully!");
-    } else {
-        eprintln!("❌ Proof verification failed!");
-        std::process::exit(1);
+    // Try to find the WASM file for the program
+    let wasm_path = get_wasm_path(input_data.program.id());
+    {
+        // novanet-host working directory
+        let cwd = std::env::current_dir()?;
+        println!("Current dir:: {}", cwd.display());
     }
 
+    let wasm_result = if wasm_path.exists() {
+        println!("   Found WASM at: {:?}", wasm_path);
+
+        let func_name = get_function_name(input_data.program.id());
+        let func_args = vec![input_data.n.to_string()];
+
+        let wasm_args = WASMArgsBuilder::default()
+            .file_path(wasm_path.clone())
+            .map_err(|e| anyhow::anyhow!("Failed to load WASM: {:?}", e))?
+            .invoke(&func_name)
+            .func_args(func_args)
+            .build();
+
+        Some(WASMCtx::new(wasm_args))
+    } else {
+        println!("   ⚠ WASM file not found: {:?}", wasm_path);
+        println!("   Using reference execution mode");
+        None
+    };
+
+    let build_duration = build_start.elapsed();
+    println!(
+        "BENCHMARK: build_time_s={:.6}",
+        build_duration.as_secs_f64()
+    );
+    println!();
+
+    // Step 4: Generate proof
+    println!("4️⃣  Generating Nova IVC proof...");
+    let prove_start = Instant::now();
+
+    let (proof_result, proof_size) = if let Some(wasm_ctx) = wasm_result {
+        // Generate real proof using zkEngine
+        match WasmSNARK::<E, S1, S2>::prove(&pp, &wasm_ctx, step_size.clone()) {
+            Ok((snark, instance)) => {
+                let prove_duration = prove_start.elapsed();
+                println!(
+                    "   ✓ Proof generated in {:.3}s",
+                    prove_duration.as_secs_f64()
+                );
+
+                // Estimate proof size
+                let proof_size = std::mem::size_of_val(&snark);
+                println!("   ✓ Proof size: ~{} bytes", proof_size);
+
+                println!(
+                    "BENCHMARK: proof_time_s={:.6}",
+                    prove_duration.as_secs_f64()
+                );
+                println!("BENCHMARK: proof_size_bytes={}", proof_size);
+
+                // Verify the proof
+                println!("\n5️⃣  Verifying proof...");
+                let verify_start = Instant::now();
+
+                match snark.verify(&pp, &instance) {
+                    Ok(_) => {
+                        let verify_duration = verify_start.elapsed();
+                        println!(
+                            "   ✓ Proof verified in {:.6}s",
+                            verify_duration.as_secs_f64()
+                        );
+                        println!(
+                            "BENCHMARK: verification_time_s={:.6}",
+                            verify_duration.as_secs_f64()
+                        );
+                        println!(
+                            "BENCHMARK: verification_time_ms={:.3}",
+                            verify_duration.as_secs_f64() * 1000.0
+                        );
+                        println!("BENCHMARK: success_status=success");
+                    }
+                    Err(e) => {
+                        let verify_duration = verify_start.elapsed();
+                        println!("   ✗ Verification failed: {:?}", e);
+                        println!(
+                            "BENCHMARK: verification_time_s={:.6}",
+                            verify_duration.as_secs_f64()
+                        );
+                        println!("BENCHMARK: success_status=failed");
+                    }
+                }
+
+                (true, proof_size)
+            }
+            Err(e) => {
+                println!("   ✗ Proof generation failed: {:?}", e);
+                println!("BENCHMARK: proof_time_s=0.0");
+                println!("BENCHMARK: success_status=failed");
+                (false, 0)
+            }
+        }
+    } else {
+        panic!("WASM file not found, path: {:?}", wasm_path);
+    };
+
+    // Total time
+    let total_duration = total_start.elapsed();
+    println!(
+        "BENCHMARK: total_time_s={:.6}",
+        total_duration.as_secs_f64()
+    );
+
+    println!("========================================");
+    println!("📈 Performance Summary");
+    println!("========================================");
+    println!("Setup time:     {:.6}s", setup_duration.as_secs_f64());
+    println!("Execution time: {:.6}s", exec_duration.as_secs_f64());
+    println!("Build time:     {:.6}s", build_duration.as_secs_f64());
+    println!("Total time:     {:.6}s", total_duration.as_secs_f64());
+    println!("Proof size:     ~{} bytes", proof_size);
+    println!("Result:         {}", expected_result);
+    println!("========================================\n");
+
+    if proof_result {
+        println!("✅ NovaNet zkVM Demo completed successfully!");
+    } else {
+        println!("❌ NovaNet zkVM Demo failed!");
+    }
+
+    println!("\nNote: This implementation uses zkEngine from ICME-Lab.");
+    println!("For WASM programs, place .wat/.wasm files in the wasm/ directory.");
+    println!("Repository: https://github.com/ICME-Lab/zkEngine_dev");
+
     Ok(())
+}
+
+/// Get the WASM file path for a program
+fn get_wasm_path(program_id: u32) -> PathBuf {
+    let filename = match program_id {
+        0 => "fib.wat",
+        1 => "sum.wat",
+        2 => "factorial.wat",
+        3 => "isprime.wat",
+        4 => "popcount.wat",
+        5 => "hash.wat",
+        6 => "signature.wat",
+        _ => "main.wat",
+    };
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let project_path = std::path::Path::new(manifest_dir)
+        .parent()
+        .expect("Failed to get project path");
+    let wasm_dir = project_path.join("wasm");
+    wasm_dir.join(filename)
+}
+
+/// Get the function name for a program
+fn get_function_name(program_id: u32) -> String {
+    match program_id {
+        0 => "fib".to_string(),
+        1 => "sum".to_string(),
+        2 => "factorial".to_string(),
+        3 => "isprime".to_string(),
+        4 => "popcount".to_string(),
+        5 => "hash".to_string(),
+        6 => "verify_signature".to_string(),
+        _ => "main".to_string(),
+    }
+}
+
+/// Estimate execution cycles based on program type and input
+fn estimate_cycles(program_id: u32, n: u32) -> u64 {
+    match program_id {
+        0 => (n as u64) * 150 + 500,          // Fibonacci
+        1 => (n as u64) * 50 + 200,           // Sum
+        2 => (n as u64) * 100 + 300,          // Factorial
+        3 => (n as u64).isqrt() * 200 + 1000, // IsPrime
+        4 => 32 * 30 + 200,                   // Popcount
+        5 | 6 => (n as u64) * 1000 + 10000,   // Hash/Signature
+        _ => (n as u64) * 100 + 1000,
+    }
 }

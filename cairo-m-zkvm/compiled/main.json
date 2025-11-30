@@ -1,0 +1,7 @@
+{
+  "program": "main",
+  "source": "../programs/main.cm",
+  "entrypoints": ["dispatch", "fibonacci", "sum", "factorial", "isprime", "popcount", "hash", "signature", "main"],
+  "instructions": 500
+}
+

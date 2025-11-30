@@ -1,0 +1,90 @@
+# ================================================================
+# Jolt zkVM Benchmark Configuration
+# ================================================================
+
+name = "jolt"
+version = "v0.3.0-alpha"
+enabled = true
+test_scales = [10, 20]
+prove_modes = ["core"]
+
+working_dir = "../jolt-zkvm/jolt-host"
+build_command = "cargo build --release"
+run_command = "cargo run --release"
+
+timeout_seconds = 3600
+repeat_count = 1
+
+[[programs]]
+name = "fibonacci"
+scales = [50, 100]
+
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
+
+[env_vars]
+RUSTFLAGS = "-C target-cpu=native"
+RUST_LOG = "debug"
+
+[parsed_metrics]
+# BENCHMARK format logs (primary) & Human readable format (fallback)
+# Using non-capturing group (?:...) for prefix to allow matching both formats with single capture group
+raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
+raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
+raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
+raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
+
+# Timing metrics
+# Matches "BENCHMARK: compile_time_s=0.25" OR "   ✓ Compilation completed in 0.25s"
+raw_compile_time_s = '(?:BENCHMARK: compile_time_s=|✓ Compilation completed in )([\d.]+)'
+
+# Matches "BENCHMARK: preprocess_time_s=1.85" OR "   ✓ Preprocessing completed in 1.85s"
+raw_preprocess_time_s = '(?:BENCHMARK: preprocess_time_s=|✓ Preprocessing completed in )([\d.]+)'
+
+# Matches "BENCHMARK: build_time_s=0.00" OR "   ✓ Build completed in 0.00s"
+raw_build_time_s = '(?:BENCHMARK: build_time_s=|✓ Build completed in )([\d.]+)'
+
+# Matches "BENCHMARK: proof_time_s=1.44" OR "   ✓ Proof generated in 1.44s"
+raw_proof_time_s = '(?:BENCHMARK: proof_time_s=|✓ Proof generated in )([\d.]+)'
+
+# Matches "BENCHMARK: proof_size_bytes=12345"
+raw_proof_size_bytes = 'BENCHMARK: proof_size_bytes=(\d+)'
+
+# Matches "BENCHMARK: total_prove_time_s=3.29" OR "Total prove time: 3.29s"
+raw_total_prove_time_s = '(?:BENCHMARK: total_prove_time_s=|Total prove time:\s+)([\d.]+)'
+
+# Matches "BENCHMARK: output_result=399..." OR "   ✓ Result: 399..."
+raw_output_result = '(?:BENCHMARK: output_result=|✓ Result: )(\d+)'
+
+# Matches "BENCHMARK: verification_time_s=0.05" OR "   ✓ Proof verified successfully in 0.05s"
+raw_verification_time_s = '(?:BENCHMARK: verification_time_s=|✓ Proof verified successfully in )([\d.]+)'
+
+raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_total_time_s = '(?:BENCHMARK: total_time_s=|Total time:\s+)([\d.]+)'
+raw_error_reason = 'BENCHMARK: error_reason=(\w+)'
+
+# Legacy format fallback (summary block at end of execution)
+legacy_compile_time = 'Compile time:\s+([\d.]+)s'
+legacy_preprocess_time = 'Preprocess time:\s+([\d.]+)s'
+legacy_build_time = 'Build time:\s+([\d.]+)s'
+legacy_prove_time = 'Prove time:\s+([\d.]+)s'
+legacy_verify_time = 'Verify time:\s+([\d.]+)s'
+legacy_total_prove_time = 'Total prove time:\s+([\d.]+)s'
+
+[metric_mapping]
+# Map raw keys to standard keys
+"compilation_time_s" = "raw_compile_time_s"
+"preprocess_time_s" = "raw_preprocess_time_s"
+"build_time_s" = "raw_build_time_s"
+"vm_prove_time_s" = "raw_proof_time_s"
+"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+"total_prove_time_s" = "raw_total_prove_time_s"
+"verification_time_s" = "raw_verification_time_s"
+"success_status" = "raw_success_status"
+"total_time_s" = "raw_total_time_s"
+"output_result" = "raw_output_result"

@@ -1,49 +1,74 @@
-// Airbender zkVM Guest Program - Multi-Program Support
+// ZKsync Airbender Guest Program - Multi-Program Support
 //
-// Note: This is a reference implementation based on the RISC-V zkVM architecture.
+// Based on: https://github.com/matter-labs/zksync-airbender/tree/main/examples/dynamic_fibonacci
+//
+// This is a RISC-V guest program that runs inside the Airbender zkVM.
+// It uses the riscv_common library for I/O operations.
+//
+// Input reading: Uses csr_read_word() to read program_id and n from host
+// Output: Uses zksync_os_finish_success() to return result
 
-#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
+#![no_std]
+#![allow(incomplete_features)]
+#![feature(allocator_api)]
+#![feature(generic_const_exprs)]
+#![no_main]
+#![no_builtins]
 
-use common::execute_program;
+use airbender_riscv_common::{csr_read_word, zksync_os_finish_success};
 
-// RISC-V zkVM entry point
-#[cfg(target_arch = "riscv32")]
+// Use the common programs library for multi-program support
+use zkvm_programs::execute_program;
+
+// Assembly entry point (from Airbender scripts)
+core::arch::global_asm!(include_str!("asm_reduced.S"));
+
 #[no_mangle]
-pub extern "C" fn main() {
-    // In a real Airbender implementation, public inputs would be read
-    // through the Airbender runtime API.
-    
-    // Placeholder: Read input (simulated)
-    // In real implementation: let program_id: u32 = airbender::read();
-    let program_id: u32 = 0; // Default to Fibonacci for compilation check
-    
-    // In real implementation: let n: u32 = airbender::read();
-    let n: u32 = 10; 
-    
-    // Execute selected program
-    let result = execute_program(program_id, n);
-    
-    // In a real implementation, results would be committed
-    // core::hint::black_box(result);
+extern "C" fn eh_personality() {}
+
+#[link_section = ".init.rust"]
+#[export_name = "_start_rust"]
+unsafe extern "C" fn start_rust() -> ! {
+    main()
 }
 
-#[cfg(target_arch = "riscv32")]
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
+#[export_name = "_setup_interrupts"]
+pub unsafe fn custom_setup_interrupts() {
+    extern "C" {
+        fn _machine_start_trap();
+    }
 }
 
-// Native build for testing
-#[cfg(not(target_arch = "riscv32"))]
-#[allow(dead_code)]
-fn main() {
-    println!("=== Airbender zkVM Guest Program (Native Test) ===");
-    println!("This is a test build. Run via the host program for actual proof generation.");
-    
-    // Simulate inputs
-    let program_id = 0;
-    let n = 10;
-    
+#[repr(C)]
+#[derive(Debug)]
+pub struct MachineTrapFrame {
+    pub registers: [u32; 32],
+}
+
+/// Trap handler
+#[link_section = ".trap.rust"]
+#[export_name = "_machine_start_trap_rust"]
+pub extern "C" fn machine_start_trap_rust(_trap_frame: *mut MachineTrapFrame) -> usize {
+    unsafe { core::hint::unreachable_unchecked() }
+}
+
+/// Main workload - read inputs from CSR and execute the selected program
+unsafe fn workload() -> ! {
+    // Read program_id and n from CSR input (provided by host via input.hex)
+    // First call reads program_id, second reads n
+    let program_id = csr_read_word();
+    let n = csr_read_word();
+
+    // Execute the program using the common programs library
+    // This ensures consistency with all other zkVM implementations
     let result = execute_program(program_id, n);
-    println!("Program(id={}) input={} result={}", program_id, n, result);
+
+    // Output result through registers (Airbender convention)
+    // Registers 10-17 are output values, 18-25 are set to 0 for recursion chain
+    zksync_os_finish_success(&[result, program_id, n, 0, 0, 0, 0, 0]);
+}
+
+#[inline(never)]
+fn main() -> ! {
+    unsafe { workload() }
 }
