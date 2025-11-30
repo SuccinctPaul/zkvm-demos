@@ -53,10 +53,8 @@ RUST_LOG = "debug"
 [parsed_metrics]
 # Raw Extraction
 # We use the raw_ prefix to distinguish between raw data and standard data
-#2025-11-30T13:39:33.758651Z DEBUG prove_core: summary: cycles=5293
-raw_total_cycles = '(?:BENCHMARK: |execution report \(totals\): )total_cycles=(\d+)'
-#BENCHMARK: total_system_call_cycles=1111
-raw_total_system_call_cycles = 'BENCHMARK: total_system_call_cycles=(\d+)'
+raw_total_cycles = '(?:(?:BENCHMARK: |execution report \(totals\): )total_cycles=|summary: cycles=)(\d+)'
+raw_total_system_call_cycles = '(?:BENCHMARK: |execution report \(totals\): )total_system_call_cycles=(\d+)'
 raw_total_instruction_count = '(?:BENCHMARK: |execution report \(totals\): )total_instruction_count=(\d+)'
 raw_total_prove_time_s = 'BENCHMARK: total_prove_time_s=([\d.]+)'
 raw_final_proof_size_bytes = 'BENCHMARK: .*_proof_size_bytes=(\d+)'
