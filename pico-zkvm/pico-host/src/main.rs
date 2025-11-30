@@ -1,4 +1,5 @@
 use pico_sdk::{client::DefaultProverClient, init_logger};
+use std::path::Path;
 use std::time::Instant;
 use zkvm_programs::load_program_input;
 
@@ -103,14 +104,15 @@ fn main() -> anyhow::Result<()> {
             // Approximate proof size for core mode
             let size = bincode::serialize(&riscv_proof)?.len();
             println!("BENCHMARK: core_proof_size_bytes={}", size);
-            
+
             // Core verification not applicable/benchmarked here
             println!("BENCHMARK: core_verification_time_s=0.0");
-            
+
             if let Some(public_buffer) = &riscv_proof.pv_stream {
-                let result: u32 = bincode::deserialize(public_buffer).expect("Failed to deserialize public values");
+                let result: u32 = bincode::deserialize(public_buffer)
+                    .expect("Failed to deserialize public values");
                 println!("BENCHMARK: output_result={}", result);
-                
+
                 // Summary block removed to avoid redundancy
             } else {
                 println!("Warning: No public values in proof");
@@ -120,34 +122,55 @@ fn main() -> anyhow::Result<()> {
             println!("Running in COMPRESSED PROVE mode...");
             let (riscv_proof, combined_proof) = client.prove(create_stdin())?;
             let duration = prove_start.elapsed();
-            println!("BENCHMARK: compressed_proof_time_s={:.6}", duration.as_secs_f64());
+            println!(
+                "BENCHMARK: compressed_proof_time_s={:.6}",
+                duration.as_secs_f64()
+            );
 
             let size = bincode::serialize(&combined_proof)?.len();
             println!("BENCHMARK: compressed_proof_size_bytes={}", size);
-            
+
             println!("\n--- Verification Phase ---");
             let verify_start = Instant::now();
             // Verify requires the full tuple of proofs
             let proofs = (riscv_proof.clone(), combined_proof);
             client.verify(&proofs)?;
             let verify_duration = verify_start.elapsed();
-            println!("BENCHMARK: compressed_verification_time_s={:.6}", verify_duration.as_secs_f64());
-            
+            println!(
+                "BENCHMARK: compressed_verification_time_s={:.6}",
+                verify_duration.as_secs_f64()
+            );
+
             if let Some(public_buffer) = &riscv_proof.pv_stream {
-                let result: u32 = bincode::deserialize(public_buffer).expect("Failed to deserialize public values");
+                let result: u32 = bincode::deserialize(public_buffer)
+                    .expect("Failed to deserialize public values");
                 println!("BENCHMARK: output_result={}", result);
 
                 // Summary block removed to avoid redundancy
             } else {
-                 println!("Warning: No public values in proof");
+                println!("Warning: No public values in proof");
             }
         }
         "groth16" => {
             println!("Running in GROTH16 PROVE mode...");
             // prove_evm writes files to disk and returns () or Result<()>
-            client.prove_evm(create_stdin(), false, "proofs", "kb")?;
+            let manifest_dir =
+                std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+            let manifest_path = Path::new(&manifest_dir);
+            let guest_path = manifest_path
+                .parent()
+                .expect("Failed to get parent")
+                .join("pico-zkvm")
+                .join("pico-host")
+                .join("outputs");
+            println!("======output directory: {:?}", guest_path);
+
+            client.prove_evm(create_stdin(), false, guest_path, "kb")?;
             let duration = prove_start.elapsed();
-            println!("BENCHMARK: groth16_proof_time_s={:.6}", duration.as_secs_f64());
+            println!(
+                "BENCHMARK: groth16_proof_time_s={:.6}",
+                duration.as_secs_f64()
+            );
 
             // For Groth16, we'll try to get the file size of the generated proof if possible,
             // otherwise use a dummy value or try to read 'proofs/proof.json' if that's where it writes.
@@ -156,7 +179,9 @@ fn main() -> anyhow::Result<()> {
             println!("BENCHMARK: groth16_proof_size_bytes={}", size);
 
             println!("BENCHMARK: groth16_verification_time_s=0.0");
-            println!("Warning: Public values not verified in Groth16 mode (proof generated on disk)");
+            println!(
+                "Warning: Public values not verified in Groth16 mode (proof generated on disk)"
+            );
 
             // Summary block removed to avoid redundancy
         }
