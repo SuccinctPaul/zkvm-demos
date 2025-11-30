@@ -98,10 +98,7 @@ async fn main() -> anyhow::Result<()> {
         } => {
             run_benchmarks(output, zkvms, report_formats).await?;
         }
-        Commands::Execute {
-            output,
-            zkvms,
-        } => {
+        Commands::Execute { output, zkvms } => {
             execute_benchmarks(output, zkvms).await?;
         }
         Commands::Parse {
