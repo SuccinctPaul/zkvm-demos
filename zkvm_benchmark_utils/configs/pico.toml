@@ -23,6 +23,7 @@ working_dir = "../pico-zkvm"
 # ⚠️ Skip build: Pico SDK v1.1.6 has toolchain compatibility issues
 #    - error[E0635]: unknown feature `const_cmp`
 #    - error[E0658]: using `_` for array lengths is unstable
+build_command = "cargo build --release"
 # Use pre-built binaries, do not set build_command
 run_command = "./target/release/pico-host"
 
