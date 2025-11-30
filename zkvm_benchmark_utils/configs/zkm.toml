@@ -7,7 +7,7 @@ name = "zkm"
 version = "v0.3.0"
 enabled = true
 test_scales = [10, 20]
-prove_modes = ["core", "compressed"]
+prove_modes = ["core", "compressed", "groth16"]
 
 working_dir = "../zkm-zkvm/zkm-host"
 
