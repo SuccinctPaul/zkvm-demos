@@ -80,7 +80,7 @@ fn main() {
 
     let total_prove_start = std::time::Instant::now();
 
-    let proof = match proof_mode {
+    match proof_mode {
         ZKMProofKind::Core => {
             println!("Stage 1: Generating Core proof...");
             let start = std::time::Instant::now();
@@ -229,13 +229,11 @@ fn main() {
 
     println!("✅ Successfully generated proof!");
 
-    // Verify the proof.
     println!(
         "BENCHMARK: program_name={}_{}",
         input.program.name(),
         input.n
     );
     println!("BENCHMARK: zkvm_name=zkm");
-    println!("BENCHMARK: zkvm_version=v0.1.0");
     println!("BENCHMARK: success_status=success");
 }

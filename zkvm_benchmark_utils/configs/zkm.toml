@@ -125,7 +125,7 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 "snark_setup_time_s" = "groth16_r1cs_reading_time_s"
 "snark_witness_time_s" = "groth16_witness_generation_time_ms"
 "snark_constraint_count" = "groth16_constraint_count"
-"snark_proof_time_s" = "raw_total_prove_time_s"
+"snark_proof_time_s" = "groth16_generation_time_s"
 "snark_type" = "raw_snark_type"
 
 # Verification
