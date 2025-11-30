@@ -13,8 +13,8 @@ enabled = true
 test_scales = [10, 20]
 
 # Proving mode
-# Pico's prove_fast method maps to "core" mode
-prove_modes = ["core"]
+# Pico supports "core" (fast), "combined" (compressed), and "groth16" (evm)
+prove_modes = ["core", "combined", "groth16"]
 
 # Pico project path (use pico-zkvm root as working directory)
 working_dir = "../pico-zkvm"
