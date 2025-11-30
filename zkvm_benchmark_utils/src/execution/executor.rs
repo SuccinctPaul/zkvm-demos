@@ -334,7 +334,8 @@ impl BenchmarkExecutor {
                     let metrics_path = paths.parsed_metrics.join(&metrics_filename);
                     if let Ok(metrics_json) = serde_json::to_string_pretty(m) {
                         let _ = fs::write(&metrics_path, metrics_json);
-                        info!("  💾 Metrics saved: {}", metrics_path.display()); // Avoid spamming info logs in parallel
+                        info!("  💾 Metrics saved: {}", metrics_path.display());
+                        // Avoid spamming info logs in parallel
                     }
                 }
 
@@ -592,26 +593,10 @@ impl BenchmarkExecutor {
         fs::write(&log_path, &cleaned_log)?;
         info!("  📄 Raw log saved: {}", log_path.display());
 
-        // Save resource stats
-        let mut resource_path = None;
-        if let Some(ref stats) = resource_stats {
-            let base_name = log_path.file_stem().and_then(|s| s.to_str()).unwrap();
-
-            // Just return the path, don't save again if it's already saved by run_command_with_monitoring?
-            // Actually run_command_with_monitoring does NOT save to file, it returns the struct.
-            // So we DO need to save it here once.
-            // The issue might be if we save it again during parsing phase?
-
-            if let Ok(path) = self.save_resource_stats(stats, base_name) {
-                resource_path = Some(path);
-            }
-        }
-
         Ok((
             ExecutionMetadata {
                 test_run: test_run.clone(),
                 log_path,
-                resource_path,
             },
             log_content,
             resource_stats,
