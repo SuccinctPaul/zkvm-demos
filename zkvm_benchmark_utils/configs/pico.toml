@@ -13,8 +13,8 @@ enabled = true
 test_scales = [10, 20]
 
 # Proving mode
-# Pico supports "core" (fast), "compressed" (combined), and "groth16" (evm)
-prove_modes = ["groth16"]
+# Pico supports "core" (fast), "compressed" (combined), and "groth16" (evm, which needs lots of memory)
+prove_modes = ["core", "compressed"]
 
 # Pico project path (use pico-zkvm root as working directory)
 working_dir = "../pico-zkvm"
@@ -37,13 +37,13 @@ repeat_count = 1
 name = "fibonacci"
 scales = [50, 100]
 
-#[[programs]]
-#name = "hash"
-#scales = [500]
-#
-#[[programs]]
-#name = "sig"
-#scales = [1, 10, 50]
+[[programs]]
+name = "hash"
+scales = [500]
+
+[[programs]]
+name = "sig"
+scales = [1, 10, 50]
 
 # ----------------------------------------------------------------
 # Environment variables
