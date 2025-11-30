@@ -81,9 +81,18 @@ raw_riscv_prove_time_s = 'RISCV MACHINE PROVE: close time\.busy=([\d.]+)s'
 # Finish RISCV time: "--- Finish riscv in 2.167714125s"
 raw_finish_riscv_time_s = '--- Finish riscv in ([\d.]+)s'
 # User friendly prove time: "Proof generation completed in 2.33s"
-raw_total_prove_time_s = 'Proof generation completed in ([\d.]+)s'
+raw_total_prove_time_s = '(?:Proof generation completed in|BENCHMARK: compressed_proof_time_s=|BENCHMARK: core_proof_time_s=)\s*([\d.]+)'
 # Fallback format: "Prove time: 2.33s"
 raw_prove_time_alt = 'Prove time: ([\d.]+)s'
+
+# ================================================================
+# Recursion Layers Time
+# ================================================================
+raw_convert_prove_time_s = 'CONVERT MACHINE PROVE: close time\.busy=([\d.]+)s'
+# Matches both "COMBINE MACHINE PROVE: close time.busy=..." and "COMBINE MACHINE PROVE:combine layer: close time.busy=..."
+raw_combine_prove_time_s = 'COMBINE MACHINE PROVE: close time\.busy=([\d.]+)s'
+raw_compress_prove_time_s = 'COMPRESS MACHINE PROVE: close time\.busy=([\d.]+)s'
+raw_embed_prove_time_s = 'EMBED MACHINE PROVE: close time\.busy=([\d.]+)s'
 
 # ================================================================
 # Chunk proving time statistics
@@ -112,6 +121,12 @@ raw_cpu_chip_rows = 'chip Cpu\s+\| width \d+\s+rows (\d+)'
 raw_cpu_chip_cells = 'chip Cpu\s+\| width \d+\s+rows \d+\s+cells (\d+)'
 raw_program_chip_rows = 'chip Program\s+\| width \d+\s+rows (\d+)'
 raw_memory_chip_rows = 'chip MemoryReadWrite\s+\| width \d+\s+rows (\d+)'
+raw_poseidon2_chip_rows = 'chip Poseidon2\s+\| width \d+\s+rows (\d+)'
+raw_batch_fri_chip_rows = 'chip BatchFRI\s+\| width \d+\s+rows (\d+)'
+raw_ext_alu_chip_rows = 'chip ExtAlu\s+\| width \d+\s+rows (\d+)'
+raw_base_alu_chip_rows = 'chip BaseAlu\s+\| width \d+\s+rows (\d+)'
+raw_keccak_permute_chip_rows = 'chip KeccakPermute\s+\| width \d+\s+rows (\d+)'
+raw_sha_compress_chip_rows = 'chip ShaCompress\s+\| width \d+\s+rows (\d+)'
 
 # ================================================================
 # Setup Keys Time
@@ -163,7 +178,7 @@ raw_success_status = 'BENCHMARK: success_status=(\w+)'
 "vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
 
 # Mode-specific mappings (captured if available)
-"core_prove_time_s" = "raw_core_proof_time_s"
+"core_prove_time_s" = "raw_riscv_prove_time_s"
 "core_verification_time_s" = "raw_core_verification_time_s"
 "core_proof_size_bytes" = "raw_core_proof_size_bytes"
 
