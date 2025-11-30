@@ -60,7 +60,10 @@ fn main() {
 
     // Generate the proof
     println!("🔐 Generating proof...");
-    let proof_mode_env = std::env::var("PROOF_MODE").unwrap_or_else(|_| "groth16".to_string());
+    let proof_mode_env = std::env::var("ZKM_PROOF_MODE")
+        .or_else(|_| std::env::var("PROOF_MODE"))
+        .unwrap_or_else(|_| "groth16".to_string());
+
     let proof_mode = match proof_mode_env.to_lowercase().as_str() {
         "core" => ZKMProofKind::Core,
         "compressed" => ZKMProofKind::Compressed,
