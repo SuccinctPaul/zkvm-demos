@@ -55,9 +55,11 @@ raw_final_proof_size_bytes = 'BENCHMARK: final_proof_size_bytes=(\d+)'
 raw_vm_circuit_chunk_count = 'BENCHMARK: vm_circuit_chunk_count=(\d+)'
 
 # Legacy / Alternative format fallback
-legacy_instruction_count = 'total_instruction_count=(\d+)'
-legacy_cycles = 'total_cycles=(\d+)'
+raw_total_instruction_count = 'total_instruction_count=(\d+)'
+raw_total_cycles = 'total_cycles=(\d+)'
 legacy_proof_size = 'proof size: (\d+) Bytes'
+total_syscall_cycles = 'total_syscall_cycles=(\d+)'
+touched_memory_addresses = 'touched_memory_addresses=(\d+)'
 
 # ================================================================
 # ZKM Trace & Proof Metrics
@@ -101,8 +103,8 @@ merkle_dimensions = 'dimensions="([^"]+)"'
 
 [metric_mapping]
 # Execution
-"instruction_count" = "legacy_instruction_count"
-"total_cycles" = "legacy_cycles"
+"instruction_count" = "raw_total_instruction_count"
+"total_cycles" = "raw_total_cycles"
 "total_syscall_cycles" = "total_syscall_cycles"
 "touched_memory_addresses" = "touched_memory_addresses"
 "execution_time_s" = "raw_execute_time_s"
