@@ -334,7 +334,7 @@ impl BenchmarkExecutor {
                     let metrics_path = paths.parsed_metrics.join(&metrics_filename);
                     if let Ok(metrics_json) = serde_json::to_string_pretty(m) {
                         let _ = fs::write(&metrics_path, metrics_json);
-                        // info!("  💾 Metrics saved: {}", metrics_path.display()); // Avoid spamming info logs in parallel
+                        info!("  💾 Metrics saved: {}", metrics_path.display()); // Avoid spamming info logs in parallel
                     }
                 }
 
@@ -625,6 +625,7 @@ impl BenchmarkExecutor {
         let json = serde_json::to_string_pretty(stats)
             .map_err(|e| BenchmarkError::Execution(format!("Failed to serialize stats: {}", e)))?;
         fs::write(&path, json)?;
+        info!("  📊 Resource stats saved: {}", path.display());
         Ok(path)
     }
 

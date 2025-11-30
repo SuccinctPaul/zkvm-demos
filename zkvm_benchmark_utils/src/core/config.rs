@@ -268,9 +268,14 @@ impl BenchmarkConfig {
             repeat_count: Some(1),
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 
     /// Create a minimal example configuration
-    pub fn example() -> Self {
+    pub fn example() -> BenchmarkConfig {
         let mut zkvms = HashMap::new();
 
         // SP1 example configuration
@@ -327,7 +332,7 @@ impl BenchmarkConfig {
             },
         );
 
-        Self {
+        BenchmarkConfig {
             test_scales: vec![10, 20],
             zkvms,
             output_dir: "benchmark-results".to_string(),
@@ -336,25 +341,9 @@ impl BenchmarkConfig {
         }
     }
 
-    /// Save configuration to TOML file
-    pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        let content = toml::to_string_pretty(self)
-            .map_err(|e| BenchmarkError::Config(format!("Failed to serialize config: {}", e)))?;
-
-        fs::write(path, content)
-            .map_err(|e| BenchmarkError::Config(format!("Failed to write config: {}", e)))?;
-
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
     #[test]
     fn test_example_config() {
-        let config = BenchmarkConfig::example();
+        let config = example();
         assert!(!config.test_scales.is_empty());
         assert!(!config.zkvms.is_empty());
 
@@ -365,7 +354,7 @@ mod tests {
 
     #[test]
     fn test_config_validation() {
-        let config = BenchmarkConfig::example();
+        let config = example();
         assert!(config.validate().is_ok());
 
         let mut bad_config = config.clone();
