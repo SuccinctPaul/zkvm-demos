@@ -69,7 +69,7 @@ fn main() {
     println!("\n--- Execution Phase ---");
     println!("BENCHMARK: total_system_call_cycles={}", report.total_syscall_count());
     println!("BENCHMARK: total_instruction_count={}", report.total_instruction_count());
-    println!("BENCHMARK: execution_time_s={:.6}", exec_time.as_secs_f64());
+    println!("BENCHMARK: execute_time_s={:.6}", exec_time.as_secs_f64());
 
     // Determine proof mode from environment or default to Groth16
     let proof_mode = std::env::var("SP1_PROOF_MODE")
