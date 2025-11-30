@@ -107,8 +107,8 @@ impl AirbenderSdk {
         Ok((public_values, cycles))
     }
 
-    /// Generate proof and return (public_values, proof)
-    pub fn prove(&self, input: &[u8]) -> Result<(Vec<u8>, ProgramProof)> {
+    /// Generate proof and return (public_values, proof, proof_size_bytes)
+    pub fn prove(&self, input: &[u8]) -> Result<(Vec<u8>, ProgramProof, usize)> {
         let tempdir = tempdir()?;
 
         let bin_path = tempdir.path().join("guest.bin");
@@ -175,6 +175,7 @@ impl AirbenderSdk {
 
         let proof_path = output_dir.join("final_program_proof.json");
         let proof_bytes = fs::read(&proof_path)?;
+        let proof_size = proof_bytes.len();
         let proof: ProgramProof = serde_json::from_slice(&proof_bytes)?;
 
         let (public_values, vk_hash_chain) = extract_public_values_and_vk_hash_chain(&proof)?;
@@ -187,7 +188,7 @@ impl AirbenderSdk {
             ));
         }
 
-        Ok((public_values, proof))
+        Ok((public_values, proof, proof_size))
     }
 
     /// Verify proof and return public values
@@ -297,9 +298,6 @@ fn main() -> Result<()> {
             println!("⚠️  airbender-cli not found in PATH");
             println!("   Install from: https://github.com/matter-labs/zksync-airbender\n");
         }
-
-        // Fallback to native execution
-        run_native_fallback(&input)?;
     }
 
     let total_duration = total_start.elapsed();
@@ -368,7 +366,7 @@ fn run_with_sdk(bin_path: &str, input: &zkvm_programs::ProgramInput, use_gpu: bo
     // Prove
     println!("\n3. Generating proof...");
     let prove_start = Instant::now();
-    let (_public_values, proof) = sdk.prove(&input_bytes)?;
+    let (_public_values, proof, proof_size) = sdk.prove(&input_bytes)?;
     let prove_duration = prove_start.elapsed();
 
     println!(
@@ -379,6 +377,7 @@ fn run_with_sdk(bin_path: &str, input: &zkvm_programs::ProgramInput, use_gpu: bo
         "BENCHMARK: proof_time_s={:.6}",
         prove_duration.as_secs_f64()
     );
+    println!("BENCHMARK: proof_size_bytes={}", proof_size);
 
     // Verify
     println!("\n4. Verifying proof...");
@@ -395,69 +394,6 @@ fn run_with_sdk(bin_path: &str, input: &zkvm_programs::ProgramInput, use_gpu: bo
         verify_duration.as_secs_f64()
     );
     println!("BENCHMARK: success_status=success");
-
-    Ok(())
-}
-
-/// Fallback native execution (when SDK/CLI not available)
-fn run_native_fallback(input: &zkvm_programs::ProgramInput) -> Result<()> {
-    println!("📦 Running native execution fallback\n");
-
-    // Step 1: Compile (reference)
-    println!("1. Compiling guest program...");
-    println!("   Note: Requires RISC-V toolchain and airbender build scripts");
-    let compile_start = Instant::now();
-    let compile_duration = compile_start.elapsed();
-    println!(
-        "BENCHMARK: compile_time_s={:.6}",
-        compile_duration.as_secs_f64()
-    );
-
-    // Step 2: Execute natively
-    println!("\n2. Executing program (native)...");
-    let exec_start = Instant::now();
-    let result = execute_program(input.program.id(), input.n);
-    let exec_duration = exec_start.elapsed();
-
-    println!(
-        "   ✓ Execution completed in {:.6}s",
-        exec_duration.as_secs_f64()
-    );
-    println!("   Result: {}", result);
-    println!(
-        "BENCHMARK: execution_time_s={:.6}",
-        exec_duration.as_secs_f64()
-    );
-    println!("BENCHMARK: output_result={}", result);
-
-    // Step 3: Proof (reference)
-    println!("\n3. Generating proof...");
-    println!("   Note: Requires airbender-cli and guest.bin");
-    let prove_start = Instant::now();
-    let prove_duration = prove_start.elapsed();
-    println!(
-        "BENCHMARK: proof_time_s={:.6}",
-        prove_duration.as_secs_f64()
-    );
-
-    // Step 4: Verify (reference)
-    println!("\n4. Verifying proof...");
-    let verify_start = Instant::now();
-    let verify_duration = verify_start.elapsed();
-    println!(
-        "BENCHMARK: verification_time_s={:.6}",
-        verify_duration.as_secs_f64()
-    );
-
-    // Verify correctness
-    let expected = execute_program(input.program.id(), input.n);
-    if result == expected {
-        println!("\n✅ Computation verified!");
-        println!("BENCHMARK: success_status=success");
-    } else {
-        println!("\n❌ Mismatch! Expected: {}, Got: {}", expected, result);
-        println!("BENCHMARK: success_status=failed");
-    }
 
     Ok(())
 }
