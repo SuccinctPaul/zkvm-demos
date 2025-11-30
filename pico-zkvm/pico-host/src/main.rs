@@ -83,6 +83,7 @@ fn main() -> anyhow::Result<()> {
         builder.write(&input.n);
         builder
     };
+    client.emulate(create_stdin());
 
     let exec_time = exec_start.elapsed();
     println!("BENCHMARK: execute_time_s={:.6}", exec_time.as_secs_f64());
