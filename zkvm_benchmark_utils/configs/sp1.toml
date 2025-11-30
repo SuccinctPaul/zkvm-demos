@@ -11,7 +11,7 @@ enabled = true
 test_scales = [10, 20]
 
 # Prove Modes
-prove_modes = ["core", "compressed", "groth16"]
+prove_modes = ["core"]
 
 # SP1 Project Path
 working_dir = "../sp1-zkvm/sp1-host"

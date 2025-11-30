@@ -157,6 +157,7 @@ raw_groth16_verification_time_s = 'BENCHMARK: groth16_verification_time_s=([\d.]
 # ================================================================
 raw_output_result = 'BENCHMARK: output_result=(\d+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'
+raw_execution_time_s = 'BENCHMARK: execute_time_s=([\d.]+)'
 
 # ----------------------------------------------------------------
 # Metric Mapping
@@ -167,6 +168,7 @@ raw_success_status = 'BENCHMARK: success_status=(\w+)'
 # ====================
 "total_cycles" = "raw_total_cycles"
 "output_result" = "raw_output_result"
+"execution_time_s" = "raw_execution_time_s"
 
 # ====================
 # 2. VM Circuit Phase

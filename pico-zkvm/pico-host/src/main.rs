@@ -84,11 +84,8 @@ fn main() -> anyhow::Result<()> {
         builder
     };
 
-    let exec_setup_duration = exec_start.elapsed();
-    println!(
-        "BENCHMARK: execution_setup_time_s={:.6}",
-        exec_setup_duration.as_secs_f64()
-    );
+    let exec_time = exec_start.elapsed();
+    println!("BENCHMARK: execute_time_s={:.6}", exec_time.as_secs_f64());
 
     println!("\n--- Proving Phase ---");
     let prove_start = Instant::now();
