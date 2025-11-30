@@ -67,7 +67,7 @@ fn main() {
     let exec_time = exec_start.elapsed();
 
     println!("\n--- Execution Phase ---");
-    println!("BENCHMARK: total_cycles={}", report.total_syscall_count());
+    println!("BENCHMARK: total_system_call_cycles={}", report.total_syscall_count());
     println!("BENCHMARK: total_instruction_count={}", report.total_instruction_count());
     println!("BENCHMARK: execution_time_s={:.6}", exec_time.as_secs_f64());
 
