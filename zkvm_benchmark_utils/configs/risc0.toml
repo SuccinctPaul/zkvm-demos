@@ -125,6 +125,12 @@ guest_cycles = 'fibonacci \(cycle tracker\): (\d+)'
 # 4. SNARK Phase (Groth16)
 # ====================
 # RISC0 groth16 mode reuses the same proof metrics
+# TODO: here the snark proof time is little bit different with others.
+#   raw_proof_time_s is wrong, because it's the total proof generation time.
+#   And we need to calc the time from the logs:
+#   eg: 2025-11-30T17:29:45.438705Z DEBUG risc0_zkvm::receipt: Receipt::verify_with_context
+#       2025-11-30T17:29:45.438708Z DEBUG risc0_zkvm::receipt: InnerReceipt::verify_integrity_with_context
+#
 "snark_proof_time_s" = "raw_proof_time_s"
 "snark_proof_size_bytes" = "raw_proof_size_bytes"
 "snark_type" = "raw_proof_mode"
