@@ -81,7 +81,6 @@ raw_riscv_prove_time_s = 'RISCV MACHINE PROVE: close time\.busy=([\d.]+)s'
 # Finish RISCV time: "--- Finish riscv in 2.167714125s"
 raw_finish_riscv_time_s = '--- Finish riscv in ([\d.]+)s'
 # User friendly prove time: "Proof generation completed in 2.33s"
-raw_total_prove_time_s = '(?:Proof generation completed in|BENCHMARK: compressed_proof_time_s=|BENCHMARK: core_proof_time_s=)\s*([\d.]+)'
 # Fallback format: "Prove time: 2.33s"
 raw_prove_time_alt = 'Prove time: ([\d.]+)s'
 
@@ -173,29 +172,23 @@ raw_success_status = 'BENCHMARK: success_status=(\w+)'
 # 2. VM Circuit Phase
 # ====================
 "vm_chunk_count" = "raw_chunk_num"
-"vm_chunk_size_rows" = "raw_chunk_size"
-"vm_prove_time_s" = "raw_total_prove_time_s"
-"vm_prove_proof_size_bytes" = "raw_proof_size_bytes"
+"vm_prove_time_s" = "raw_riscv_prove_time_s"
+"vm_prove_proof_size_bytes" = "raw_core_proof_size_bytes"
 
 # Mode-specific mappings (captured if available)
-"core_prove_time_s" = "raw_riscv_prove_time_s"
-"core_verification_time_s" = "raw_core_verification_time_s"
-"core_proof_size_bytes" = "raw_core_proof_size_bytes"
 
-"compressed_prove_time_s" = "raw_compressed_proof_time_s"
-"compressed_verification_time_s" = "raw_compressed_verification_time_s"
-"compressed_proof_size_bytes" = "raw_compressed_proof_size_bytes"
+"aggressive_prove_time_s" = "raw_compressed_proof_time_s"
+"aggressive_proof_size_bytes" = "raw_compressed_proof_size_bytes"
 
-"groth16_prove_time_s" = "raw_groth16_proof_time_s"
-"groth16_verification_time_s" = "raw_groth16_verification_time_s"
-"groth16_proof_size_bytes" = "raw_groth16_proof_size_bytes"
+
+"snark_proof_time_s" = "raw_groth16_proof_time_s"
+"snark_proof_size_bytes" = "raw_groth16_proof_size_bytes"
 
 # ====================
 # 3. Verification Phase
 # ====================
 "success_status" = "raw_success_status"
-
-# ====================
-# 4. Initialization
-# ====================
-"prover_initialization_time_s" = "raw_initialization_time_s"
+#"core_verification_time_s" = "raw_core_verification_time_s"
+#"compressed_verification_time_s" = "raw_compressed_verification_time_s"
+#"groth16_verification_time_s" = "raw_groth16_verification_time_s"
+"verification_time_s" = "raw_compressed_verification_time_s"
