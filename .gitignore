@@ -36,6 +36,9 @@ debug
 **/*.bin
 **/*.srs
 
+#pico's outputs
+outputs
+
 # bench results
 build
 zkvm_benchmark_utils/benchmark-results/parsed-metrics/
