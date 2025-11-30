@@ -25,4 +25,5 @@ pub struct ExecutionResult {
 pub struct ExecutionMetadata {
     pub test_run: TestRun,
     pub log_path: PathBuf,
+    pub resource_path: Option<PathBuf>,
 }
