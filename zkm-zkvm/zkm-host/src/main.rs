@@ -91,9 +91,17 @@ fn main() {
                 .expect("Core proof generation failed");
             let duration = start.elapsed();
 
-            let chunk_count = match &proof.proof {
-                ZKMProof::Core(core_proofs) => core_proofs.len(),
-                _ => 0,
+            let (core_proof_size, chunk_count) = match &proof.proof {
+                ZKMProof::Core(core_proofs) => {
+                    let mut total = 0;
+                    for cp in core_proofs {
+                        if let Ok(bytes) = bincode::serialize(cp) {
+                            total += bytes.len();
+                        }
+                    }
+                    (total, core_proofs.len())
+                }
+                _ => (0, 0),
             };
 
             println!(
@@ -101,11 +109,8 @@ fn main() {
                 duration.as_secs_f64()
             );
             println!("BENCHMARK: vm_circuit_chunk_count={}", chunk_count);
-            println!(
-                "BENCHMARK: vm_core_proof_size_bytes={}",
-                proof.bytes().len()
-            );
-            println!("BENCHMARK: final_proof_size_bytes={}", proof.bytes().len());
+            println!("BENCHMARK: vm_core_proof_size_bytes={}", core_proof_size);
+            println!("BENCHMARK: final_proof_size_bytes={}", core_proof_size);
             proof
         }
         ZKMProofKind::Compressed => {
@@ -118,15 +123,18 @@ fn main() {
                 .expect("Compressed proof generation failed");
             let duration = start.elapsed();
 
+            let compressed_size = match &proof.proof {
+                ZKMProof::Compressed(compressed) => bincode::serialize(&proof.proof)
+                    .map(|bytes| bytes.len())
+                    .unwrap_or(0),
+                _ => 0,
+            };
             println!(
                 "BENCHMARK: stage2_recursive_time_s={:.6}",
                 duration.as_secs_f64()
             );
-            println!(
-                "BENCHMARK: compressed_proof_size_bytes={}",
-                proof.bytes().len()
-            );
-            println!("BENCHMARK: final_proof_size_bytes={}", proof.bytes().len());
+            println!("BENCHMARK: compressed_proof_size_bytes={}", compressed_size);
+            println!("BENCHMARK: final_proof_size_bytes={}", compressed_size);
             proof
         }
         ZKMProofKind::Groth16 => {

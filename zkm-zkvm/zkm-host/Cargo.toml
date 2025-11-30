@@ -11,6 +11,7 @@ zkm-sdk = { git = "https://github.com/ProjectZKM/Ziren.git", tag = "v1.2.1", def
 zkvm_programs = { path = "../../programs" }
 #misc
 dotenv = "0.15.0"
+bincode = "1.3"
 
 
 [build-dependencies]

@@ -7991,6 +7991,7 @@ dependencies = [
 name = "zkm-host"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "dotenv",
  "zkm-build",
  "zkm-sdk",
