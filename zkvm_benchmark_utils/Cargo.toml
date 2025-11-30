@@ -24,7 +24,6 @@ regex = "1.10"
 chrono = { version = "0.4", features = ["serde"] }
 
 # Files and IO
-walkdir = "2.5"
 csv = "1.3"
 
 # Error Handling
@@ -34,9 +33,6 @@ thiserror = "1.0"
 # Process Management
 tokio = { version = "1.40", features = ["full"] }
 
-# Table Output
-comfy-table = "7.1"
-
 # System Info Collection
 sysinfo = "0.30"
 
@@ -45,14 +41,6 @@ once_cell = "1.19"
 
 # Performance Optimization
 parking_lot = "0.12"
-num_cpus = "1.16"
-futures = "0.3"
 
 # Progress Tracking
-indicatif = "0.17"
 rayon = "1.11.0"
-
-[dev-dependencies]
-tempfile = "3.13"
-criterion = "0.5"
-atty = "0.2"
