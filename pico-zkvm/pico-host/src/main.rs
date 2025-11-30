@@ -154,15 +154,9 @@ fn main() -> anyhow::Result<()> {
         "groth16" => {
             println!("Running in GROTH16 PROVE mode...");
             // prove_evm writes files to disk and returns () or Result<()>
-            let manifest_dir =
-                std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+            let manifest_dir = env!("CARGO_MANIFEST_DIR");
             let manifest_path = Path::new(&manifest_dir);
-            let guest_path = manifest_path
-                .parent()
-                .expect("Failed to get parent")
-                .join("pico-zkvm")
-                .join("pico-host")
-                .join("outputs");
+            let guest_path = manifest_path.join("outputs");
             println!("======output directory: {:?}", guest_path);
 
             client.prove_evm(create_stdin(), false, guest_path, "kb")?;
