@@ -13,7 +13,7 @@ enabled = false
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../ceno-zkvm"
+working_dir = "../zkvms/ceno-zkvm"
 # Note: CENO SDK requires specific nightly toolchain (nightly-2025-08-18)
 # Using shell script to handle environment setup
 run_command = "./run_benchmark.sh"

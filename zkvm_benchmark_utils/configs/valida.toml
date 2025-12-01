@@ -9,7 +9,7 @@ enabled = true  # Requires valida CLI; falls back to reference execution if miss
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../valida-zkvm/valida-host"
+working_dir = "../zkvms/valida-zkvm/valida-host"
 build_command = "cargo build --release"
 run_command = "cargo run --release"
 

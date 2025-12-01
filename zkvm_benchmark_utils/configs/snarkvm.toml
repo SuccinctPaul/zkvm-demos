@@ -9,7 +9,7 @@ enabled = true  # SDK support added; falls back to CLI/Reference if needed
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../snarkvm-zkvm/snarkvm-host"
+working_dir = "../zkvms/snarkvm-zkvm/snarkvm-host"
 build_command = "cargo build --release"
 run_command = "cargo run --release"
 

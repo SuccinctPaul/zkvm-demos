@@ -14,7 +14,7 @@ test_scales = [10, 20]
 prove_modes = ["core", "compressed", "groth16"]
 
 # RISC0 project path
-working_dir = "../risc0-zkvm/risc0-host"
+working_dir = "../zkvms/risc0-zkvm/risc0-host"
 
 # Build and run commands
 build_command = "cargo build --release"

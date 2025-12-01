@@ -26,7 +26,7 @@ test_scales = [10, 20]
 prove_modes = ["core"]
 
 # Working directory (zisk-guest subdirectory)
-working_dir = "../zisk-zkvm/zisk-guest"
+working_dir = "../zkvms/zisk-zkvm/zisk-guest"
 
 # Build command
 # On macOS, cargo-zisk is not available, so we skip build (run_benchmark.sh handles it via Docker)

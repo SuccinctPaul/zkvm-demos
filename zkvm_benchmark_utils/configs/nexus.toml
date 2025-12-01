@@ -14,7 +14,7 @@ test_scales = [10, 20]
 prove_modes = ["core"]
 
 # Nexus project path
-working_dir = "../nexus-zkvm/nexus-host"
+working_dir = "../zkvms/nexus-zkvm/nexus-host"
 
 # Build and run commands
 build_command = "cargo build --release"

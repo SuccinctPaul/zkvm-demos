@@ -16,7 +16,7 @@ test_scales = [10, 20]
 prove_modes = ["core"]
 
 # Working directory (cairo-m-zkvm root)
-working_dir = "../cairo-m-zkvm"
+working_dir = "../zkvms/cairo-m-zkvm"
 
 # Build and run commands
 build_command = "cargo build --release -p cairo-m-host"

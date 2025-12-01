@@ -104,7 +104,7 @@ echo ""
 
 # Set up project dependencies
 echo "🔨 Setting up project dependencies..."
-cd "$PROJECT_ROOT/airbender-zkvm"
+cd "$PROJECT_ROOT/zkvms/airbender-zkvm"
 
 if [ -f "Cargo.toml" ]; then
     echo "📦 Checking and fetching dependencies..."
@@ -119,7 +119,7 @@ fi
 echo ""
 
 # Create environment file template
-ENV_FILE="$PROJECT_ROOT/airbender-zkvm/.env.example"
+ENV_FILE="$PROJECT_ROOT/zkvms/airbender-zkvm/.env.example"
 echo "📝 Creating environment template..."
 cat > "$ENV_FILE" << 'EOF'
 # Airbender zkVM Environment Configuration
@@ -154,14 +154,14 @@ echo "   • Current implementation is a reference structure"
 echo "   • Real proof generation requires official SDK"
 echo ""
 echo "🚀 Try the Demo:"
-echo "   cd $PROJECT_ROOT/airbender-zkvm"
+echo "   cd $PROJECT_ROOT/zkvms/airbender-zkvm"
 echo "   cargo build --release"
 echo "   cargo run --release --bin airbender-host"
 echo ""
 echo "📖 Learn More:"
 echo "   • zkSync Airbender: https://docs.zksync.io/zk-stack/components/zksync-airbender"
 echo "   • ere Project: https://github.com/eth-act/ere"
-echo "   • Local README: $PROJECT_ROOT/airbender-zkvm/README.md"
+echo "   • Local README: $PROJECT_ROOT/zkvms/airbender-zkvm/README.md"
 echo ""
 echo "🔔 Stay Updated:"
 echo "   • zkSync Discord: https://discord.gg/zksync"

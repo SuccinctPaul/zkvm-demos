@@ -9,7 +9,7 @@ enabled = false
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../o1vm-zkvm/o1vm-host"
+working_dir = "../zkvms/o1vm-zkvm/o1vm-host"
 build_command = "cargo build --release"
 run_command = "cargo run --release"
 

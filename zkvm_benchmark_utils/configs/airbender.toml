@@ -16,7 +16,7 @@ test_scales = [10, 20]
 prove_modes = ["core"]
 
 # Working directory (airbender-zkvm root)
-working_dir = "../airbender-zkvm"
+working_dir = "../zkvms/airbender-zkvm"
 
 # Build and run commands
 build_command = "./build_all.sh"

@@ -13,7 +13,7 @@ prove_modes = ["core"]
 # NOTE: Must run from zkwasm-zkvm root (not zkwasm-host) because
 # zkwasm-host uses relative paths like "zkwasm-guest/Cargo.toml"
 # The host program wraps the delphinus-cli (official zkWasm CLI)
-working_dir = "../zkwasm-zkvm"
+working_dir = "../zkvms/zkwasm-zkvm"
 build_command = "cargo build --release -p zkwasm-host"
 # run command uses the 'run' subcommand which orchestrates build/setup/prove/verify
 run_command = "./target/release/zkwasm-host run"

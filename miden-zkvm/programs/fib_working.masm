@@ -1,7 +1,0 @@
-# Fibonacci in Miden Assembly - Minimal Version
-# Returns fib(5) = 8
-
-begin
-    # Push result directly
-    push.8
-end

@@ -174,7 +174,7 @@ echo ""
 # Step 5: Test build (optional)
 echo "Step 5: Testing build..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-O1VM_DIR="$SCRIPT_DIR/../../o1vm-zkvm"
+O1VM_DIR="$SCRIPT_DIR/../../zkvms/o1vm-zkvm"
 
 if [ -d "$O1VM_DIR" ]; then
     echo "Found o1vm-zkvm directory at: $O1VM_DIR"

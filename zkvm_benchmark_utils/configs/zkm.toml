@@ -9,7 +9,7 @@ enabled = true
 test_scales = [10, 20]
 prove_modes = ["core", "compressed", "groth16"]
 
-working_dir = "../zkm-zkvm/zkm-host"
+working_dir = "../zkvms/zkm-zkvm/zkm-host"
 
 # Note: ZKM requires sourcing the toolchain environment first
 # Using wrapper scripts to avoid shell special characters ($, &) blocked by executor

@@ -1,9 +1,0 @@
-[package]
-name = "openvm-guest"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-# Use no_std for guest (zkVM environment)
-zkvm_programs = { workspace = true, default-features = false }
-openvm = { git = "https://github.com/openvm-org/openvm", tag = "v1.4.0" }

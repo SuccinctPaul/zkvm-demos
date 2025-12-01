@@ -9,7 +9,7 @@ enabled = true
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../miden-zkvm/miden-host"
+working_dir = "../zkvms/miden-zkvm/miden-host"
 build_command = "cargo build --release"
 run_command = "cargo run --release"
 

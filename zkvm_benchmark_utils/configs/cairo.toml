@@ -19,7 +19,7 @@ enabled = false
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../cairo-zkvm"
+working_dir = "../zkvms/cairo-zkvm"
 run_command = "./run_benchmark.sh"
 
 timeout_seconds = 600

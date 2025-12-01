@@ -1,7 +1,0 @@
-{
-  "program": "isprime",
-  "source": "../programs/isprime.cm",
-  "entrypoints": ["isprime", "main"],
-  "instructions": 120
-}
-

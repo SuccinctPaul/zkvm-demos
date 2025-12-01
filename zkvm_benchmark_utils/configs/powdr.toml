@@ -16,7 +16,7 @@ test_scales = [10, 20]
 prove_modes = ["core"]
 
 # Working directory (powdr-zkvm root)
-working_dir = "../powdr-zkvm"
+working_dir = "../zkvms/powdr-zkvm"
 
 # Build and run commands
 # Build from powdr-host subdirectory, run binary from root

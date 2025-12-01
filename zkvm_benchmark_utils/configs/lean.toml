@@ -16,7 +16,7 @@ test_scales = [10, 20]
 prove_modes = ["core"]
 
 # Working directory (lean-zkvm root)
-working_dir = "../lean-zkvm"
+working_dir = "../zkvms/lean-zkvm"
 
 # Build and run commands
 build_command = "cargo build --release -p lean-host"
