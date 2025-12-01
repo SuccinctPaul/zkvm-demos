@@ -50,7 +50,7 @@ Install the Valida toolchain following the official guide:
 
 ```bash
 # Navigate to the Valida workspace
-cd valida-zkvm
+cd zkvms/valida-zkvm
 
 # Compile the guest program
 docker run --rm -v $(pwd):/workspace lita-xyz/valida \
@@ -73,7 +73,7 @@ docker run --rm -v $(pwd):/workspace lita-xyz/valida \
 
 ```bash
 # Navigate to the Valida workspace
-cd valida-zkvm
+cd zkvms/valida-zkvm
 
 # Compile the guest program
 valida-cc -o fib.elf valida-guest/fib.c
@@ -92,7 +92,7 @@ valida verify proof.bin
 
 ```bash
 # Navigate to the host directory
-cd valida-zkvm/valida-host
+cd zkvms/valida-zkvm/valida-host
 
 # Run the demonstration
 RUST_LOG=info cargo run --release

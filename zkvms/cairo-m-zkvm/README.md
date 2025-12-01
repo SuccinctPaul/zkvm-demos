@@ -52,7 +52,7 @@ export CXX=/opt/homebrew/opt/llvm/bin/clang++
 ## Building
 
 ```bash
-cd cairo-m-zkvm
+cd zkvms/cairo-m-zkvm
 cargo build --release
 ```
 

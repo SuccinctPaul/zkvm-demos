@@ -109,7 +109,7 @@ scarb --version  # Should show 2.8.0+
 ## How to Run
 
 ```bash
-cd cairo-zkvm
+cd zkvms/cairo-zkvm
 
 # Build the project
 scarb build

@@ -78,7 +78,7 @@ For a quick demonstration of all available programs, run:
 
 **Example:**
 ```bash
-cd sp1-zkvm/sp1-host
+cd zkvms/sp1-zkvm/sp1-host
 
 # Run Fibonacci
 PROGRAM=fibonacci INPUT_N=20 cargo run --release
@@ -120,7 +120,7 @@ INPUT_N=20
 ## Building
 
 ```bash
-cd sp1-zkvm/sp1-host
+cd zkvms/sp1-zkvm/sp1-host
 cargo build --release
 ```
 
@@ -136,7 +136,7 @@ The build process will:
 Run the full benchmark pipeline (Execute + Prove + Verify):
 
 ```bash
-cd sp1-zkvm/sp1-host
+cd zkvms/sp1-zkvm/sp1-host
 
 # Fibonacci
 PROGRAM=fibonacci INPUT_N=20 cargo run --release
@@ -175,7 +175,7 @@ stdout: Result: 5050
 Generate a zero-knowledge proof:
 
 ```bash
-cd sp1-zkvm/sp1-host
+cd zkvms/sp1-zkvm/sp1-host
 PROGRAM=fibonacci INPUT_N=20 cargo run --release
 ```
 

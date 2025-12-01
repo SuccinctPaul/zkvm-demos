@@ -76,7 +76,7 @@ in the `openvm-guest/` directory to compile the guest program.
 ### Step 2: Build Host
 
 ```bash
-cd openvm-zkvm/openvm-host
+cd zkvms/openvm-zkvm/openvm-host
 cargo build --release
 ```
 
@@ -90,7 +90,7 @@ The complete build flow:
 
 To build the guest separately:
 ```bash
-cd openvm-zkvm/openvm-guest
+cd zkvms/openvm-zkvm/openvm-guest
 cargo openvm build
 ```
 
@@ -99,7 +99,7 @@ cargo openvm build
 ### Execute and Generate Proof
 
 ```bash
-cd openvm-zkvm/openvm-host
+cd zkvms/openvm-zkvm/openvm-host
 cargo run --release
 ```
 

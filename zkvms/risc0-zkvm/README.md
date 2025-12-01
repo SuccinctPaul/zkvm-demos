@@ -67,7 +67,7 @@ FIBONACCI_N=10
 ## Building
 
 ```bash
-cd risc0-zkvm/risc0-host
+cd zkvms/risc0-zkvm/risc0-host
 cargo build --release
 ```
 
@@ -81,7 +81,7 @@ The build process will:
 ### Generate and verify proof:
 
 ```bash
-cd risc0-zkvm/risc0-host
+cd zkvms/risc0-zkvm/risc0-host
 RUST_LOG=info cargo run --release
 ```
 

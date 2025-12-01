@@ -63,7 +63,7 @@ FIBONACCI_N=10
 ## Building
 
 ```bash
-cd nexus-zkvm/nexus-host
+cd zkvms/nexus-zkvm/nexus-host
 cargo build --release
 ```
 
@@ -77,7 +77,7 @@ The build process will:
 ### Generate and verify proof:
 
 ```bash
-cd nexus-zkvm/nexus-host
+cd zkvms/nexus-zkvm/nexus-host
 RUST_LOG=info cargo run --release
 ```
 

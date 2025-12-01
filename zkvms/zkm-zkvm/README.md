@@ -64,7 +64,7 @@ FIBONACCI_N=10
 ## Building
 
 ```bash
-cd zkm-zkvm/zkm-host
+cd zkvms/zkm-zkvm/zkm-host
 cargo build --release
 ```
 
@@ -80,7 +80,7 @@ The build process will:
 Generate a zero-knowledge proof:
 
 ```bash
-cd zkm-zkvm/zkm-host
+cd zkvms/zkm-zkvm/zkm-host
 RUST_LOG=info cargo run --release
 ```
 

@@ -61,7 +61,7 @@ nightly toolchains. The `cargo pico build` command may fail due to:
 ### Building Guest Program (when toolchain issues are resolved)
 
 ```bash
-cd pico-zkvm/pico-guest
+cd zkvms/pico-zkvm/pico-guest
 cargo pico build
 ```
 
@@ -70,7 +70,7 @@ The built ELF will be placed in `target/riscv32im-pico-zkvm-elf/release/pico-gue
 ### Verifying Host Code
 
 ```bash
-cd pico-zkvm
+cd zkvms/pico-zkvm
 cargo check
 cargo build --release
 ```
@@ -94,7 +94,7 @@ See [PROOF_VERIFICATION.md](PROOF_VERIFICATION.md) for detailed test results.
 ### Execute the program and generate proof:
 
 ```bash
-cd pico-zkvm/pico-host
+cd zkvms/pico-zkvm/pico-host
 cargo run --release
 ```
 

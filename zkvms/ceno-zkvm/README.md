@@ -59,7 +59,7 @@ cargo install cargo-make
 ### Build and Run Host
 
 ```bash
-cd ceno-zkvm
+cd zkvms/ceno-zkvm
 RUST_LOG=info cargo run --release --bin ceno-host
 ```
 

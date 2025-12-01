@@ -63,7 +63,7 @@ rustup toolchain list | grep zisk
 ### Build
 
 ```bash
-cd zisk-zkvm/zisk-guest
+cd zkvms/zisk-zkvm/zisk-guest
 cargo-zisk build --release
 ```
 
@@ -204,7 +204,7 @@ Performance is about 40-60% of native Linux:
 Run full test workflow:
 
 ```bash
-cd zisk-zkvm
+cd zkvms/zisk-zkvm
 bash test.sh
 ```
 

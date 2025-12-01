@@ -72,7 +72,7 @@ lean-zkvm/
 ### Quick Start
 
 ```bash
-cd lean-zkvm
+cd zkvms/lean-zkvm
 ./run_demo.sh
 ```
 

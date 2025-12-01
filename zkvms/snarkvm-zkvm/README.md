@@ -54,7 +54,7 @@ FIBONACCI_N=10
 Navigate to the host directory:
 
 ```bash
-cd snarkvm-zkvm/snarkvm-host
+cd zkvms/snarkvm-zkvm/snarkvm-host
 ```
 
 Build the project:
@@ -68,7 +68,7 @@ cargo build --release
 ### Quick Start
 
 ```bash
-cd snarkvm-zkvm/snarkvm-host
+cd zkvms/snarkvm-zkvm/snarkvm-host
 FIBONACCI_N=10 cargo run --release
 ```
 

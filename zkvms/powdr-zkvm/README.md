@@ -71,7 +71,7 @@ FIBONACCI_N=10
 ## Building
 
 ```bash
-cd powdr-zkvm/powdr-host
+cd zkvms/powdr-zkvm/powdr-host
 cargo build --release
 ```
 
@@ -86,7 +86,7 @@ The build process will:
 ### Generate and verify proof:
 
 ```bash
-cd powdr-zkvm/powdr-host
+cd zkvms/powdr-zkvm/powdr-host
 RUST_LOG=info cargo run --release
 ```
 

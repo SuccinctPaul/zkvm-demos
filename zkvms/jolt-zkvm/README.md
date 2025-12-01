@@ -58,7 +58,7 @@ FIBONACCI_N=10
 Navigate to the host directory:
 
 ```bash
-cd jolt-zkvm/jolt-host
+cd zkvms/jolt-zkvm/jolt-host
 ```
 
 Build the project (this will also build the guest program):
@@ -72,7 +72,7 @@ cargo build --release
 ### Quick Start
 
 ```bash
-cd jolt-zkvm/jolt-host
+cd zkvms/jolt-zkvm/jolt-host
 RUST_LOG=debug FIBONACCI_N=10 cargo run --release
 ```
 

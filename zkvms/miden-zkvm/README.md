@@ -67,7 +67,7 @@ FIBONACCI_N=10
 ## Building
 
 ```bash
-cd miden-zkvm/miden-host
+cd zkvms/miden-zkvm/miden-host
 cargo build --release
 ```
 
@@ -80,7 +80,7 @@ The build process will:
 ### Generate and verify proof:
 
 ```bash
-cd miden-zkvm/miden-host
+cd zkvms/miden-zkvm/miden-host
 FIBONACCI_N=10 cargo run --release
 ```
 
