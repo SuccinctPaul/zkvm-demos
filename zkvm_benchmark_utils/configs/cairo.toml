@@ -19,7 +19,7 @@ enabled = false
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../cairo-zkvm"
+working_dir = "../zkvms/cairo-zkvm"
 run_command = "./run_benchmark.sh"
 
 timeout_seconds = 600
@@ -48,10 +48,9 @@ PROGRAM_ID = "0"
 # ================================================================
 raw_program_name = 'BENCHMARK: program_name=(\w+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_prover_backend = 'BENCHMARK: prover_backend=([\w\-]+)'
-raw_prover_version = 'BENCHMARK: prover_version=([\w\.\-\s]+)'
+
 
 # ================================================================
 # Compilation Phase

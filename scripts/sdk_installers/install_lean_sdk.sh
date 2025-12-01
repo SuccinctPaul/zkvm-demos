@@ -131,7 +131,7 @@ echo
 
 # Navigate to lean-zkvm demo directory (if it exists)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-LEAN_ZKVM_DIR="$SCRIPT_DIR/../../lean-zkvm"
+LEAN_ZKVM_DIR="$SCRIPT_DIR/../../zkvms/lean-zkvm"
 
 if [ -d "$LEAN_ZKVM_DIR" ]; then
     echo -e "${BLUE}4. Building lean-zkvm demo...${NC}"

@@ -8,7 +8,7 @@ enabled = true
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../jolt-zkvm/jolt-host"
+working_dir = "../zkvms/jolt-zkvm/jolt-host"
 build_command = "cargo build --release"
 run_command = "cargo run --release"
 
@@ -36,7 +36,6 @@ RUST_LOG = "debug"
 # Using non-capturing group (?:...) for prefix to allow matching both formats with single capture group
 raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 
 # Timing metrics

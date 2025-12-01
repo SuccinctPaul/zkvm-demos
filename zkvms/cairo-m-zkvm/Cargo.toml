@@ -1,0 +1,41 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[workspace]
+members = [
+    "cairo-m-host",
+]
+resolver = "2"
+
+[workspace.dependencies]
+zkvm_programs = { path = "../../programs", features = ["std"] }
+
+# Cairo-M SDK dependencies from kkrt-labs/cairo-m
+cairo-m-common = { git = "https://github.com/kkrt-labs/cairo-m" }
+cairo-m-runner = { git = "https://github.com/kkrt-labs/cairo-m" }
+cairo-m-compiler = { git = "https://github.com/kkrt-labs/cairo-m" }
+cairo-m-prover = { git = "https://github.com/kkrt-labs/cairo-m" }
+stwo-prover = { git = "https://github.com/starkware-libs/stwo", rev = "ab57a1c" }
+
+# misc
+dotenv = "0.15.0"
+anyhow = "1.0"
+env_logger = "0.11"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.5", features = ["derive", "env"] }
+once_cell = "1.21"
+
+# Always optimize; building and running takes much longer without optimization.
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+debug = 1
+lto = true
+
+[patch."https://github.com/HorizenLabs/poseidon2.git"]
+zkhash = { git = "https://github.com/AntoineFONDEUR/poseidon2.git", branch = "poseidon2-M31" }

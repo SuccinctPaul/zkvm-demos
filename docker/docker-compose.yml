@@ -29,7 +29,7 @@ services:
       - RUST_LOG=info
       - ZKVM_ARGS=${ZKVM_ARGS:---nocapture}
     command: >
-      bash -c "cd nexus-zkvm/nexus-host && cargo run -r -- $${ZKVM_ARGS:---nocapture}"
+      bash -c "cd zkvms/nexus-zkvm/nexus-host && cargo run -r -- $${ZKVM_ARGS:---nocapture}"
     stdin_open: true
     tty: true
     profiles:
@@ -55,7 +55,7 @@ services:
       - RISC0_INFO=1
       - ZKVM_ARGS=${ZKVM_ARGS}
     command: >
-      bash -c "cd risc0-zkvm/risc0-host && RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release $${ZKVM_ARGS}"
+      bash -c "cd zkvms/risc0-zkvm/risc0-host && RISC0_DEV_MODE=1 RUST_LOG=info RISC0_INFO=1 cargo run --release $${ZKVM_ARGS}"
     stdin_open: true
     tty: true
     profiles:
@@ -78,7 +78,7 @@ services:
       - RUST_LOG=info
       - ZKVM_ARGS=${ZKVM_ARGS:---execute}
     command: >
-      bash -c "cd sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- $${ZKVM_ARGS:---execute}"
+      bash -c "cd zkvms/sp1-zkvm/sp1-host && RUST_LOG=info cargo run --release -- $${ZKVM_ARGS:---execute}"
     stdin_open: true
     tty: true
     profiles:
@@ -101,7 +101,7 @@ services:
       - RUST_LOG=info
       - ZKVM_ARGS=${ZKVM_ARGS:---execute}
     command: >
-      bash -c "cd zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release -- $${ZKVM_ARGS:---execute}"
+      bash -c "cd zkvms/zkm-zkvm/zkm-host && RUST_LOG=info cargo run --release -- $${ZKVM_ARGS:---execute}"
     stdin_open: true
     tty: true
     profiles:
@@ -121,7 +121,7 @@ services:
       - zisk-cargo-cache:/usr/local/cargo/registry
       - zisk-target-cache:/workspace/target
       - zisk-zisk-cache:/root/.zisk
-    working_dir: /workspace/zisk-zkvm
+    working_dir: /workspace/zkvms/zisk-zkvm
     environment:
       - RUST_LOG=info
       - FIBONACCI_N=${FIBONACCI_N:-10}

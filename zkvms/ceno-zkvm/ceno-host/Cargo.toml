@@ -1,0 +1,36 @@
+[package]
+name = "ceno-host"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "ceno-host"
+path = "src/main.rs"
+
+[dependencies]
+# CENO SDK from Scroll
+ceno_host = { workspace = true }
+ceno_emul = { workspace = true }
+ceno_zkvm = { workspace = true }
+
+# Common utilities
+zkvm_programs = { path = "../../../programs" }
+
+# Environment and logging
+dotenv = "0.15"
+env_logger = "0.11"
+log = "0.4"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# CLI
+clap = { version = "4.0", features = ["derive"] }
+
+# Async runtime (if needed)
+tokio = { version = "1.0", features = ["full"], optional = true }
+
+[features]
+default = []
+async = ["tokio"]

@@ -14,7 +14,7 @@ test_scales = [10, 20]
 prove_modes = ["core", "compressed", "groth16"]
 
 # SP1 Project Path
-working_dir = "../sp1-zkvm/sp1-host"
+working_dir = "../zkvms/sp1-zkvm/sp1-host"
 
 # Build and Run Commands
 build_command = "cargo build --release"

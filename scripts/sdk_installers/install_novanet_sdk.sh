@@ -87,7 +87,7 @@ echo -e "${GREEN}   ✓ Components installed${NC}\n"
 # Step 4: Verify installation
 echo -e "${YELLOW}4. Verifying installation...${NC}"
 echo "   Testing cargo build..."
-cd "$(dirname "$0")/../../novanet-zkvm"
+cd "$(dirname "$0")/../../zkvms/novanet-zkvm"
 if cargo check --quiet; then
     echo -e "${GREEN}   ✓ Build test passed${NC}\n"
 else

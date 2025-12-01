@@ -13,7 +13,7 @@ enabled = false
 test_scales = [10, 20]
 prove_modes = ["core"]
 
-working_dir = "../ceno-zkvm"
+working_dir = "../zkvms/ceno-zkvm"
 # Note: CENO SDK requires specific nightly toolchain (nightly-2025-08-18)
 # Using shell script to handle environment setup
 run_command = "./run_benchmark.sh"
@@ -47,7 +47,6 @@ RUST_LOG = "debug"
 # Metadata
 raw_program_name = 'BENCHMARK: program_name=([a-zA-Z0-9_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_output_result = 'BENCHMARK: output_result=(\d+)'
 raw_elf_size = 'BENCHMARK: elf_size_bytes=(\d+)'

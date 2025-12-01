@@ -17,7 +17,7 @@ test_scales = [10, 20]
 prove_modes = ["core", "compressed"]
 
 # Pico project path (use pico-zkvm root as working directory)
-working_dir = "../pico-zkvm"
+working_dir = "../zkvms/pico-zkvm"
 
 # Build and run commands
 # ⚠️ Skip build: Pico SDK v1.1.6 has toolchain compatibility issues

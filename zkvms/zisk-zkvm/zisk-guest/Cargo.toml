@@ -1,0 +1,9 @@
+[package]
+name = "zisk-guest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ziskos = { workspace = true }
+zkvm_programs = { path = "../../../programs", default-features = false }

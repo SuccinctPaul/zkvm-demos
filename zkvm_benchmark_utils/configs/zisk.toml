@@ -26,7 +26,7 @@ test_scales = [10, 20]
 prove_modes = ["core"]
 
 # Working directory (zisk-guest subdirectory)
-working_dir = "../zisk-zkvm/zisk-guest"
+working_dir = "../zkvms/zisk-zkvm/zisk-guest"
 
 # Build command
 # On macOS, cargo-zisk is not available, so we skip build (run_benchmark.sh handles it via Docker)
@@ -81,7 +81,6 @@ RUST_LOG = "debug"
 # Program and zkVM info
 benchmark_program_name = 'BENCHMARK: program_name=(\S+)'
 benchmark_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-benchmark_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 benchmark_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 
 # Timing metrics
@@ -168,6 +167,5 @@ raw_memory_operations = 'Memory operations:\s*(\d+)'
 # 6. Metadata (optional)
 # ====================
 "program_name" = "benchmark_program_name"
-"zkvm_version" = "benchmark_zkvm_version"
 "proof_mode" = "benchmark_proof_mode"
 
