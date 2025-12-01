@@ -59,7 +59,6 @@ AIRBENDER_GUEST_BIN = "target/riscv32im-unknown-none-elf/release/airbender-guest
 # ================================================================
 raw_program_name = 'BENCHMARK: program_name=(\w+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_output_result = 'BENCHMARK: output_result=(\d+)'
 

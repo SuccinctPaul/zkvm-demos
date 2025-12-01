@@ -39,7 +39,6 @@ RUST_LOG = "debug"
 # BENCHMARK format logs (primary)
 raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 raw_verification_time_s = 'BENCHMARK: verification_time_s=([\d.]+)'
 raw_success_status = 'BENCHMARK: success_status=(\w+)'

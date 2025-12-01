@@ -36,7 +36,6 @@ RUST_LOG = "debug"
 # Using non-capturing group (?:...) for prefix to allow matching both formats with single capture group
 raw_program_name = 'BENCHMARK: program_name=([\w_]+)'
 raw_zkvm_name = 'BENCHMARK: zkvm_name=(\w+)'
-raw_zkvm_version = 'BENCHMARK: zkvm_version=([\w\.\-]+)'
 raw_proof_mode = 'BENCHMARK: proof_mode=(\w+)'
 
 # Timing metrics
