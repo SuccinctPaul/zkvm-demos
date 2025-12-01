@@ -1,0 +1,25 @@
+[package]
+name = "novanet-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Guest program (computation logic)
+guest = { package = "novanet-guest", path = "../novanet-guest" }
+zkvm_programs.workspace = true
+
+# NovaNet zkEngine SDK
+zk-engine.workspace = true
+
+# Utilities
+dotenv.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+bincode.workspace = true
+rand.workspace = true
+sha2.workspace = true
+log.workspace = true
+env_logger.workspace = true

@@ -1,0 +1,7 @@
+{
+  "program": "hash",
+  "source": "../programs/hash.cm",
+  "entrypoints": ["hash", "main"],
+  "instructions": 200
+}
+

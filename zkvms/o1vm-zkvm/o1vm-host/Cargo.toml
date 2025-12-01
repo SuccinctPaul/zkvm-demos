@@ -1,0 +1,27 @@
+[package]
+name = "o1vm-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+zkvm_programs.workspace = true
+
+# o1vm SDK dependencies
+o1vm.workspace = true
+kimchi.workspace = true
+poly-commitment.workspace = true
+mina-curves.workspace = true
+mina-poseidon.workspace = true
+
+# utilities
+anyhow.workspace = true
+log.workspace = true
+env_logger.workspace = true
+
+# Additional dependencies
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+hex = "0.4"
+tempfile = "3"

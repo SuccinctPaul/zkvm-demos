@@ -1,0 +1,4 @@
+[toolchain]
+# Cairo-M requires this specific nightly version
+# Must match: https://github.com/kkrt-labs/cairo-m/blob/main/rust-toolchain.toml
+channel = "nightly-2025-04-06"

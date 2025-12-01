@@ -1,0 +1,11 @@
+[workspace]
+members = ["openvm-guest", "openvm-host"]
+resolver = "2"
+
+[workspace.dependencies]
+zkvm_programs = { path = "../../programs", default-features = false }
+
+# Optimize for zkVM execution
+[profile.release]
+opt-level = 3
+lto = true

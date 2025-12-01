@@ -1,0 +1,36 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+
+[workspace]
+members = [
+    "jolt-guest",
+    "jolt-host",
+]
+resolver = "2"
+
+[workspace.dependencies]
+zkvm_programs = { path = "../../programs" }
+
+# misc
+dotenv = "0.15.0"
+anyhow = "1.0.98"
+
+# Always optimize; building and running the guest takes much longer without optimization.
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+debug = 1
+lto = true
+
+
+[patch.crates-io]
+# Use feat/fewer-reductions branch to match jolt-optimizations dependency
+ark-bn254 = { git = "https://github.com/a16z/arkworks-algebra", branch = "feat/fewer-reductions" }
+ark-ff = { git = "https://github.com/a16z/arkworks-algebra", branch = "feat/fewer-reductions" }
+ark-ec = { git = "https://github.com/a16z/arkworks-algebra", branch = "feat/fewer-reductions" }
+ark-serialize = { git = "https://github.com/a16z/arkworks-algebra", branch = "feat/fewer-reductions" }
+allocative = { git = "https://github.com/facebookexperimental/allocative", rev = "85b773d85d526d068ce94724ff7a7b81203fc95e" }

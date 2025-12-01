@@ -1,0 +1,11 @@
+[package]
+name = "jolt-guest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+zkvm_programs = { path = "../../../programs", default-features = false }
+jolt = { package = "jolt-sdk", git = "https://github.com/a16z/jolt",  tag = "v0.3.0-alpha" }
+
+[features]
+guest = []

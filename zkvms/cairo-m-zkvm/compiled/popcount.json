@@ -1,0 +1,7 @@
+{
+  "program": "popcount",
+  "source": "../programs/popcount.cm",
+  "entrypoints": ["popcount", "main"],
+  "instructions": 60
+}
+

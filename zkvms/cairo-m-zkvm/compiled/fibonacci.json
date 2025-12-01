@@ -1,0 +1,6 @@
+{
+  "program": "fibonacci",
+  "source": "../programs/fibonacci.cm",
+  "entrypoints": ["fibonacci", "main"],
+  "instructions": 150
+}

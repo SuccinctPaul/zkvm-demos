@@ -1,0 +1,8 @@
+[package]
+name = "pico-guest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+zkvm_programs.workspace = true
+pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v1.1.6" }

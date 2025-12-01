@@ -1,0 +1,24 @@
+# Scarb.toml for Stwo-Cairo Integration
+# Use this configuration to run the Stwo-Cairo prover
+
+[package]
+name = "cairo_fibonacci"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = ">=2.10.0"
+
+# ⚠️ Critical Configuration: Stwo-Cairo requires disabling Gas tracking
+[cairo]
+enable-gas = false
+
+[dev-dependencies]
+cairo_test = "2.10.0"
+
+[lib]
+
+[scripts]
+test = "scarb cairo-test"
+# Note: No --available-gas argument needed because gas is disabled
+run = "scarb cairo-run"

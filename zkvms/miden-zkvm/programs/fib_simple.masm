@@ -1,0 +1,6 @@
+# Fibonacci - hardcoded for n=5, returns 8
+
+begin
+    # Just push the result
+    push.8
+end

@@ -1,0 +1,89 @@
+// Signature verification simulation in Cairo-M
+// Simulates ECDSA signature verification workload
+//
+// Usage:
+//   cairo-m-compiler --input signature.cm --output signature.json
+//   cairo-m-runner signature.json --entrypoint signature --arguments 10
+
+// Simulate modular exponentiation (simplified)
+func mod_exp(base: felt, exp: felt, modulus: felt) -> felt {
+    let mut result: felt = 1;
+    let mut b: felt = base % modulus;
+    let mut e: felt = exp;
+    
+    while e > 0 {
+        if e % 2 == 1 {
+            result = (result * b) % modulus;
+        }
+        e = e / 2;
+        b = (b * b) % modulus;
+    }
+    
+    return result;
+}
+
+// Simulate point multiplication (simplified)
+func simulate_point_mul(scalar: felt, iterations: felt) -> felt {
+    let mut result: felt = scalar;
+    let mut i: felt = 0;
+    
+    while i < iterations {
+        // Simulate EC point operations
+        result = mod_exp(result, 65537, 2147483647);
+        result = (result + scalar) % 2147483647;
+        i = i + 1;
+    }
+    
+    return result;
+}
+
+// Signature verification simulation
+// Input: n (felt) - number of verification iterations (clamped 1-100)
+// Output: 1 if "verification" succeeds
+func signature(n: felt) -> felt {
+    // Clamp iterations to 1-100
+    let iterations: felt = if n < 1 { 
+        1 
+    } else if n > 100 { 
+        100 
+    } else { 
+        n 
+    };
+    
+    // Simulate signature verification
+    let mut i: felt = 0;
+    let mut success: felt = 1;
+    
+    // Test values (simulating r, s, hash)
+    let r: felt = 12345678;
+    let s: felt = 87654321;
+    let msg_hash: felt = 11111111;
+    
+    while i < iterations {
+        // Simulate verification computation
+        let u1: felt = mod_exp(msg_hash, s, 2147483647);
+        let u2: felt = mod_exp(r, s, 2147483647);
+        
+        // Simulate point operations
+        let p1: felt = simulate_point_mul(u1, 10);
+        let p2: felt = simulate_point_mul(u2, 10);
+        
+        // Combined result
+        let computed: felt = (p1 + p2) % 2147483647;
+        
+        // Check (simplified - always succeeds in simulation)
+        if computed == 0 {
+            success = 0;
+        }
+        
+        i = i + 1;
+    }
+    
+    return success;
+}
+
+// Entry point
+func main(input: felt) -> felt {
+    return signature(input);
+}
+

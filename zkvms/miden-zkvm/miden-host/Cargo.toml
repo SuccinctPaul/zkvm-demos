@@ -1,0 +1,18 @@
+[package]
+name = "miden-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+zkvm_programs.workspace = true
+miden-vm.workspace = true
+miden-assembly.workspace = true
+miden-processor.workspace = true
+miden-stdlib.workspace = true
+anyhow.workspace = true
+
+[lints]
+workspace = true
+

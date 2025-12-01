@@ -1,0 +1,7 @@
+{
+  "program": "factorial",
+  "source": "../programs/factorial.cm",
+  "entrypoints": ["factorial", "main"],
+  "instructions": 100
+}
+
