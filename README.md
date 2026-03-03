@@ -32,7 +32,6 @@ resource usage across implementations using standardized guest programs.
 
 ## Quick Start
 > Notes: Before running benchmarks, make sure your environment can run individual zkVMs natively (e.g., you can run SP1 or Risc0 programs without Docker). This ensures that the benchmarks will run smoothly and generate valid results.
-> 
 
 * Haredware Requirements
   * CPU: 16+ cores
