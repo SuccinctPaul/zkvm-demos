@@ -28,35 +28,54 @@ resource usage across implementations using standardized guest programs.
 | **o1vm**      | 🟡 Ref   | All           | Framework Only        |
 | **OpenVM**    | ⚪ Off    | All           | Disabled by default   |
 
+
 > **Legend**: 🟢 Ready (Full Integration) | 🟡 Ref (Reference/Simulated) | 🔴 Linux (OS Dependent) | ⚪ Off (Disabled)
 
 ## Quick Start
 
-* Prepare
+* Haredware Requirements
+  * CPU: 16+ cores (for parallel benchmarks)
+  * RAM: 32GB+ (for heavy zkVMs like SP1)
+  * Storage: 100GB+ free space (for SDKs, toolchains, and benchmark results)
+  * OS: macOS/Linux (recommended: MacBook Pro M4 Pro)
 
-Run benchmarks natively needs installed zkVM toolchains/SDKs. Install them using the provided scripts.
 
-```bash
-cd scripts/sdk_installers
-bash install_xxx.sdk.sh
-```
+* Prerequisites
+    * Rust toolchain
+    * golang toolchain
+    * Docker
+    * Make,curl,git etc.
+
+* Install zkVM SDKs/Toolchains
+
+  Run benchmarks natively needs installed zkVM toolchains/SDKs. Install them using the provided scripts.
+  
+  ```bash
+  cd scripts/sdk_installers
+  bash install_xxx.sdk.sh
+  ```
 
 * Run
+  
+  Run benchmarks natively using the provided `Makefile`.
+  
+  ```bash
+  cd zkvm_benchmark_utils
+  
+  # 1. Run specific zkVM (e.g., SP1)
+  make bench_sp1
+  
+  # 2. Run fast benchmark set (SP1, Risc0, Jolt)
+  make bench_fast
+  
+  # 3. Run all enabled zkVMs
+  make bench_all
+  ```
 
-Run benchmarks natively using the provided `Makefile`.
+* Result
 
-```bash
-cd zkvm_benchmark_utils
-
-# 1. Run specific zkVM (e.g., SP1)
-make bench_sp1
-
-# 2. Run fast benchmark set (SP1, Risc0, Jolt)
-make bench_fast
-
-# 3. Run all enabled zkVMs
-make bench_all
-```
+  You can find the results in the `zkvm_benchmark_utils/benchmark-results/reports` directory. Each run will generate a timestamped subdirectory containing raw logs, parsed metrics, and generated reports. 
+  And the final reporter(csv) can be found at `zkvm_benchmark_utils/benchmark-results/reports`, organized by zkVM, program and input.
 
 ## Benchmark Utils
 
