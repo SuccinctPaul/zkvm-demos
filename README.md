@@ -31,12 +31,14 @@ resource usage across implementations using standardized guest programs.
 > **Legend**: 🟢 Ready (Full Integration) | 🟡 Ref (Reference/Simulated) | 🔴 Linux (OS Dependent) | ⚪ Off (Disabled)
 
 ## Quick Start
-> Notes: before running benchmarks, make sure your environment can run individual zkVMs natively (e.g., you can run SP1 or Risc0 programs without Docker). This ensures that the benchmarks will run smoothly and generate valid results.
+> Notes: Before running benchmarks, make sure your environment can run individual zkVMs natively (e.g., you can run SP1 or Risc0 programs without Docker). This ensures that the benchmarks will run smoothly and generate valid results.
+> 
+
 * Haredware Requirements
-  * CPU: 16+ cores (for parallel benchmarks)
+  * CPU: 16+ cores
   * RAM: 32GB+ (for heavy zkVMs like SP1)
   * Storage: 100GB+ free space (for SDKs, toolchains, and benchmark results)
-  * OS: macOS/Linux (recommended: MacBook Pro M4 Pro)
+  * OS: macOS/Linux (recommended: macos)
 
 
 * Prerequisites
@@ -53,6 +55,8 @@ resource usage across implementations using standardized guest programs.
   cd scripts/sdk_installers
   bash install_xxx.sdk.sh
   ```
+  > If you meet any problems, we recommend to reference official docs of related zkVM to set up the environment and run their example programs, which can help you understand the underlying mechanics and debug potential issues during benchmarking.
+
 
 * Run
   
