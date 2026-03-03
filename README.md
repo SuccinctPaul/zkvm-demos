@@ -81,9 +81,13 @@ resource usage across implementations using standardized guest programs.
 For details on metrics, configuration, and advanced usage, see:
 👉 [**zkvm_benchmark_utils/README.md**](./zkvm_benchmark_utils/README.md)
 
-## Reference
 
-Inspired by and builds upon previous zkVM benchmarking efforts:
+## Acknowledgements
+This project aims to provide a unified benchmarking framework for measuring and comparing the performance of different zkVM implementations and their example programs on custom metrics such as execution time, proof metrics, and etc.
+During the development, The following resources and projects have been invaluable for reference and inspiration:
 
 * https://github.com/blocksense-network/zkVMs-benchmarks
 * https://github.com/kkrt-labs/zkvm-benchmarks
+
+We acknowledge the efforts of the zkVM community in developing these innovative technologies and hope that this framework can contribute to their evaluation and improvement.
+And welcome contributions from the community to expand zkVM support, add new benchmark programs, and improve the framework.
